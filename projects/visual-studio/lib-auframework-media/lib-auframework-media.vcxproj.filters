@@ -1,0 +1,747 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\cpp\AUFrameworkMediaStdAfx.cpp">
+      <Filter>lib-auframework-media</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\NBGestorIdioma.cpp">
+      <Filter>lib-auframework-media\datos</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUDialogo.cpp">
+      <Filter>lib-auframework-media\datos</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUDialogoMutable.cpp">
+      <Filter>lib-auframework-media\datos</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUDiccionarioTextoMulti.cpp">
+      <Filter>lib-auframework-media\datos</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\NBGestorSonidos.cpp">
+      <Filter>lib-auframework-media\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\NBSegmentadorFiguras.cpp">
+      <Filter>lib-auframework-media\visual\iluminacion</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\NBGestorAnimaciones.cpp">
+      <Filter>lib-auframework-media\visual\gestores</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\NBGestorEscena.cpp">
+      <Filter>lib-auframework-media\visual\gestores</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\NBGestorGL.cpp">
+      <Filter>lib-auframework-media\visual\gestores</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\NBGestorPersonajes.cpp">
+      <Filter>lib-auframework-media\visual\gestores</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\NBGestorTexturas.cpp">
+      <Filter>lib-auframework-media\visual\gestores</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\NBGestorTouches.cpp">
+      <Filter>lib-auframework-media\visual\gestores</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUCargadorAnimaciones.cpp">
+      <Filter>lib-auframework-media\visual\gestores\intermediarios</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUCargadorCuerpos.cpp">
+      <Filter>lib-auframework-media\visual\gestores\intermediarios</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\NBGestorFisica.cpp">
+      <Filter>lib-auframework-media\visual\gestores\fisica</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\NBGestorCuerpos.cpp">
+      <Filter>lib-auframework-media\visual\gestores\fisica</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUSimuladorLiquidos.cpp">
+      <Filter>lib-auframework-media\visual\gestores\fisica</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\NBSimuladorLiquidosMotor1.cpp">
+      <Filter>lib-auframework-media\visual\gestores\fisica</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\NBSimuladorLiquidosMotor2.cpp">
+      <Filter>lib-auframework-media\visual\gestores\fisica</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUAnimadorSonidoVolumen.cpp">
+      <Filter>lib-auframework-media\visual\animadores</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUAnimadorSonido.cpp">
+      <Filter>lib-auframework-media\visual\animadores</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUAnimadorAnimacion.cpp">
+      <Filter>lib-auframework-media\visual\animadores</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUAnimadorContenedor.cpp">
+      <Filter>lib-auframework-media\visual\animadores</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUAnimadorObjetoEscena.cpp">
+      <Filter>lib-auframework-media\visual\animadores</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaContenedor.cpp">
+      <Filter>lib-auframework-media\visual\escenas</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaObjeto.cpp">
+      <Filter>lib-auframework-media\visual\escenas</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaSnd.cpp">
+      <Filter>lib-auframework-media\visual\escenas\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaSonido.cpp">
+      <Filter>lib-auframework-media\visual\escenas\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaSonidoStream.cpp">
+      <Filter>lib-auframework-media\visual\escenas\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaSonidoStreamMulti.cpp">
+      <Filter>lib-auframework-media\visual\escenas\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AURenderBuffer.cpp">
+      <Filter>lib-auframework-media\visual\escenas\texturas</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUTextura.cpp">
+      <Filter>lib-auframework-media\visual\escenas\texturas</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUNodoElectroCarga.cpp">
+      <Filter>lib-auframework-media\visual\escenas\avanzados</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUBateria.cpp">
+      <Filter>lib-auframework-media\visual\escenas\avanzados</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUPanelSolar.cpp">
+      <Filter>lib-auframework-media\visual\escenas\avanzados</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUBombillo.cpp">
+      <Filter>lib-auframework-media\visual\escenas\avanzados</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AULaser.cpp">
+      <Filter>lib-auframework-media\visual\escenas\avanzados</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AULanzallamas.cpp">
+      <Filter>lib-auframework-media\visual\escenas\avanzados</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUElectronodo.cpp">
+      <Filter>lib-auframework-media\visual\escenas\avanzados</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaAnimacion.cpp">
+      <Filter>lib-auframework-media\visual\escenas\compuestos</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaAnimacionI.cpp">
+      <Filter>lib-auframework-media\visual\escenas\compuestos</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaMallaGelatina.cpp">
+      <Filter>lib-auframework-media\visual\escenas\compuestos</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaMallaConHueso.cpp">
+      <Filter>lib-auframework-media\visual\escenas\compuestos</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaMallaBezier.cpp">
+      <Filter>lib-auframework-media\visual\escenas\compuestos</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaMallaXBase.cpp">
+      <Filter>lib-auframework-media\visual\escenas\compuestos</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaMalla3.cpp">
+      <Filter>lib-auframework-media\visual\escenas\compuestos</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaMalla9.cpp">
+      <Filter>lib-auframework-media\visual\escenas\compuestos</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaMalla9Patron.cpp">
+      <Filter>lib-auframework-media\visual\escenas\compuestos</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaCuerpoI.cpp">
+      <Filter>lib-auframework-media\visual\escenas\compuestos</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaCuerpo.cpp">
+      <Filter>lib-auframework-media\visual\escenas\compuestos</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaCuerpoMulti.cpp">
+      <Filter>lib-auframework-media\visual\escenas\compuestos</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaPolea.cpp">
+      <Filter>lib-auframework-media\visual\escenas\compuestos</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaTexto.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaSpritePorcion.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaSpriteMascara.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaSprite.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaSensor.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaIluminacion.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaLaser.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaLuzEspejo.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaLuzRadial.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaLuzSensor.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaLuzSombra.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaMalla.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaPuasLinea.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaPuasLineaAnimIndiv.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaPuasLineaAnimSinc.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaRuta.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaRutaAnimador.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaElectroRayo.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaCuerda.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaFigura.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaFiguraTransformable.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaFiltro.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaGeneradorParticulas.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaGrupoParticulas.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaGrupoParticulasFuego.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaGrupoParticulasLinea.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\c\glew\glew.c">
+      <Filter>lib-auframework-media\glew</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUFrameworkMediaRegistro.cpp">
+      <Filter>lib-auframework-media</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\NBGestorTeclas.cpp">
+      <Filter>lib-auframework-media\visual\gestores</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaTextoEditable.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUITextbox.cpp">
+      <Filter>lib-auframework-media\visual\escenas\controles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaContenedorLimitado.cpp">
+      <Filter>lib-auframework-media\visual\escenas</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaSpriteElastico.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUIButton.cpp">
+      <Filter>lib-auframework-media\visual\escenas\controles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaPanel.cpp">
+      <Filter>lib-auframework-media\visual\escenas\compuestos</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUParticlesGenerator.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaSpriteWithLoader.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUMngrFonts.cpp">
+      <Filter>lib-auframework-media\visual\gestores\fonts</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\NBMngrFonts.cpp">
+      <Filter>lib-auframework-media\visual\gestores\fonts</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUFuenteVisualModel.cpp">
+      <Filter>lib-auframework-media\visual\escenas\fuentes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUFuenteRaster.cpp">
+      <Filter>lib-auframework-media\visual\escenas\fuentes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUFuenteRender.cpp">
+      <Filter>lib-auframework-media\visual\escenas\fuentes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUFuenteTextura.cpp">
+      <Filter>lib-auframework-media\visual\escenas\fuentes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUIDatebox.cpp">
+      <Filter>lib-auframework-media\visual\escenas\controles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUISelectbox.cpp">
+      <Filter>lib-auframework-media\visual\escenas\controles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaTextoEditableOffscreen.cpp">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaContenedorRaiz.cpp">
+      <Filter>lib-auframework-media\visual\escenas</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUIMsgBox.cpp">
+      <Filter>lib-auframework-media\visual\escenas\controles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaPanelTexto.cpp">
+      <Filter>lib-auframework-media\visual\escenas\compuestos</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUTextoFiltro.cpp">
+      <Filter>lib-auframework-media\visual\escenas\fuentes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cpp\AUTextoFiltroLimitado.cpp">
+      <Filter>lib-auframework-media\visual\escenas\fuentes</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\include\AUFrameworkMedia.h">
+      <Filter>lib-auframework-media</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUFrameworkMediaDefiniciones.h">
+      <Filter>lib-auframework-media</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUFrameworkMediaStdAfx.h">
+      <Filter>lib-auframework-media</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\NBGestorIdioma.h">
+      <Filter>lib-auframework-media\datos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\NBGestorIdiomaDef.h">
+      <Filter>lib-auframework-media\datos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUDialogo.h">
+      <Filter>lib-auframework-media\datos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUDialogoMutable.h">
+      <Filter>lib-auframework-media\datos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUDiccionarioTextoMulti.h">
+      <Filter>lib-auframework-media\datos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\NBGestorSonidos.h">
+      <Filter>lib-auframework-media\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\NBPropiedadesEnEscena.h">
+      <Filter>lib-auframework-media\visual</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\NBPropiedadesFijacion.h">
+      <Filter>lib-auframework-media\visual</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\NBSegmentadorFiguras.h">
+      <Filter>lib-auframework-media\visual\iluminacion</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\NBFuenteEspejo.h">
+      <Filter>lib-auframework-media\visual\iluminacion</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\NBFuenteIluminacion.h">
+      <Filter>lib-auframework-media\visual\iluminacion</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\NBFuenteSombra.h">
+      <Filter>lib-auframework-media\visual\iluminacion</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\NBGestorAnimaciones.h">
+      <Filter>lib-auframework-media\visual\gestores</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\NBGestorEscena.h">
+      <Filter>lib-auframework-media\visual\gestores</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\NBGestorGL.h">
+      <Filter>lib-auframework-media\visual\gestores</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\NBGestorPersonajes.h">
+      <Filter>lib-auframework-media\visual\gestores</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\NBGestorTexturas.h">
+      <Filter>lib-auframework-media\visual\gestores</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\NBGestorTouches.h">
+      <Filter>lib-auframework-media\visual\gestores</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUCargadorCuerposI.h">
+      <Filter>lib-auframework-media\visual\gestores\intermediarios</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUCargadorAnimaciones.h">
+      <Filter>lib-auframework-media\visual\gestores\intermediarios</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUCargadorAnimacionesI.h">
+      <Filter>lib-auframework-media\visual\gestores\intermediarios</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUCargadorCuerpos.h">
+      <Filter>lib-auframework-media\visual\gestores\intermediarios</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\NBGestorFisica.h">
+      <Filter>lib-auframework-media\visual\gestores\fisica</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\NBGestorCuerpos.h">
+      <Filter>lib-auframework-media\visual\gestores\fisica</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUCuerpoDef.h">
+      <Filter>lib-auframework-media\visual\gestores\fisica</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\IAnimadorFisicaAdicional.h">
+      <Filter>lib-auframework-media\visual\gestores\fisica</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUSimuladorLiquidos.h">
+      <Filter>lib-auframework-media\visual\gestores\fisica</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\NBSimuladorLiquidosMotor1.h">
+      <Filter>lib-auframework-media\visual\gestores\fisica</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\NBSimuladorLiquidosMotor2.h">
+      <Filter>lib-auframework-media\visual\gestores\fisica</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\NBSimuladorLiquidosMotorI.h">
+      <Filter>lib-auframework-media\visual\gestores\fisica</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUAnimadorSonidoVolumen.h">
+      <Filter>lib-auframework-media\visual\animadores</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUAnimadorSonido.h">
+      <Filter>lib-auframework-media\visual\animadores</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUAnimadorAnimacion.h">
+      <Filter>lib-auframework-media\visual\animadores</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUAnimadorContenedor.h">
+      <Filter>lib-auframework-media\visual\animadores</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUAnimadorObjetoEscena.h">
+      <Filter>lib-auframework-media\visual\animadores</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUAnimadorPropsDef.h">
+      <Filter>lib-auframework-media\visual\animadores</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUAnimacionDef.h">
+      <Filter>lib-auframework-media\visual\animadores</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaContenedor.h">
+      <Filter>lib-auframework-media\visual\escenas</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaObjeto.h">
+      <Filter>lib-auframework-media\visual\escenas</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaSnd.h">
+      <Filter>lib-auframework-media\visual\escenas\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaSonido.h">
+      <Filter>lib-auframework-media\visual\escenas\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaSonidoStream.h">
+      <Filter>lib-auframework-media\visual\escenas\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaSonidoStreamMulti.h">
+      <Filter>lib-auframework-media\visual\escenas\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AURenderBuffer.h">
+      <Filter>lib-auframework-media\visual\escenas\texturas</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUTextura.h">
+      <Filter>lib-auframework-media\visual\escenas\texturas</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUNodoElectroCarga.h">
+      <Filter>lib-auframework-media\visual\escenas\avanzados</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUBateria.h">
+      <Filter>lib-auframework-media\visual\escenas\avanzados</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUPanelSolar.h">
+      <Filter>lib-auframework-media\visual\escenas\avanzados</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUBombillo.h">
+      <Filter>lib-auframework-media\visual\escenas\avanzados</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AULaser.h">
+      <Filter>lib-auframework-media\visual\escenas\avanzados</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AULanzallamas.h">
+      <Filter>lib-auframework-media\visual\escenas\avanzados</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUElectronodo.h">
+      <Filter>lib-auframework-media\visual\escenas\avanzados</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaAnimacion.h">
+      <Filter>lib-auframework-media\visual\escenas\compuestos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaAnimacionI.h">
+      <Filter>lib-auframework-media\visual\escenas\compuestos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaMallaGelatina.h">
+      <Filter>lib-auframework-media\visual\escenas\compuestos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaMallaConHueso.h">
+      <Filter>lib-auframework-media\visual\escenas\compuestos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaMallaBezier.h">
+      <Filter>lib-auframework-media\visual\escenas\compuestos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaMallaXBase.h">
+      <Filter>lib-auframework-media\visual\escenas\compuestos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaMalla3.h">
+      <Filter>lib-auframework-media\visual\escenas\compuestos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaMalla9.h">
+      <Filter>lib-auframework-media\visual\escenas\compuestos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaMalla9Patron.h">
+      <Filter>lib-auframework-media\visual\escenas\compuestos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaCuerpoI.h">
+      <Filter>lib-auframework-media\visual\escenas\compuestos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaCuerpo.h">
+      <Filter>lib-auframework-media\visual\escenas\compuestos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaCuerpoMulti.h">
+      <Filter>lib-auframework-media\visual\escenas\compuestos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaPolea.h">
+      <Filter>lib-auframework-media\visual\escenas\compuestos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaTexto.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaSpritePorcion.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaSpriteMascara.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaSprite.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaSensor.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaIluminacion.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaLaser.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaLaserDef.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaLuzEspejo.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaLuzRadial.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaLuzSensor.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaLuzSombra.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaMalla.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaPuasLinea.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaPuasLineaAnimIndiv.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaPuasLineaAnimSinc.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaPuasLineaDef.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaRuta.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaRutaAnimador.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaElectroRayo.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaCuerda.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaFigura.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaFiguraTransformable.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaFiltro.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaGeneradorParticulas.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaGrupoParticulas.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaGrupoParticulasFuego.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaGrupoParticulasLinea.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\glew\glew.h">
+      <Filter>lib-auframework-media\glew</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\glew\wglew.h">
+      <Filter>lib-auframework-media\glew</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUFrameworkMediaRegistro.h">
+      <Filter>lib-auframework-media</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\NBGestorTeclas.h">
+      <Filter>lib-auframework-media\visual\gestores</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaTextoEditable.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUITextbox.h">
+      <Filter>lib-auframework-media\visual\escenas\controles</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaContenedorLimitado.h">
+      <Filter>lib-auframework-media\visual\escenas</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaSpriteElastico.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUIButton.h">
+      <Filter>lib-auframework-media\visual\escenas\controles</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaListaItemI.h">
+      <Filter>lib-auframework-media\visual\escenas\controles</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaPanel.h">
+      <Filter>lib-auframework-media\visual\escenas\compuestos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUParticlesGenerator.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaSpriteWithLoader.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUMngrFonts.h">
+      <Filter>lib-auframework-media\visual\gestores\fonts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\NBMngrFonts.h">
+      <Filter>lib-auframework-media\visual\gestores\fonts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUFuenteRaster.h">
+      <Filter>lib-auframework-media\visual\escenas\fuentes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUFuenteRender.h">
+      <Filter>lib-auframework-media\visual\escenas\fuentes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUFuenteTextura.h">
+      <Filter>lib-auframework-media\visual\escenas\fuentes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUFuenteVisualModel.h">
+      <Filter>lib-auframework-media\visual\escenas\fuentes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUISelectbox.h">
+      <Filter>lib-auframework-media\visual\escenas\controles</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaTextoEditableOffscreen.h">
+      <Filter>lib-auframework-media\visual\escenas\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaContenedorRaiz.h">
+      <Filter>lib-auframework-media\visual\escenas</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUIDateBox.h">
+      <Filter>lib-auframework-media\visual\escenas\controles</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUIMsgBox.h">
+      <Filter>lib-auframework-media\visual\escenas\controles</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUEscenaPanelTexto.h">
+      <Filter>lib-auframework-media\visual\escenas\compuestos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUTextoFiltro.h">
+      <Filter>lib-auframework-media\visual\escenas\fuentes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\AUTextoFiltroLimitado.h">
+      <Filter>lib-auframework-media\visual\escenas\fuentes</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="lib-auframework-media">
+      <UniqueIdentifier>{f5cc70b6-857d-4e2d-b97d-359eb67ecc95}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib-auframework-media\datos">
+      <UniqueIdentifier>{2fe216e5-e2fe-4f84-beb4-78b3f0a60a58}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib-auframework-media\audio">
+      <UniqueIdentifier>{acc625aa-c1d8-4c47-a303-4a802476ff97}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib-auframework-media\visual">
+      <UniqueIdentifier>{679f970a-4c26-4560-9896-ee0717a40619}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib-auframework-media\visual\iluminacion">
+      <UniqueIdentifier>{ede34418-9ddd-4d14-b1d2-774d1084c7d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib-auframework-media\visual\gestores">
+      <UniqueIdentifier>{e1376cf3-cd79-4406-af44-90cb8138ac85}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib-auframework-media\visual\gestores\intermediarios">
+      <UniqueIdentifier>{9e531108-4f3e-404b-9f9c-4b11ce89b9ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib-auframework-media\visual\gestores\fisica">
+      <UniqueIdentifier>{b7ea9d86-64b8-415f-ba8d-fef5a49ad334}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib-auframework-media\visual\animadores">
+      <UniqueIdentifier>{b85bebaf-8028-4d2f-8285-b0eb3272e6fe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib-auframework-media\visual\escenas">
+      <UniqueIdentifier>{8c0ce50e-fdb3-4793-8472-670a6d6c5afd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib-auframework-media\visual\escenas\audio">
+      <UniqueIdentifier>{74a6b4ca-1c81-4047-bb3d-1b183bc75174}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib-auframework-media\visual\escenas\texturas">
+      <UniqueIdentifier>{22ca45b6-2231-457b-a66f-b677161676a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib-auframework-media\visual\escenas\base">
+      <UniqueIdentifier>{0c022cc7-210e-439e-b93a-6f8ecb55651e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib-auframework-media\visual\escenas\compuestos">
+      <UniqueIdentifier>{0eebdbb8-f683-4169-8c7d-de10e61a1dc4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib-auframework-media\visual\escenas\avanzados">
+      <UniqueIdentifier>{a0d1f8b3-dd12-4e88-aae8-20da4fc96dc8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib-auframework-media\glew">
+      <UniqueIdentifier>{9119ccfd-2f51-4289-8f85-7e8902971c23}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib-auframework-media\visual\escenas\controles">
+      <UniqueIdentifier>{aa0b3747-79fd-4ba6-971b-68342dc0abe9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib-auframework-media\visual\gestores\fonts">
+      <UniqueIdentifier>{fcb11e3c-b3c7-4a7c-bd87-bd3ff4a19507}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib-auframework-media\visual\escenas\fuentes">
+      <UniqueIdentifier>{91fc1713-9739-4076-baae-c876db729de3}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,399 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{CBA4579C-AD7E-40BB-A1D5-86A421610234}</ProjectGuid>
+    <RootNamespace>lib-auframework-media</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)..\..\bin\win\$(Configuration)\$(Platform)\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)..\..\bin\win\$(Configuration)\$(Platform)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)..\..\tmp\win\$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)..\..\tmp\win\$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)..\..\bin\win\$(Configuration)\$(Platform)\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)..\..\bin\win\$(Configuration)\$(Platform)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)..\..\tmp\win\$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)..\..\tmp\win\$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>
+      </Optimization>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\..\..\sys-nbframework\lib-nbframework-src\include;$(ProjectDir)..\..\..\include;$(ProjectDir)..\..\..\..\lib-box2d-src\include;$(ProjectDir)..\..\..\..\lib-auframework-src\include;$(ProjectDir)..\..\..\..\lib-nixtla-audio-src\include;$(ProjectDir)..\..\..\..\lib-nixtla-audio-src\src\c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>AUFrameworkMediaStdAfx.h</PrecompiledHeaderFile>
+      <WarningLevel>
+      </WarningLevel>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <PreprocessorDefinitions>_MBCS;WIN32_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <Optimization>
+      </Optimization>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\..\..\sys-nbframework\lib-nbframework-src\include;$(ProjectDir)..\..\..\include;$(ProjectDir)..\..\..\..\lib-box2d-src\include;$(ProjectDir)..\..\..\..\lib-auframework-src\include;$(ProjectDir)..\..\..\..\lib-nixtla-audio-src\include;$(ProjectDir)..\..\..\..\lib-nixtla-audio-src\src\c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>AUFrameworkMediaStdAfx.h</PrecompiledHeaderFile>
+      <WarningLevel>
+      </WarningLevel>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <PreprocessorDefinitions>_MBCS;WIN32_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>
+      </Optimization>
+      <IntrinsicFunctions>
+      </IntrinsicFunctions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <WarningLevel>
+      </WarningLevel>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>AUFrameworkMediaStdAfx.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\..\..\sys-nbframework\lib-nbframework-src\include;$(ProjectDir)..\..\..\include;$(ProjectDir)..\..\..\..\lib-box2d-src\include;$(ProjectDir)..\..\..\..\lib-auframework-src\include;$(ProjectDir)..\..\..\..\lib-nixtla-audio-src\include;$(ProjectDir)..\..\..\..\lib-nixtla-audio-src\src\c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_MBCS;WIN32_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <Optimization>
+      </Optimization>
+      <IntrinsicFunctions>
+      </IntrinsicFunctions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <WarningLevel>
+      </WarningLevel>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>AUFrameworkMediaStdAfx.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\..\..\sys-nbframework\lib-nbframework-src\include;$(ProjectDir)..\..\..\include;$(ProjectDir)..\..\..\..\lib-box2d-src\include;$(ProjectDir)..\..\..\..\lib-auframework-src\include;$(ProjectDir)..\..\..\..\lib-nixtla-audio-src\include;$(ProjectDir)..\..\..\..\lib-nixtla-audio-src\src\c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_MBCS;WIN32_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\cpp\AUDialogo.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUDialogoMutable.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUDiccionarioTextoMulti.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaContenedorLimitado.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaContenedorRaiz.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaPanel.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaPanelTexto.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaSpriteElastico.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaSpriteWithLoader.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaTextoEditable.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaTextoEditableOffscreen.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUFrameworkMediaRegistro.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUFuenteRaster.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUFuenteRender.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUFuenteVisualModel.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUIButton.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUIDatebox.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUIMsgBox.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUISelectbox.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUITextbox.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUMngrFonts.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUParticlesGenerator.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUTextoFiltro.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUTextoFiltroLimitado.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\NBGestorIdioma.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\NBGestorAnimaciones.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\NBGestorEscena.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\NBGestorGL.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\NBGestorPersonajes.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\NBGestorTeclas.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\NBGestorTexturas.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\NBGestorTouches.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\NBMngrFonts.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\NBSegmentadorFiguras.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUSimuladorLiquidos.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\NBGestorCuerpos.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\NBGestorFisica.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\NBSimuladorLiquidosMotor1.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\NBSimuladorLiquidosMotor2.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUCargadorAnimaciones.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUCargadorCuerpos.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUAnimadorAnimacion.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUAnimadorContenedor.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUAnimadorObjetoEscena.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUAnimadorSonido.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUAnimadorSonidoVolumen.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaAnimacion.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaAnimacionI.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaContenedor.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaCuerda.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaCuerpo.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaCuerpoI.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaCuerpoMulti.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaElectroRayo.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaFigura.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaFiguraTransformable.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaGeneradorParticulas.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaGrupoParticulas.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaGrupoParticulasFuego.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaGrupoParticulasLinea.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaIluminacion.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaLaser.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaLuzEspejo.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaLuzRadial.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaLuzSensor.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaLuzSombra.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaObjeto.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaPolea.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaPuasLinea.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaPuasLineaAnimIndiv.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaPuasLineaAnimSinc.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaRuta.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaRutaAnimador.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaSensor.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaSnd.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaSonido.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaSonidoStream.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaSonidoStreamMulti.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaSprite.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaSpriteMascara.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaSpritePorcion.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaTexto.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUFuenteTextura.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AURenderBuffer.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUTextura.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaMalla.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaMalla3.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaMalla9.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaMalla9Patron.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaMallaBezier.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaMallaConHueso.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaMallaGelatina.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaMallaXBase.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUBateria.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUBombillo.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUElectronodo.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AULanzallamas.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AULaser.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUNodoElectroCarga.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUPanelSolar.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUEscenaFiltro.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\NBGestorSonidos.cpp" />
+    <ClCompile Include="..\..\..\src\cpp\AUFrameworkMediaStdAfx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\c\glew\glew.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\include\AUAnimacionDef.h" />
+    <ClInclude Include="..\..\..\include\AUDialogo.h" />
+    <ClInclude Include="..\..\..\include\AUDialogoMutable.h" />
+    <ClInclude Include="..\..\..\include\AUDiccionarioTextoMulti.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaContenedorLimitado.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaContenedorRaiz.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaListaItemI.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaPanel.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaPanelTexto.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaSpriteElastico.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaSpriteWithLoader.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaTextoEditable.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaTextoEditableOffscreen.h" />
+    <ClInclude Include="..\..\..\include\AUFrameworkMediaRegistro.h" />
+    <ClInclude Include="..\..\..\include\AUFuenteRaster.h" />
+    <ClInclude Include="..\..\..\include\AUFuenteRender.h" />
+    <ClInclude Include="..\..\..\include\AUFuenteVisualModel.h" />
+    <ClInclude Include="..\..\..\include\AUIButton.h" />
+    <ClInclude Include="..\..\..\include\AUIDateBox.h" />
+    <ClInclude Include="..\..\..\include\AUIMsgBox.h" />
+    <ClInclude Include="..\..\..\include\AUISelectbox.h" />
+    <ClInclude Include="..\..\..\include\AUITextbox.h" />
+    <ClInclude Include="..\..\..\include\AUMngrFonts.h" />
+    <ClInclude Include="..\..\..\include\AUParticlesGenerator.h" />
+    <ClInclude Include="..\..\..\include\AUTextoFiltro.h" />
+    <ClInclude Include="..\..\..\include\AUTextoFiltroLimitado.h" />
+    <ClInclude Include="..\..\..\include\glew\glew.h" />
+    <ClInclude Include="..\..\..\include\glew\wglew.h" />
+    <ClInclude Include="..\..\..\include\NBFuenteEspejo.h" />
+    <ClInclude Include="..\..\..\include\NBFuenteIluminacion.h" />
+    <ClInclude Include="..\..\..\include\NBFuenteSombra.h" />
+    <ClInclude Include="..\..\..\include\NBGestorIdioma.h" />
+    <ClInclude Include="..\..\..\include\NBGestorIdiomaDef.h" />
+    <ClInclude Include="..\..\..\include\NBGestorTeclas.h" />
+    <ClInclude Include="..\..\..\include\NBMngrFonts.h" />
+    <ClInclude Include="..\..\..\include\NBPropiedadesEnEscena.h" />
+    <ClInclude Include="..\..\..\include\NBGestorAnimaciones.h" />
+    <ClInclude Include="..\..\..\include\NBGestorEscena.h" />
+    <ClInclude Include="..\..\..\include\NBGestorGL.h" />
+    <ClInclude Include="..\..\..\include\NBGestorPersonajes.h" />
+    <ClInclude Include="..\..\..\include\NBGestorTexturas.h" />
+    <ClInclude Include="..\..\..\include\NBGestorTouches.h" />
+    <ClInclude Include="..\..\..\include\NBPropiedadesFijacion.h" />
+    <ClInclude Include="..\..\..\include\NBSegmentadorFiguras.h" />
+    <ClInclude Include="..\..\..\include\AUCuerpoDef.h" />
+    <ClInclude Include="..\..\..\include\AUSimuladorLiquidos.h" />
+    <ClInclude Include="..\..\..\include\IAnimadorFisicaAdicional.h" />
+    <ClInclude Include="..\..\..\include\NBGestorCuerpos.h" />
+    <ClInclude Include="..\..\..\include\NBGestorFisica.h" />
+    <ClInclude Include="..\..\..\include\NBSimuladorLiquidosMotor1.h" />
+    <ClInclude Include="..\..\..\include\NBSimuladorLiquidosMotor2.h" />
+    <ClInclude Include="..\..\..\include\NBSimuladorLiquidosMotorI.h" />
+    <ClInclude Include="..\..\..\include\AUCargadorAnimaciones.h" />
+    <ClInclude Include="..\..\..\include\AUCargadorAnimacionesI.h" />
+    <ClInclude Include="..\..\..\include\AUCargadorCuerpos.h" />
+    <ClInclude Include="..\..\..\include\AUCargadorCuerposI.h" />
+    <ClInclude Include="..\..\..\include\AUAnimadorAnimacion.h" />
+    <ClInclude Include="..\..\..\include\AUAnimadorContenedor.h" />
+    <ClInclude Include="..\..\..\include\AUAnimadorObjetoEscena.h" />
+    <ClInclude Include="..\..\..\include\AUAnimadorPropsDef.h" />
+    <ClInclude Include="..\..\..\include\AUAnimadorSonido.h" />
+    <ClInclude Include="..\..\..\include\AUAnimadorSonidoVolumen.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaAnimacion.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaAnimacionI.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaContenedor.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaCuerda.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaCuerpo.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaCuerpoI.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaCuerpoMulti.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaElectroRayo.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaFigura.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaFiguraTransformable.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaGeneradorParticulas.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaGrupoParticulas.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaGrupoParticulasFuego.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaGrupoParticulasLinea.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaIluminacion.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaLaser.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaLaserDef.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaLuzEspejo.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaLuzRadial.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaLuzSensor.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaLuzSombra.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaObjeto.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaPolea.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaPuasLinea.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaPuasLineaAnimIndiv.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaPuasLineaAnimSinc.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaPuasLineaDef.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaRuta.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaRutaAnimador.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaSensor.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaSnd.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaSonido.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaSonidoStream.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaSonidoStreamMulti.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaSprite.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaSpriteMascara.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaSpritePorcion.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaTexto.h" />
+    <ClInclude Include="..\..\..\include\AUFuenteTextura.h" />
+    <ClInclude Include="..\..\..\include\AURenderBuffer.h" />
+    <ClInclude Include="..\..\..\include\AUTextura.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaMalla.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaMalla3.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaMalla9.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaMalla9Patron.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaMallaBezier.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaMallaConHueso.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaMallaGelatina.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaMallaXBase.h" />
+    <ClInclude Include="..\..\..\include\AUBateria.h" />
+    <ClInclude Include="..\..\..\include\AUBombillo.h" />
+    <ClInclude Include="..\..\..\include\AUElectronodo.h" />
+    <ClInclude Include="..\..\..\include\AULanzallamas.h" />
+    <ClInclude Include="..\..\..\include\AULaser.h" />
+    <ClInclude Include="..\..\..\include\AUNodoElectroCarga.h" />
+    <ClInclude Include="..\..\..\include\AUPanelSolar.h" />
+    <ClInclude Include="..\..\..\include\AUEscenaFiltro.h" />
+    <ClInclude Include="..\..\..\include\NBGestorSonidos.h" />
+    <ClInclude Include="..\..\..\include\AUFrameworkMedia.h" />
+    <ClInclude Include="..\..\..\include\AUFrameworkMediaDefiniciones.h" />
+    <ClInclude Include="..\..\..\include\AUFrameworkMediaStdAfx.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

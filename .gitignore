@@ -1,0 +1,16 @@
+projects/eclipse-workspace/.metadata
+projects/momentics-workspace/.metadata
+projects/xcode/lib-auframework-media/lib-auframework-media.xcodeproj/project.xcworkspace/xcuserdata
+projects/xcode/lib-auframework-media/lib-auframework-media.xcodeproj/xcuserdata
+projects/xcode/lib-auframework-media.xcworkspace/xcuserdata
+*.suo
+bin
+projects/visual-studio/ipch
+lib-auframework-media.sdf
+xcshareddata
+projects/android/obj
+.DS_Store
+tmp
+projects/visual-studio/.vs
+*.zip
+*.user

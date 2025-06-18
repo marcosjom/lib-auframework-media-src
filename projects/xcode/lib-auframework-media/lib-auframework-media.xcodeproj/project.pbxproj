@@ -1,0 +1,1315 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		2C0123B5220F42A8004600BB /* AUEscenaContenedorRaiz.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C0123B3220F42A8004600BB /* AUEscenaContenedorRaiz.cpp */; };
+		2C0123B6220F42A8004600BB /* AUEscenaContenedorRaiz.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C0123B3220F42A8004600BB /* AUEscenaContenedorRaiz.cpp */; };
+		2C0199EF153B8DF000DC70F9 /* AURenderBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C0199EE153B8DF000DC70F9 /* AURenderBuffer.cpp */; };
+		2C0199F0153B8DF000DC70F9 /* AURenderBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C0199EE153B8DF000DC70F9 /* AURenderBuffer.cpp */; };
+		2C0264761523F63A0085CF06 /* AUEscenaSnd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C0264751523F63A0085CF06 /* AUEscenaSnd.cpp */; };
+		2C0264771523F63A0085CF06 /* AUEscenaSnd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C0264751523F63A0085CF06 /* AUEscenaSnd.cpp */; };
+		2C02EDC615DA9B4D00CCBBFA /* AUEscenaGeneradorParticulas.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C02EDC415DA9B4D00CCBBFA /* AUEscenaGeneradorParticulas.cpp */; };
+		2C02EDC715DA9B4D00CCBBFA /* AUEscenaGeneradorParticulas.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C02EDC415DA9B4D00CCBBFA /* AUEscenaGeneradorParticulas.cpp */; };
+		2C0BC1FF213DF7EA007783AD /* AUIDateBox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C0BC1FE213DF7EA007783AD /* AUIDateBox.cpp */; };
+		2C0BC201213DFD0D007783AD /* AUIDateBox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C0BC1FE213DF7EA007783AD /* AUIDateBox.cpp */; };
+		2C0BC204213E070B007783AD /* AUISelectBox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C0BC203213E070B007783AD /* AUISelectBox.cpp */; };
+		2C0BC205213E070B007783AD /* AUISelectBox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C0BC203213E070B007783AD /* AUISelectBox.cpp */; };
+		2C149850171CA917009B1AAB /* AUDialogo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C14984C171CA917009B1AAB /* AUDialogo.cpp */; };
+		2C149851171CA917009B1AAB /* AUDialogo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C14984C171CA917009B1AAB /* AUDialogo.cpp */; };
+		2C149854171CA917009B1AAB /* AUDialogoMutable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C14984E171CA917009B1AAB /* AUDialogoMutable.cpp */; };
+		2C149855171CA917009B1AAB /* AUDialogoMutable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C14984E171CA917009B1AAB /* AUDialogoMutable.cpp */; };
+		2C14985D171CA975009B1AAB /* NBGestorIdioma.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C149859171CA975009B1AAB /* NBGestorIdioma.cpp */; };
+		2C14985E171CA975009B1AAB /* NBGestorIdioma.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C149859171CA975009B1AAB /* NBGestorIdioma.cpp */; };
+		2C149863171CA9AA009B1AAB /* AUDiccionarioTextoMulti.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C149861171CA9AA009B1AAB /* AUDiccionarioTextoMulti.cpp */; };
+		2C149864171CA9AA009B1AAB /* AUDiccionarioTextoMulti.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C149861171CA9AA009B1AAB /* AUDiccionarioTextoMulti.cpp */; };
+		2C149874171CAD72009B1AAB /* AUFrameworkMediaStdAfx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C149870171CAD72009B1AAB /* AUFrameworkMediaStdAfx.cpp */; };
+		2C149875171CAD72009B1AAB /* AUFrameworkMediaStdAfx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C149870171CAD72009B1AAB /* AUFrameworkMediaStdAfx.cpp */; };
+		2C1498AB171CCE23009B1AAB /* NBGestorPersonajes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C1498A9171CCE23009B1AAB /* NBGestorPersonajes.cpp */; };
+		2C1498AC171CCE23009B1AAB /* NBGestorPersonajes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C1498A9171CCE23009B1AAB /* NBGestorPersonajes.cpp */; };
+		2C1714D1150A4B2E0093A1D2 /* NBGestorTouches.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C1714CF150A4B2E0093A1D2 /* NBGestorTouches.cpp */; };
+		2C1714D2150A4B2E0093A1D2 /* NBGestorTouches.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C1714CF150A4B2E0093A1D2 /* NBGestorTouches.cpp */; };
+		2C1BBA901901A2EA00FB9C06 /* AUFrameworkMediaRegistro.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C1BBA8F1901A2EA00FB9C06 /* AUFrameworkMediaRegistro.cpp */; };
+		2C1BBA911901A2EA00FB9C06 /* AUFrameworkMediaRegistro.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C1BBA8F1901A2EA00FB9C06 /* AUFrameworkMediaRegistro.cpp */; };
+		2C217AC214F405D300B3696B /* AUEscenaSonido.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C217AC114F405D300B3696B /* AUEscenaSonido.cpp */; };
+		2C217AC314F405D300B3696B /* AUEscenaSonido.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C217AC114F405D300B3696B /* AUEscenaSonido.cpp */; };
+		2C217ACD14F41BE300B3696B /* NBGestorSonidos.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C217ACC14F41BE300B3696B /* NBGestorSonidos.cpp */; };
+		2C217ACE14F41BE300B3696B /* NBGestorSonidos.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C217ACC14F41BE300B3696B /* NBGestorSonidos.cpp */; };
+		2C227637167CEC940007AB26 /* AUEscenaElectroRayo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C227635167CEC930007AB26 /* AUEscenaElectroRayo.cpp */; };
+		2C227638167CEC940007AB26 /* AUEscenaElectroRayo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C227635167CEC930007AB26 /* AUEscenaElectroRayo.cpp */; };
+		2C27104D163736A80051BA81 /* AUEscenaSonidoStreamMulti.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C27104B163736A80051BA81 /* AUEscenaSonidoStreamMulti.cpp */; };
+		2C27104E163736A80051BA81 /* AUEscenaSonidoStreamMulti.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C27104B163736A80051BA81 /* AUEscenaSonidoStreamMulti.cpp */; };
+		2C285FFC15B5C7F800DB84AB /* AUCargadorAnimaciones.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C285FFB15B5C7F800DB84AB /* AUCargadorAnimaciones.cpp */; };
+		2C285FFD15B5C7F800DB84AB /* AUCargadorAnimaciones.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C285FFB15B5C7F800DB84AB /* AUCargadorAnimaciones.cpp */; };
+		2C28600115B5CB0C00DB84AB /* AUCargadorCuerpos.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C285FFE15B5CB0C00DB84AB /* AUCargadorCuerpos.cpp */; };
+		2C28600215B5CB0C00DB84AB /* AUCargadorCuerpos.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C285FFE15B5CB0C00DB84AB /* AUCargadorCuerpos.cpp */; };
+		2C2B0100155AB5E000FD6D95 /* AUAnimadorObjetoEscena.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C2B00FF155AB5E000FD6D95 /* AUAnimadorObjetoEscena.cpp */; };
+		2C2B0101155AB5E000FD6D95 /* AUAnimadorObjetoEscena.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C2B00FF155AB5E000FD6D95 /* AUAnimadorObjetoEscena.cpp */; };
+		2C2E25A315B70E6F001E271F /* AUEscenaCuerpoMulti.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C2E25A115B70E6F001E271F /* AUEscenaCuerpoMulti.cpp */; };
+		2C2E25A415B70E6F001E271F /* AUEscenaCuerpoMulti.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C2E25A115B70E6F001E271F /* AUEscenaCuerpoMulti.cpp */; };
+		2C3066D221ADE6550098DF8A /* AUITextBox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C9F82111998881B002692CD /* AUITextBox.cpp */; };
+		2C3066D321ADE6550098DF8A /* AUITextBox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C9F82111998881B002692CD /* AUITextBox.cpp */; };
+		2C3066D621ADEEC30098DF8A /* AUEscenaTextoEditableOffscreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C3066D421ADEEC30098DF8A /* AUEscenaTextoEditableOffscreen.cpp */; };
+		2C3066D721ADEEC30098DF8A /* AUEscenaTextoEditableOffscreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C3066D421ADEEC30098DF8A /* AUEscenaTextoEditableOffscreen.cpp */; };
+		2C31966614FFFA9D00A5B0D3 /* AUEscenaSonidoStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C31966514FFFA9C00A5B0D3 /* AUEscenaSonidoStream.cpp */; };
+		2C31966714FFFA9D00A5B0D3 /* AUEscenaSonidoStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C31966514FFFA9C00A5B0D3 /* AUEscenaSonidoStream.cpp */; };
+		2C3516D4155C053700D38770 /* AUEscenaSpritePorcion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C3516D2155C053700D38770 /* AUEscenaSpritePorcion.cpp */; };
+		2C3516D5155C053700D38770 /* AUEscenaSpritePorcion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C3516D2155C053700D38770 /* AUEscenaSpritePorcion.cpp */; };
+		2C36A39915AB25D50031166D /* AUEscenaCuerda.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C36A38515AB25D50031166D /* AUEscenaCuerda.cpp */; };
+		2C36A39B15AB25D50031166D /* AUEscenaCuerpo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C36A38715AB25D50031166D /* AUEscenaCuerpo.cpp */; };
+		2C36A39D15AB25D50031166D /* AUEscenaMalla.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C36A38915AB25D50031166D /* AUEscenaMalla.cpp */; };
+		2C36A39F15AB25D50031166D /* AUEscenaMalla3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C36A38B15AB25D50031166D /* AUEscenaMalla3.cpp */; };
+		2C36A3A115AB25D50031166D /* AUEscenaMalla9.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C36A38D15AB25D50031166D /* AUEscenaMalla9.cpp */; };
+		2C36A3A315AB25D50031166D /* AUEscenaMalla9Patron.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C36A38F15AB25D50031166D /* AUEscenaMalla9Patron.cpp */; };
+		2C36A3A515AB25D50031166D /* AUEscenaMallaBezier.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C36A39115AB25D50031166D /* AUEscenaMallaBezier.cpp */; };
+		2C36A3A715AB25D50031166D /* AUEscenaMallaConHueso.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C36A39315AB25D50031166D /* AUEscenaMallaConHueso.cpp */; };
+		2C36A3A915AB25D50031166D /* AUEscenaMallaGelatina.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C36A39515AB25D50031166D /* AUEscenaMallaGelatina.cpp */; };
+		2C36A3AB15AB25D50031166D /* AUEscenaMallaXBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C36A39715AB25D50031166D /* AUEscenaMallaXBase.cpp */; };
+		2C36A3B115AB26630031166D /* NBGestorCuerpos.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C36A3AF15AB26630031166D /* NBGestorCuerpos.cpp */; };
+		2C36A3B215AB26630031166D /* NBGestorCuerpos.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C36A3AF15AB26630031166D /* NBGestorCuerpos.cpp */; };
+		2C36A3B515AB26D50031166D /* AUEscenaMalla.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C36A38915AB25D50031166D /* AUEscenaMalla.cpp */; };
+		2C36A3B615AB26D50031166D /* AUEscenaMallaGelatina.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C36A39515AB25D50031166D /* AUEscenaMallaGelatina.cpp */; };
+		2C36A3B715AB26D50031166D /* AUEscenaMallaConHueso.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C36A39315AB25D50031166D /* AUEscenaMallaConHueso.cpp */; };
+		2C36A3B815AB26D50031166D /* AUEscenaMallaBezier.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C36A39115AB25D50031166D /* AUEscenaMallaBezier.cpp */; };
+		2C36A3B915AB26D50031166D /* AUEscenaMallaXBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C36A39715AB25D50031166D /* AUEscenaMallaXBase.cpp */; };
+		2C36A3BA15AB26D50031166D /* AUEscenaMalla3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C36A38B15AB25D50031166D /* AUEscenaMalla3.cpp */; };
+		2C36A3BB15AB26D50031166D /* AUEscenaMalla9.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C36A38D15AB25D50031166D /* AUEscenaMalla9.cpp */; };
+		2C36A3BC15AB26D50031166D /* AUEscenaMalla9Patron.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C36A38F15AB25D50031166D /* AUEscenaMalla9Patron.cpp */; };
+		2C36A3C715AB27080031166D /* NBGestorFisica.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C36A3C515AB27080031166D /* NBGestorFisica.cpp */; };
+		2C36A3C815AB27080031166D /* NBGestorFisica.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C36A3C515AB27080031166D /* NBGestorFisica.cpp */; };
+		2C36A3D015AB273C0031166D /* AUSimuladorLiquidos.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C36A3CC15AB273B0031166D /* AUSimuladorLiquidos.cpp */; };
+		2C36A3D115AB273C0031166D /* AUSimuladorLiquidos.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C36A3CC15AB273B0031166D /* AUSimuladorLiquidos.cpp */; };
+		2C36A3E115AB2B6D0031166D /* NBSimuladorLiquidosMotor1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C36A3DC15AB2B6A0031166D /* NBSimuladorLiquidosMotor1.cpp */; };
+		2C36A3E215AB2B6D0031166D /* NBSimuladorLiquidosMotor1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C36A3DC15AB2B6A0031166D /* NBSimuladorLiquidosMotor1.cpp */; };
+		2C36A3E515AB2B6D0031166D /* NBSimuladorLiquidosMotor2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C36A3DE15AB2B6B0031166D /* NBSimuladorLiquidosMotor2.cpp */; };
+		2C36A3E615AB2B6D0031166D /* NBSimuladorLiquidosMotor2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C36A3DE15AB2B6B0031166D /* NBSimuladorLiquidosMotor2.cpp */; };
+		2C36A3EB15AB2CD80031166D /* AUEscenaCuerda.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C36A38515AB25D50031166D /* AUEscenaCuerda.cpp */; };
+		2C36A3EC15AB2CD80031166D /* AUEscenaCuerpo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C36A38715AB25D50031166D /* AUEscenaCuerpo.cpp */; };
+		2C3A86F62203618B000625D5 /* AUMngrFonts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C3A86F52203618B000625D5 /* AUMngrFonts.cpp */; };
+		2C3A86F72203618B000625D5 /* AUMngrFonts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C3A86F52203618B000625D5 /* AUMngrFonts.cpp */; };
+		2C3A86FB220375A8000625D5 /* NBMngrFonts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C3A86F82203619D000625D5 /* NBMngrFonts.cpp */; };
+		2C3A86FC220375A8000625D5 /* NBMngrFonts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C3A86F82203619D000625D5 /* NBMngrFonts.cpp */; };
+		2C3B292B15EED4C6008941FD /* AUEscenaSensor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C3B292915EED4C6008941FD /* AUEscenaSensor.cpp */; };
+		2C3B292C15EED4C6008941FD /* AUEscenaSensor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C3B292915EED4C6008941FD /* AUEscenaSensor.cpp */; };
+		2C42AC17167BD771003EEED7 /* AUEscenaGrupoParticulasFuego.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C42AC15167BD76F003EEED7 /* AUEscenaGrupoParticulasFuego.cpp */; };
+		2C42AC18167BD771003EEED7 /* AUEscenaGrupoParticulasFuego.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C42AC15167BD76F003EEED7 /* AUEscenaGrupoParticulasFuego.cpp */; };
+		2C512B2916F1067B0060E61D /* AUEscenaLaser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C512B2716F1067A0060E61D /* AUEscenaLaser.cpp */; };
+		2C512B2A16F1067B0060E61D /* AUEscenaLaser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C512B2716F1067A0060E61D /* AUEscenaLaser.cpp */; };
+		2C56CF1715D4154400177997 /* AUEscenaGrupoParticulas.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C56CF1515D4154400177997 /* AUEscenaGrupoParticulas.cpp */; };
+		2C56CF1815D4154400177997 /* AUEscenaGrupoParticulas.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C56CF1515D4154400177997 /* AUEscenaGrupoParticulas.cpp */; };
+		2C585C8C14FC1055007D7863 /* AUAnimadorSonidoVolumen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C585C8B14FC1055007D7863 /* AUAnimadorSonidoVolumen.cpp */; };
+		2C585C8D14FC1055007D7863 /* AUAnimadorSonidoVolumen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C585C8B14FC1055007D7863 /* AUAnimadorSonidoVolumen.cpp */; };
+		2C5E27E516C5E20800A40BFF /* NBSegmentadorFiguras.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C5E27E216C5E20800A40BFF /* NBSegmentadorFiguras.cpp */; };
+		2C5E27E616C5E20800A40BFF /* NBSegmentadorFiguras.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C5E27E216C5E20800A40BFF /* NBSegmentadorFiguras.cpp */; };
+		2C60A82D1C287557005C7C3E /* AUIButton.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C60A82C1C287557005C7C3E /* AUIButton.cpp */; };
+		2C60A82E1C287557005C7C3E /* AUIButton.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C60A82C1C287557005C7C3E /* AUIButton.cpp */; };
+		2C6AFC1815643E4D00AF5E0B /* AUEscenaSpriteMascara.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C6AFC1615643E4C00AF5E0B /* AUEscenaSpriteMascara.cpp */; };
+		2C6AFC1915643E4D00AF5E0B /* AUEscenaSpriteMascara.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C6AFC1615643E4C00AF5E0B /* AUEscenaSpriteMascara.cpp */; };
+		2C6B97F91B016E6F002635D0 /* AUEscenaContenedorLimitado.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C6B97F81B016E6F002635D0 /* AUEscenaContenedorLimitado.cpp */; };
+		2C6B97FA1B016E6F002635D0 /* AUEscenaContenedorLimitado.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C6B97F81B016E6F002635D0 /* AUEscenaContenedorLimitado.cpp */; };
+		2C725A1215FA602D00A5FC62 /* AUAnimadorSonido.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C725A1015FA602C00A5FC62 /* AUAnimadorSonido.cpp */; };
+		2C725A1315FA602D00A5FC62 /* AUAnimadorSonido.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C725A1015FA602C00A5FC62 /* AUAnimadorSonido.cpp */; };
+		2C7305F0167F8CC100E50226 /* AUEscenaLuzSensor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C7305EE167F8CC100E50226 /* AUEscenaLuzSensor.cpp */; };
+		2C7305F1167F8CC100E50226 /* AUEscenaLuzSensor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C7305EE167F8CC100E50226 /* AUEscenaLuzSensor.cpp */; };
+		2C83103315B0813E0024F95C /* AUEscenaIluminacion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C83103115B0813E0024F95C /* AUEscenaIluminacion.cpp */; };
+		2C83103415B0813E0024F95C /* AUEscenaIluminacion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C83103115B0813E0024F95C /* AUEscenaIluminacion.cpp */; };
+		2C8D72FB1AE9E316009DDCCF /* AUEscenaSpriteElastico.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C8D72FA1AE9E316009DDCCF /* AUEscenaSpriteElastico.cpp */; };
+		2C8D72FC1AE9E316009DDCCF /* AUEscenaSpriteElastico.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C8D72FA1AE9E316009DDCCF /* AUEscenaSpriteElastico.cpp */; };
+		2C8F1F221484376400959542 /* AUEscenaLuzRadial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C8F1F201484376300959542 /* AUEscenaLuzRadial.cpp */; };
+		2C8F1F231484376400959542 /* AUEscenaLuzRadial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C8F1F201484376300959542 /* AUEscenaLuzRadial.cpp */; };
+		2C9F820D19987A15002692CD /* NBGestorTeclas.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C9F820C19987A15002692CD /* NBGestorTeclas.cpp */; };
+		2C9F820E19987A15002692CD /* NBGestorTeclas.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C9F820C19987A15002692CD /* NBGestorTeclas.cpp */; };
+		2CA438601DBD763C008426D1 /* AUEscenaSpriteWithLoader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CA4385F1DBD763C008426D1 /* AUEscenaSpriteWithLoader.cpp */; };
+		2CA438621DBD9DE4008426D1 /* AUEscenaSpriteWithLoader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CA4385F1DBD763C008426D1 /* AUEscenaSpriteWithLoader.cpp */; };
+		2CB066E01698D5BF00F42D19 /* AUEscenaRuta.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CB066DE1698D5BF00F42D19 /* AUEscenaRuta.cpp */; };
+		2CB066E11698D5BF00F42D19 /* AUEscenaRuta.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CB066DE1698D5BF00F42D19 /* AUEscenaRuta.cpp */; };
+		2CB066E71698DA8600F42D19 /* AUEscenaRutaAnimador.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CB066E51698DA8600F42D19 /* AUEscenaRutaAnimador.cpp */; };
+		2CB066E81698DA8600F42D19 /* AUEscenaRutaAnimador.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CB066E51698DA8600F42D19 /* AUEscenaRutaAnimador.cpp */; };
+		2CB23DE81A55CA3D00D08A16 /* AUFuenteRaster.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CB23DE71A55CA3D00D08A16 /* AUFuenteRaster.cpp */; };
+		2CB23DE91A55CA3D00D08A16 /* AUFuenteRaster.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CB23DE71A55CA3D00D08A16 /* AUFuenteRaster.cpp */; };
+		2CB23DEE1A56FBD200D08A16 /* AUFuenteRender.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CB23DED1A56FBD200D08A16 /* AUFuenteRender.cpp */; };
+		2CB23DEF1A56FBD200D08A16 /* AUFuenteRender.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CB23DED1A56FBD200D08A16 /* AUFuenteRender.cpp */; };
+		2CB4C1FB2156DCBF007BF314 /* AUFuenteVisualModel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CB4C1F92156DCBE007BF314 /* AUFuenteVisualModel.cpp */; };
+		2CB4C1FC2156DCBF007BF314 /* AUFuenteVisualModel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CB4C1F92156DCBE007BF314 /* AUFuenteVisualModel.cpp */; };
+		2CBA88A116779860000C2831 /* AUEscenaLuzSombra.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CBA889F16779860000C2831 /* AUEscenaLuzSombra.cpp */; };
+		2CBA88A216779860000C2831 /* AUEscenaLuzSombra.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CBA889F16779860000C2831 /* AUEscenaLuzSombra.cpp */; };
+		2CBE082221A37BB1002B86EF /* AUEscenaTextoEditable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CBE082121A37BB1002B86EF /* AUEscenaTextoEditable.cpp */; };
+		2CBE082321A37BB1002B86EF /* AUEscenaTextoEditable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CBE082121A37BB1002B86EF /* AUEscenaTextoEditable.cpp */; };
+		2CBFABC915B5CFAB0089361B /* AUEscenaAnimacionI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CBFABC715B5CFAB0089361B /* AUEscenaAnimacionI.cpp */; };
+		2CBFABCA15B5CFAB0089361B /* AUEscenaAnimacionI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CBFABC715B5CFAB0089361B /* AUEscenaAnimacionI.cpp */; };
+		2CBFABD015B5D1920089361B /* AUEscenaCuerpoI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CBFABCE15B5D1920089361B /* AUEscenaCuerpoI.cpp */; };
+		2CBFABD115B5D1920089361B /* AUEscenaCuerpoI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CBFABCE15B5D1920089361B /* AUEscenaCuerpoI.cpp */; };
+		2CCDE0621C5A8BFA00284EB2 /* AUParticlesGenerator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CCDE0611C5A8BFA00284EB2 /* AUParticlesGenerator.cpp */; };
+		2CCDE0631C5A8BFA00284EB2 /* AUParticlesGenerator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CCDE0611C5A8BFA00284EB2 /* AUParticlesGenerator.cpp */; };
+		2CCE394815AC96FA005EFD49 /* AUEscenaPolea.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CCE394715AC96FA005EFD49 /* AUEscenaPolea.cpp */; };
+		2CCE394915AC96FA005EFD49 /* AUEscenaPolea.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CCE394715AC96FA005EFD49 /* AUEscenaPolea.cpp */; };
+		2CD0132121D6AAD100212030 /* AUEscenaCol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CD0132021D6AAD100212030 /* AUEscenaCol.cpp */; };
+		2CD0132221D6AAD100212030 /* AUEscenaCol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CD0132021D6AAD100212030 /* AUEscenaCol.cpp */; };
+		2CD0132521D6AB1000212030 /* AUEscenaCols.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CD0132421D6AB1000212030 /* AUEscenaCols.cpp */; };
+		2CD0132621D6AB1000212030 /* AUEscenaCols.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CD0132421D6AB1000212030 /* AUEscenaCols.cpp */; };
+		2CD088571C3AC3AB004648E6 /* AUEscenaPanel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CD088561C3AC3AB004648E6 /* AUEscenaPanel.cpp */; };
+		2CD088581C3AC3AB004648E6 /* AUEscenaPanel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CD088561C3AC3AB004648E6 /* AUEscenaPanel.cpp */; };
+		2CD2424516486A7B00AEF0DC /* AUEscenaFiltro.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CD2424316486A7700AEF0DC /* AUEscenaFiltro.cpp */; };
+		2CD2424616486A7B00AEF0DC /* AUEscenaFiltro.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CD2424316486A7700AEF0DC /* AUEscenaFiltro.cpp */; };
+		2CDE24EA221B4F1B00AA2D5A /* AUTextoFiltroLimitado.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CDE24E8221B4F1B00AA2D5A /* AUTextoFiltroLimitado.cpp */; };
+		2CDE24EB221B4F1B00AA2D5A /* AUTextoFiltroLimitado.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CDE24E8221B4F1B00AA2D5A /* AUTextoFiltroLimitado.cpp */; };
+		2CDE24EE221B51F100AA2D5A /* AUTextoFiltro.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CDE24EC221B51F100AA2D5A /* AUTextoFiltro.cpp */; };
+		2CDE24EF221B51F100AA2D5A /* AUTextoFiltro.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CDE24EC221B51F100AA2D5A /* AUTextoFiltro.cpp */; };
+		2CDE24F2221B9E2E00AA2D5A /* AUEscenaPanelTexto.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CDE24F1221B9E2E00AA2D5A /* AUEscenaPanelTexto.cpp */; };
+		2CDE24F3221B9E2E00AA2D5A /* AUEscenaPanelTexto.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CDE24F1221B9E2E00AA2D5A /* AUEscenaPanelTexto.cpp */; };
+		2CDE24F6221BB1A000AA2D5A /* AUIMsgBox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CDE24F4221BB1A000AA2D5A /* AUIMsgBox.cpp */; };
+		2CDE24F7221BB1A000AA2D5A /* AUIMsgBox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CDE24F4221BB1A000AA2D5A /* AUIMsgBox.cpp */; };
+		2CDE7A8A16AE273B00B045A1 /* AUEscenaGrupoParticulasLinea.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CDE7A8816AE273B00B045A1 /* AUEscenaGrupoParticulasLinea.cpp */; };
+		2CDE7A8B16AE273B00B045A1 /* AUEscenaGrupoParticulasLinea.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CDE7A8816AE273B00B045A1 /* AUEscenaGrupoParticulasLinea.cpp */; };
+		2CDFC229145397B4007697E7 /* NBGestorEscena.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CDFC228145397B4007697E7 /* NBGestorEscena.cpp */; };
+		2CDFC22A145397B4007697E7 /* NBGestorEscena.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CDFC228145397B4007697E7 /* NBGestorEscena.cpp */; };
+		2CE40036167638700041FF16 /* AUEscenaLuzEspejo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CE40034167638700041FF16 /* AUEscenaLuzEspejo.cpp */; };
+		2CE40037167638700041FF16 /* AUEscenaLuzEspejo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CE40034167638700041FF16 /* AUEscenaLuzEspejo.cpp */; };
+		2CE4AC2316EE3E0D000568AB /* AUEscenaPuasLinea.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CE4AC2116EE3E0D000568AB /* AUEscenaPuasLinea.cpp */; };
+		2CE4AC2416EE3E0D000568AB /* AUEscenaPuasLinea.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CE4AC2116EE3E0D000568AB /* AUEscenaPuasLinea.cpp */; };
+		2CE4AC2C16EE4D46000568AB /* AUEscenaPuasLineaAnimSinc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CE4AC2A16EE4D45000568AB /* AUEscenaPuasLineaAnimSinc.cpp */; };
+		2CE4AC2D16EE4D46000568AB /* AUEscenaPuasLineaAnimSinc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CE4AC2A16EE4D45000568AB /* AUEscenaPuasLineaAnimSinc.cpp */; };
+		2CE4AC3816EE63D7000568AB /* AUEscenaPuasLineaAnimIndiv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CE4AC3616EE63D6000568AB /* AUEscenaPuasLineaAnimIndiv.cpp */; };
+		2CE4AC3916EE63D7000568AB /* AUEscenaPuasLineaAnimIndiv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CE4AC3616EE63D6000568AB /* AUEscenaPuasLineaAnimIndiv.cpp */; };
+		2CEA8B1A1683BA8E006B378E /* AULaser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CEA8B181683BA83006B378E /* AULaser.cpp */; };
+		2CEA8B1B1683BA8E006B378E /* AULaser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CEA8B181683BA83006B378E /* AULaser.cpp */; };
+		2CF3529615F7BA2500593A19 /* AUAnimadorContenedor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CF3529415F7BA2500593A19 /* AUAnimadorContenedor.cpp */; };
+		2CF3529715F7BA2500593A19 /* AUAnimadorContenedor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CF3529415F7BA2500593A19 /* AUAnimadorContenedor.cpp */; };
+		2CF3529D15F7C15700593A19 /* AUAnimadorAnimacion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CF3529B15F7C15700593A19 /* AUAnimadorAnimacion.cpp */; };
+		2CF3529E15F7C15700593A19 /* AUAnimadorAnimacion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CF3529B15F7C15700593A19 /* AUAnimadorAnimacion.cpp */; };
+		2CF51299168256780030963A /* AUBateria.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CF5128D168256780030963A /* AUBateria.cpp */; };
+		2CF5129A168256780030963A /* AUBateria.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CF5128D168256780030963A /* AUBateria.cpp */; };
+		2CF5129D168256780030963A /* AUBombillo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CF5128F168256780030963A /* AUBombillo.cpp */; };
+		2CF5129E168256780030963A /* AUBombillo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CF5128F168256780030963A /* AUBombillo.cpp */; };
+		2CF512A1168256780030963A /* AUElectronodo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CF51291168256780030963A /* AUElectronodo.cpp */; };
+		2CF512A2168256780030963A /* AUElectronodo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CF51291168256780030963A /* AUElectronodo.cpp */; };
+		2CF512A5168256780030963A /* AULanzallamas.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CF51293168256780030963A /* AULanzallamas.cpp */; };
+		2CF512A6168256780030963A /* AULanzallamas.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CF51293168256780030963A /* AULanzallamas.cpp */; };
+		2CF512A9168256780030963A /* AUNodoElectroCarga.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CF51295168256780030963A /* AUNodoElectroCarga.cpp */; };
+		2CF512AA168256780030963A /* AUNodoElectroCarga.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CF51295168256780030963A /* AUNodoElectroCarga.cpp */; };
+		2CF512AD168256780030963A /* AUPanelSolar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CF51297168256780030963A /* AUPanelSolar.cpp */; };
+		2CF512AE168256780030963A /* AUPanelSolar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CF51297168256780030963A /* AUPanelSolar.cpp */; };
+		2CFCB7CF1485BC10001FF423 /* AUEscenaFiguraTransformable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CFCB7CD1485BC0E001FF423 /* AUEscenaFiguraTransformable.cpp */; };
+		2CFCB7D01485BC10001FF423 /* AUEscenaFiguraTransformable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CFCB7CD1485BC0E001FF423 /* AUEscenaFiguraTransformable.cpp */; };
+		2CFF503A1942234600D44E24 /* actualizarTodos.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CFF50391942234600D44E24 /* actualizarTodos.cpp */; };
+		B301F7281465A958006A414B /* AUEscenaFigura.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B301F7261465A957006A414B /* AUEscenaFigura.cpp */; };
+		B301F7291465A958006A414B /* AUEscenaFigura.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B301F7261465A957006A414B /* AUEscenaFigura.cpp */; };
+		B308DF24146C1AD000002D00 /* AUFuenteTextura.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B308DF23146C1AD000002D00 /* AUFuenteTextura.cpp */; };
+		B308DF25146C1AD000002D00 /* AUFuenteTextura.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B308DF23146C1AD000002D00 /* AUFuenteTextura.cpp */; };
+		B308DF2A146C4DBA00002D00 /* AUEscenaTexto.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B308DF29146C4DBA00002D00 /* AUEscenaTexto.cpp */; };
+		B308DF2B146C4DBA00002D00 /* AUEscenaTexto.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B308DF29146C4DBA00002D00 /* AUEscenaTexto.cpp */; };
+		B30CDA8D14958962005165B7 /* AUEscenaAnimacion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B30CDA8C14958962005165B7 /* AUEscenaAnimacion.cpp */; };
+		B30CDA8E14958962005165B7 /* AUEscenaAnimacion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B30CDA8C14958962005165B7 /* AUEscenaAnimacion.cpp */; };
+		B32D83741442B37A003CC40B /* NBGestorGL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B345A79E1442171600A297BC /* NBGestorGL.cpp */; };
+		B32D83751442B37A003CC40B /* NBGestorTexturas.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B3A10D12142C15F10070BFCA /* NBGestorTexturas.cpp */; };
+		B32D83761442B37A003CC40B /* NBGestorAnimaciones.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B3A10D09142C15F10070BFCA /* NBGestorAnimaciones.cpp */; };
+		B32D83791442B37A003CC40B /* AUEscenaObjeto.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B3A10CBB142C15EF0070BFCA /* AUEscenaObjeto.cpp */; };
+		B32D837A1442B37A003CC40B /* AUEscenaContenedor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B3A10CB7142C15EF0070BFCA /* AUEscenaContenedor.cpp */; };
+		B32D837B1442B37A003CC40B /* AUEscenaSprite.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B3A10CBD142C15EF0070BFCA /* AUEscenaSprite.cpp */; };
+		B32D837C1442B37A003CC40B /* AUTextura.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B3A10CFE142C15F10070BFCA /* AUTextura.cpp */; };
+		B345A7A01442171600A297BC /* NBGestorGL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B345A79E1442171600A297BC /* NBGestorGL.cpp */; };
+		B3A10D3C142C15F20070BFCA /* AUEscenaContenedor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B3A10CB7142C15EF0070BFCA /* AUEscenaContenedor.cpp */; };
+		B3A10D40142C15F20070BFCA /* AUEscenaObjeto.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B3A10CBB142C15EF0070BFCA /* AUEscenaObjeto.cpp */; };
+		B3A10D42142C15F20070BFCA /* AUEscenaSprite.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B3A10CBD142C15EF0070BFCA /* AUEscenaSprite.cpp */; };
+		B3A10D80142C15F20070BFCA /* AUTextura.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B3A10CFE142C15F10070BFCA /* AUTextura.cpp */; };
+		B3A10D8A142C15F20070BFCA /* NBGestorAnimaciones.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B3A10D09142C15F10070BFCA /* NBGestorAnimaciones.cpp */; };
+		B3A10D93142C15F20070BFCA /* NBGestorTexturas.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B3A10D12142C15F10070BFCA /* NBGestorTexturas.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		2C0123B3220F42A8004600BB /* AUEscenaContenedorRaiz.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaContenedorRaiz.cpp; path = ../../../src/cpp/AUEscenaContenedorRaiz.cpp; sourceTree = SOURCE_ROOT; };
+		2C0123B4220F42A8004600BB /* AUEscenaContenedorRaiz.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaContenedorRaiz.h; path = ../../../include/AUEscenaContenedorRaiz.h; sourceTree = SOURCE_ROOT; };
+		2C0123B7220F4E70004600BB /* AUEscenaTopItf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaTopItf.h; path = ../../../include/AUEscenaTopItf.h; sourceTree = "<group>"; };
+		2C0123BC2210756D004600BB /* AUEscenaTopItfDefs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AUEscenaTopItfDefs.h; path = ../../../include/AUEscenaTopItfDefs.h; sourceTree = "<group>"; };
+		2C0199EA153B8DD300DC70F9 /* AURenderBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AURenderBuffer.h; path = ../../../include/AURenderBuffer.h; sourceTree = SOURCE_ROOT; };
+		2C0199EE153B8DF000DC70F9 /* AURenderBuffer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AURenderBuffer.cpp; path = ../../../src/cpp/AURenderBuffer.cpp; sourceTree = SOURCE_ROOT; };
+		2C0264711523F62E0085CF06 /* AUEscenaSnd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaSnd.h; path = ../../../include/AUEscenaSnd.h; sourceTree = SOURCE_ROOT; };
+		2C0264751523F63A0085CF06 /* AUEscenaSnd.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaSnd.cpp; path = ../../../src/cpp/AUEscenaSnd.cpp; sourceTree = SOURCE_ROOT; };
+		2C02EDC415DA9B4D00CCBBFA /* AUEscenaGeneradorParticulas.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaGeneradorParticulas.cpp; path = ../../../src/cpp/AUEscenaGeneradorParticulas.cpp; sourceTree = SOURCE_ROOT; };
+		2C02EDC515DA9B4D00CCBBFA /* AUEscenaGeneradorParticulas.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaGeneradorParticulas.h; path = ../../../include/AUEscenaGeneradorParticulas.h; sourceTree = SOURCE_ROOT; };
+		2C03B33A1919541500AC54C4 /* AUFrameworkMediaRegistro.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUFrameworkMediaRegistro.h; path = ../../../include/AUFrameworkMediaRegistro.h; sourceTree = SOURCE_ROOT; };
+		2C0BC1FE213DF7EA007783AD /* AUIDateBox.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = AUIDateBox.cpp; path = ../../../src/cpp/AUIDateBox.cpp; sourceTree = "<group>"; };
+		2C0BC200213DF804007783AD /* AUIDateBox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AUIDateBox.h; path = ../../../include/AUIDateBox.h; sourceTree = "<group>"; };
+		2C0BC202213E06F0007783AD /* AUISelectBox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AUISelectBox.h; path = ../../../include/AUISelectBox.h; sourceTree = "<group>"; };
+		2C0BC203213E070B007783AD /* AUISelectBox.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = AUISelectBox.cpp; path = ../../../src/cpp/AUISelectBox.cpp; sourceTree = "<group>"; };
+		2C14984C171CA917009B1AAB /* AUDialogo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUDialogo.cpp; path = ../../../src/cpp/AUDialogo.cpp; sourceTree = SOURCE_ROOT; };
+		2C14984D171CA917009B1AAB /* AUDialogo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUDialogo.h; path = ../../../include/AUDialogo.h; sourceTree = SOURCE_ROOT; };
+		2C14984E171CA917009B1AAB /* AUDialogoMutable.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUDialogoMutable.cpp; path = ../../../src/cpp/AUDialogoMutable.cpp; sourceTree = SOURCE_ROOT; };
+		2C14984F171CA917009B1AAB /* AUDialogoMutable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUDialogoMutable.h; path = ../../../include/AUDialogoMutable.h; sourceTree = SOURCE_ROOT; };
+		2C149858171CA975009B1AAB /* NBGestorIdiomaDef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NBGestorIdiomaDef.h; path = ../../../include/NBGestorIdiomaDef.h; sourceTree = SOURCE_ROOT; };
+		2C149859171CA975009B1AAB /* NBGestorIdioma.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NBGestorIdioma.cpp; path = ../../../src/cpp/NBGestorIdioma.cpp; sourceTree = SOURCE_ROOT; };
+		2C14985A171CA975009B1AAB /* NBGestorIdioma.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NBGestorIdioma.h; path = ../../../include/NBGestorIdioma.h; sourceTree = SOURCE_ROOT; };
+		2C149861171CA9AA009B1AAB /* AUDiccionarioTextoMulti.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUDiccionarioTextoMulti.cpp; path = ../../../src/cpp/AUDiccionarioTextoMulti.cpp; sourceTree = SOURCE_ROOT; };
+		2C149862171CA9AA009B1AAB /* AUDiccionarioTextoMulti.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUDiccionarioTextoMulti.h; path = ../../../include/AUDiccionarioTextoMulti.h; sourceTree = SOURCE_ROOT; };
+		2C149870171CAD72009B1AAB /* AUFrameworkMediaStdAfx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUFrameworkMediaStdAfx.cpp; path = ../../../src/cpp/AUFrameworkMediaStdAfx.cpp; sourceTree = SOURCE_ROOT; };
+		2C149871171CAD72009B1AAB /* AUFrameworkMediaStdAfx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUFrameworkMediaStdAfx.h; path = ../../../include/AUFrameworkMediaStdAfx.h; sourceTree = SOURCE_ROOT; };
+		2C149872171CAD72009B1AAB /* AUFrameworkMedia.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUFrameworkMedia.h; path = ../../../include/AUFrameworkMedia.h; sourceTree = SOURCE_ROOT; };
+		2C14987C171CADBB009B1AAB /* AUFrameworkMediaDefiniciones.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUFrameworkMediaDefiniciones.h; path = ../../../include/AUFrameworkMediaDefiniciones.h; sourceTree = SOURCE_ROOT; };
+		2C1498A9171CCE23009B1AAB /* NBGestorPersonajes.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NBGestorPersonajes.cpp; path = ../../../src/cpp/NBGestorPersonajes.cpp; sourceTree = SOURCE_ROOT; };
+		2C1498AA171CCE23009B1AAB /* NBGestorPersonajes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NBGestorPersonajes.h; path = ../../../include/NBGestorPersonajes.h; sourceTree = SOURCE_ROOT; };
+		2C1714CF150A4B2E0093A1D2 /* NBGestorTouches.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NBGestorTouches.cpp; path = ../../../src/cpp/NBGestorTouches.cpp; sourceTree = SOURCE_ROOT; };
+		2C1714D0150A4B2E0093A1D2 /* NBGestorTouches.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NBGestorTouches.h; path = ../../../include/NBGestorTouches.h; sourceTree = SOURCE_ROOT; };
+		2C1BBA8F1901A2EA00FB9C06 /* AUFrameworkMediaRegistro.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUFrameworkMediaRegistro.cpp; path = ../../../src/cpp/AUFrameworkMediaRegistro.cpp; sourceTree = SOURCE_ROOT; };
+		2C217ABE14F405C300B3696B /* AUEscenaSonido.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaSonido.h; path = ../../../include/AUEscenaSonido.h; sourceTree = SOURCE_ROOT; };
+		2C217AC114F405D300B3696B /* AUEscenaSonido.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaSonido.cpp; path = ../../../src/cpp/AUEscenaSonido.cpp; sourceTree = SOURCE_ROOT; };
+		2C217AC914F41BDA00B3696B /* NBGestorSonidos.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NBGestorSonidos.h; path = ../../../include/NBGestorSonidos.h; sourceTree = SOURCE_ROOT; };
+		2C217ACC14F41BE300B3696B /* NBGestorSonidos.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NBGestorSonidos.cpp; path = ../../../src/cpp/NBGestorSonidos.cpp; sourceTree = SOURCE_ROOT; };
+		2C227635167CEC930007AB26 /* AUEscenaElectroRayo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaElectroRayo.cpp; path = ../../../src/cpp/AUEscenaElectroRayo.cpp; sourceTree = SOURCE_ROOT; };
+		2C227636167CEC930007AB26 /* AUEscenaElectroRayo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaElectroRayo.h; path = ../../../include/AUEscenaElectroRayo.h; sourceTree = SOURCE_ROOT; };
+		2C27104B163736A80051BA81 /* AUEscenaSonidoStreamMulti.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaSonidoStreamMulti.cpp; path = ../../../src/cpp/AUEscenaSonidoStreamMulti.cpp; sourceTree = SOURCE_ROOT; };
+		2C27104C163736A80051BA81 /* AUEscenaSonidoStreamMulti.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaSonidoStreamMulti.h; path = ../../../include/AUEscenaSonidoStreamMulti.h; sourceTree = SOURCE_ROOT; };
+		2C285FEF15B5C78E00DB84AB /* AUCargadorAnimacionesI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUCargadorAnimacionesI.h; path = ../../../include/AUCargadorAnimacionesI.h; sourceTree = SOURCE_ROOT; };
+		2C285FF415B5C7C400DB84AB /* AUCargadorAnimaciones.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUCargadorAnimaciones.h; path = ../../../include/AUCargadorAnimaciones.h; sourceTree = SOURCE_ROOT; };
+		2C285FFB15B5C7F800DB84AB /* AUCargadorAnimaciones.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUCargadorAnimaciones.cpp; path = ../../../src/cpp/AUCargadorAnimaciones.cpp; sourceTree = SOURCE_ROOT; };
+		2C285FFE15B5CB0C00DB84AB /* AUCargadorCuerpos.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUCargadorCuerpos.cpp; path = ../../../src/cpp/AUCargadorCuerpos.cpp; sourceTree = SOURCE_ROOT; };
+		2C285FFF15B5CB0C00DB84AB /* AUCargadorCuerpos.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUCargadorCuerpos.h; path = ../../../include/AUCargadorCuerpos.h; sourceTree = SOURCE_ROOT; };
+		2C28600015B5CB0C00DB84AB /* AUCargadorCuerposI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUCargadorCuerposI.h; path = ../../../include/AUCargadorCuerposI.h; sourceTree = SOURCE_ROOT; };
+		2C2B00FB155AB5D200FD6D95 /* AUAnimadorObjetoEscena.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUAnimadorObjetoEscena.h; path = ../../../include/AUAnimadorObjetoEscena.h; sourceTree = SOURCE_ROOT; };
+		2C2B00FF155AB5E000FD6D95 /* AUAnimadorObjetoEscena.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUAnimadorObjetoEscena.cpp; path = ../../../src/cpp/AUAnimadorObjetoEscena.cpp; sourceTree = SOURCE_ROOT; };
+		2C2E25A115B70E6F001E271F /* AUEscenaCuerpoMulti.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaCuerpoMulti.cpp; path = ../../../src/cpp/AUEscenaCuerpoMulti.cpp; sourceTree = SOURCE_ROOT; };
+		2C2E25A215B70E6F001E271F /* AUEscenaCuerpoMulti.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaCuerpoMulti.h; path = ../../../include/AUEscenaCuerpoMulti.h; sourceTree = SOURCE_ROOT; };
+		2C2E98AE149A9D3600583F42 /* NBPropiedadesFijacion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NBPropiedadesFijacion.h; path = ../../../include/NBPropiedadesFijacion.h; sourceTree = SOURCE_ROOT; };
+		2C30502A15556EFB00960074 /* NBFuenteSombra.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NBFuenteSombra.h; path = ../../../include/NBFuenteSombra.h; sourceTree = SOURCE_ROOT; };
+		2C3066D421ADEEC30098DF8A /* AUEscenaTextoEditableOffscreen.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaTextoEditableOffscreen.cpp; path = ../../../src/cpp/AUEscenaTextoEditableOffscreen.cpp; sourceTree = "<group>"; };
+		2C3066D521ADEEC30098DF8A /* AUEscenaTextoEditableOffscreen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaTextoEditableOffscreen.h; path = ../../../include/AUEscenaTextoEditableOffscreen.h; sourceTree = "<group>"; };
+		2C31966214FFFA9300A5B0D3 /* AUEscenaSonidoStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaSonidoStream.h; path = ../../../include/AUEscenaSonidoStream.h; sourceTree = SOURCE_ROOT; };
+		2C31966514FFFA9C00A5B0D3 /* AUEscenaSonidoStream.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaSonidoStream.cpp; path = ../../../src/cpp/AUEscenaSonidoStream.cpp; sourceTree = SOURCE_ROOT; };
+		2C3516D2155C053700D38770 /* AUEscenaSpritePorcion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaSpritePorcion.cpp; path = ../../../src/cpp/AUEscenaSpritePorcion.cpp; sourceTree = SOURCE_ROOT; };
+		2C3516D3155C053700D38770 /* AUEscenaSpritePorcion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaSpritePorcion.h; path = ../../../include/AUEscenaSpritePorcion.h; sourceTree = SOURCE_ROOT; };
+		2C36A38515AB25D50031166D /* AUEscenaCuerda.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaCuerda.cpp; path = ../../../src/cpp/AUEscenaCuerda.cpp; sourceTree = SOURCE_ROOT; };
+		2C36A38615AB25D50031166D /* AUEscenaCuerda.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaCuerda.h; path = ../../../include/AUEscenaCuerda.h; sourceTree = SOURCE_ROOT; };
+		2C36A38715AB25D50031166D /* AUEscenaCuerpo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaCuerpo.cpp; path = ../../../src/cpp/AUEscenaCuerpo.cpp; sourceTree = SOURCE_ROOT; };
+		2C36A38815AB25D50031166D /* AUEscenaCuerpo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaCuerpo.h; path = ../../../include/AUEscenaCuerpo.h; sourceTree = SOURCE_ROOT; };
+		2C36A38915AB25D50031166D /* AUEscenaMalla.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaMalla.cpp; path = ../../../src/cpp/AUEscenaMalla.cpp; sourceTree = SOURCE_ROOT; };
+		2C36A38A15AB25D50031166D /* AUEscenaMalla.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaMalla.h; path = ../../../include/AUEscenaMalla.h; sourceTree = SOURCE_ROOT; };
+		2C36A38B15AB25D50031166D /* AUEscenaMalla3.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaMalla3.cpp; path = ../../../src/cpp/AUEscenaMalla3.cpp; sourceTree = SOURCE_ROOT; };
+		2C36A38C15AB25D50031166D /* AUEscenaMalla3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaMalla3.h; path = ../../../include/AUEscenaMalla3.h; sourceTree = SOURCE_ROOT; };
+		2C36A38D15AB25D50031166D /* AUEscenaMalla9.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaMalla9.cpp; path = ../../../src/cpp/AUEscenaMalla9.cpp; sourceTree = SOURCE_ROOT; };
+		2C36A38E15AB25D50031166D /* AUEscenaMalla9.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaMalla9.h; path = ../../../include/AUEscenaMalla9.h; sourceTree = SOURCE_ROOT; };
+		2C36A38F15AB25D50031166D /* AUEscenaMalla9Patron.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaMalla9Patron.cpp; path = ../../../src/cpp/AUEscenaMalla9Patron.cpp; sourceTree = SOURCE_ROOT; };
+		2C36A39015AB25D50031166D /* AUEscenaMalla9Patron.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaMalla9Patron.h; path = ../../../include/AUEscenaMalla9Patron.h; sourceTree = SOURCE_ROOT; };
+		2C36A39115AB25D50031166D /* AUEscenaMallaBezier.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaMallaBezier.cpp; path = ../../../src/cpp/AUEscenaMallaBezier.cpp; sourceTree = SOURCE_ROOT; };
+		2C36A39215AB25D50031166D /* AUEscenaMallaBezier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaMallaBezier.h; path = ../../../include/AUEscenaMallaBezier.h; sourceTree = SOURCE_ROOT; };
+		2C36A39315AB25D50031166D /* AUEscenaMallaConHueso.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaMallaConHueso.cpp; path = ../../../src/cpp/AUEscenaMallaConHueso.cpp; sourceTree = SOURCE_ROOT; };
+		2C36A39415AB25D50031166D /* AUEscenaMallaConHueso.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaMallaConHueso.h; path = ../../../include/AUEscenaMallaConHueso.h; sourceTree = SOURCE_ROOT; };
+		2C36A39515AB25D50031166D /* AUEscenaMallaGelatina.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaMallaGelatina.cpp; path = ../../../src/cpp/AUEscenaMallaGelatina.cpp; sourceTree = SOURCE_ROOT; };
+		2C36A39615AB25D50031166D /* AUEscenaMallaGelatina.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaMallaGelatina.h; path = ../../../include/AUEscenaMallaGelatina.h; sourceTree = SOURCE_ROOT; };
+		2C36A39715AB25D50031166D /* AUEscenaMallaXBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaMallaXBase.cpp; path = ../../../src/cpp/AUEscenaMallaXBase.cpp; sourceTree = SOURCE_ROOT; };
+		2C36A39815AB25D50031166D /* AUEscenaMallaXBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaMallaXBase.h; path = ../../../include/AUEscenaMallaXBase.h; sourceTree = SOURCE_ROOT; };
+		2C36A3AF15AB26630031166D /* NBGestorCuerpos.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NBGestorCuerpos.cpp; path = ../../../src/cpp/NBGestorCuerpos.cpp; sourceTree = SOURCE_ROOT; };
+		2C36A3B015AB26630031166D /* NBGestorCuerpos.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NBGestorCuerpos.h; path = ../../../include/NBGestorCuerpos.h; sourceTree = SOURCE_ROOT; };
+		2C36A3C515AB27080031166D /* NBGestorFisica.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NBGestorFisica.cpp; path = ../../../src/cpp/NBGestorFisica.cpp; sourceTree = SOURCE_ROOT; };
+		2C36A3C615AB27080031166D /* NBGestorFisica.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NBGestorFisica.h; path = ../../../include/NBGestorFisica.h; sourceTree = SOURCE_ROOT; };
+		2C36A3CB15AB273B0031166D /* AUCuerpoDef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUCuerpoDef.h; path = ../../../include/AUCuerpoDef.h; sourceTree = SOURCE_ROOT; };
+		2C36A3CC15AB273B0031166D /* AUSimuladorLiquidos.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUSimuladorLiquidos.cpp; path = ../../../src/cpp/AUSimuladorLiquidos.cpp; sourceTree = SOURCE_ROOT; };
+		2C36A3CD15AB273C0031166D /* AUSimuladorLiquidos.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUSimuladorLiquidos.h; path = ../../../include/AUSimuladorLiquidos.h; sourceTree = SOURCE_ROOT; };
+		2C36A3D815AB29DF0031166D /* IAnimadorFisicaAdicional.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = IAnimadorFisicaAdicional.h; path = ../../../include/IAnimadorFisicaAdicional.h; sourceTree = SOURCE_ROOT; };
+		2C36A3DC15AB2B6A0031166D /* NBSimuladorLiquidosMotor1.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NBSimuladorLiquidosMotor1.cpp; path = ../../../src/cpp/NBSimuladorLiquidosMotor1.cpp; sourceTree = SOURCE_ROOT; };
+		2C36A3DD15AB2B6A0031166D /* NBSimuladorLiquidosMotor1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NBSimuladorLiquidosMotor1.h; path = ../../../include/NBSimuladorLiquidosMotor1.h; sourceTree = SOURCE_ROOT; };
+		2C36A3DE15AB2B6B0031166D /* NBSimuladorLiquidosMotor2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NBSimuladorLiquidosMotor2.cpp; path = ../../../src/cpp/NBSimuladorLiquidosMotor2.cpp; sourceTree = SOURCE_ROOT; };
+		2C36A3DF15AB2B6B0031166D /* NBSimuladorLiquidosMotor2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NBSimuladorLiquidosMotor2.h; path = ../../../include/NBSimuladorLiquidosMotor2.h; sourceTree = SOURCE_ROOT; };
+		2C36A3E015AB2B6C0031166D /* NBSimuladorLiquidosMotorI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NBSimuladorLiquidosMotorI.h; path = ../../../include/NBSimuladorLiquidosMotorI.h; sourceTree = SOURCE_ROOT; };
+		2C3A86F32203615E000625D5 /* AUMngrFonts.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AUMngrFonts.h; path = ../../../include/AUMngrFonts.h; sourceTree = "<group>"; };
+		2C3A86F422036173000625D5 /* NBMngrFonts.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NBMngrFonts.h; path = ../../../include/NBMngrFonts.h; sourceTree = "<group>"; };
+		2C3A86F52203618B000625D5 /* AUMngrFonts.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = AUMngrFonts.cpp; path = ../../../src/cpp/AUMngrFonts.cpp; sourceTree = "<group>"; };
+		2C3A86F82203619D000625D5 /* NBMngrFonts.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = NBMngrFonts.cpp; path = ../../../src/cpp/NBMngrFonts.cpp; sourceTree = "<group>"; };
+		2C3B292915EED4C6008941FD /* AUEscenaSensor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaSensor.cpp; path = ../../../src/cpp/AUEscenaSensor.cpp; sourceTree = SOURCE_ROOT; };
+		2C3B292A15EED4C6008941FD /* AUEscenaSensor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaSensor.h; path = ../../../include/AUEscenaSensor.h; sourceTree = SOURCE_ROOT; };
+		2C3E7B7D16F3C7E90054AE49 /* AUEscenaLaserDef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaLaserDef.h; path = ../../../include/AUEscenaLaserDef.h; sourceTree = SOURCE_ROOT; };
+		2C42AC15167BD76F003EEED7 /* AUEscenaGrupoParticulasFuego.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaGrupoParticulasFuego.cpp; path = ../../../src/cpp/AUEscenaGrupoParticulasFuego.cpp; sourceTree = SOURCE_ROOT; };
+		2C42AC16167BD76F003EEED7 /* AUEscenaGrupoParticulasFuego.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaGrupoParticulasFuego.h; path = ../../../include/AUEscenaGrupoParticulasFuego.h; sourceTree = SOURCE_ROOT; };
+		2C507BF71CC96DCB0098BDDD /* NBGestorTeclasDefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NBGestorTeclasDefs.h; path = ../../../include/NBGestorTeclasDefs.h; sourceTree = "<group>"; };
+		2C512B2716F1067A0060E61D /* AUEscenaLaser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaLaser.cpp; path = ../../../src/cpp/AUEscenaLaser.cpp; sourceTree = SOURCE_ROOT; };
+		2C512B2816F1067B0060E61D /* AUEscenaLaser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaLaser.h; path = ../../../include/AUEscenaLaser.h; sourceTree = SOURCE_ROOT; };
+		2C52C30416724CCE008AE5A9 /* NBGestorGLDef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NBGestorGLDef.h; path = ../../../include/NBGestorGLDef.h; sourceTree = SOURCE_ROOT; };
+		2C52C3071672857F008AE5A9 /* AUEscenaCuerdaDef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaCuerdaDef.h; path = ../../../include/AUEscenaCuerdaDef.h; sourceTree = SOURCE_ROOT; };
+		2C56CF1515D4154400177997 /* AUEscenaGrupoParticulas.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaGrupoParticulas.cpp; path = ../../../src/cpp/AUEscenaGrupoParticulas.cpp; sourceTree = SOURCE_ROOT; };
+		2C56CF1615D4154400177997 /* AUEscenaGrupoParticulas.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaGrupoParticulas.h; path = ../../../include/AUEscenaGrupoParticulas.h; sourceTree = SOURCE_ROOT; };
+		2C585C8814FC104A007D7863 /* AUAnimadorSonidoVolumen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUAnimadorSonidoVolumen.h; path = ../../../include/AUAnimadorSonidoVolumen.h; sourceTree = SOURCE_ROOT; };
+		2C585C8B14FC1055007D7863 /* AUAnimadorSonidoVolumen.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUAnimadorSonidoVolumen.cpp; path = ../../../src/cpp/AUAnimadorSonidoVolumen.cpp; sourceTree = SOURCE_ROOT; };
+		2C5E27E216C5E20800A40BFF /* NBSegmentadorFiguras.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NBSegmentadorFiguras.cpp; path = ../../../src/cpp/NBSegmentadorFiguras.cpp; sourceTree = SOURCE_ROOT; };
+		2C5E27E316C5E20800A40BFF /* NBSegmentadorFiguras.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NBSegmentadorFiguras.h; path = ../../../include/NBSegmentadorFiguras.h; sourceTree = SOURCE_ROOT; };
+		2C60A82B1C287557005C7C3E /* AUIButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUIButton.h; path = ../../../include/AUIButton.h; sourceTree = "<group>"; };
+		2C60A82C1C287557005C7C3E /* AUIButton.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUIButton.cpp; path = ../../../src/cpp/AUIButton.cpp; sourceTree = "<group>"; };
+		2C60A8321C28760C005C7C3E /* AUEscenaListaItemI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaListaItemI.h; path = ../../../include/AUEscenaListaItemI.h; sourceTree = "<group>"; };
+		2C62D2D11BCEC2420007F3B4 /* NBGestorFisicaDefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NBGestorFisicaDefs.h; path = ../../../include/NBGestorFisicaDefs.h; sourceTree = "<group>"; };
+		2C6AFC1615643E4C00AF5E0B /* AUEscenaSpriteMascara.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaSpriteMascara.cpp; path = ../../../src/cpp/AUEscenaSpriteMascara.cpp; sourceTree = SOURCE_ROOT; };
+		2C6AFC1715643E4C00AF5E0B /* AUEscenaSpriteMascara.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaSpriteMascara.h; path = ../../../include/AUEscenaSpriteMascara.h; sourceTree = SOURCE_ROOT; };
+		2C6B97F71B016E61002635D0 /* AUEscenaContenedorLimitado.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaContenedorLimitado.h; path = ../../../include/AUEscenaContenedorLimitado.h; sourceTree = "<group>"; };
+		2C6B97F81B016E6F002635D0 /* AUEscenaContenedorLimitado.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaContenedorLimitado.cpp; path = ../../../src/cpp/AUEscenaContenedorLimitado.cpp; sourceTree = "<group>"; };
+		2C725A0C15FA541500A5FC62 /* AUAnimadorPropsDef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUAnimadorPropsDef.h; path = ../../../include/AUAnimadorPropsDef.h; sourceTree = SOURCE_ROOT; };
+		2C725A1015FA602C00A5FC62 /* AUAnimadorSonido.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUAnimadorSonido.cpp; path = ../../../src/cpp/AUAnimadorSonido.cpp; sourceTree = SOURCE_ROOT; };
+		2C725A1115FA602C00A5FC62 /* AUAnimadorSonido.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUAnimadorSonido.h; path = ../../../include/AUAnimadorSonido.h; sourceTree = SOURCE_ROOT; };
+		2C7305EE167F8CC100E50226 /* AUEscenaLuzSensor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaLuzSensor.cpp; path = ../../../src/cpp/AUEscenaLuzSensor.cpp; sourceTree = SOURCE_ROOT; };
+		2C7305EF167F8CC100E50226 /* AUEscenaLuzSensor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaLuzSensor.h; path = ../../../include/AUEscenaLuzSensor.h; sourceTree = SOURCE_ROOT; };
+		2C83103115B0813E0024F95C /* AUEscenaIluminacion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaIluminacion.cpp; path = ../../../src/cpp/AUEscenaIluminacion.cpp; sourceTree = SOURCE_ROOT; };
+		2C83103215B0813E0024F95C /* AUEscenaIluminacion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaIluminacion.h; path = ../../../include/AUEscenaIluminacion.h; sourceTree = SOURCE_ROOT; };
+		2C8D72F91AE9E309009DDCCF /* AUEscenaSpriteElastico.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaSpriteElastico.h; path = ../../../include/AUEscenaSpriteElastico.h; sourceTree = "<group>"; };
+		2C8D72FA1AE9E316009DDCCF /* AUEscenaSpriteElastico.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaSpriteElastico.cpp; path = ../../../src/cpp/AUEscenaSpriteElastico.cpp; sourceTree = "<group>"; };
+		2C8F1F201484376300959542 /* AUEscenaLuzRadial.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaLuzRadial.cpp; path = ../../../src/cpp/AUEscenaLuzRadial.cpp; sourceTree = SOURCE_ROOT; };
+		2C8F1F211484376300959542 /* AUEscenaLuzRadial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaLuzRadial.h; path = ../../../include/AUEscenaLuzRadial.h; sourceTree = SOURCE_ROOT; };
+		2C920F38166FCDAA00E39FCC /* NBFuenteIluminacion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NBFuenteIluminacion.h; path = ../../../include/NBFuenteIluminacion.h; sourceTree = SOURCE_ROOT; };
+		2C920F3C166FECA000E39FCC /* AUEscenaGrupoParticulasDef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaGrupoParticulasDef.h; path = ../../../include/AUEscenaGrupoParticulasDef.h; sourceTree = SOURCE_ROOT; };
+		2C9E8EEF15990BF00036D2CD /* AUAnimacionDef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUAnimacionDef.h; path = ../../../include/AUAnimacionDef.h; sourceTree = SOURCE_ROOT; };
+		2C9F820B19987A03002692CD /* NBGestorTeclas.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NBGestorTeclas.h; path = ../../../include/NBGestorTeclas.h; sourceTree = SOURCE_ROOT; };
+		2C9F820C19987A15002692CD /* NBGestorTeclas.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NBGestorTeclas.cpp; path = ../../../src/cpp/NBGestorTeclas.cpp; sourceTree = SOURCE_ROOT; };
+		2C9F82101998880E002692CD /* AUITextBox.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUITextBox.h; path = ../../../include/AUITextBox.h; sourceTree = SOURCE_ROOT; };
+		2C9F82111998881B002692CD /* AUITextBox.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUITextBox.cpp; path = ../../../src/cpp/AUITextBox.cpp; sourceTree = SOURCE_ROOT; };
+		2CA4385E1DBD763C008426D1 /* AUEscenaSpriteWithLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaSpriteWithLoader.h; path = ../../../include/AUEscenaSpriteWithLoader.h; sourceTree = "<group>"; };
+		2CA4385F1DBD763C008426D1 /* AUEscenaSpriteWithLoader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaSpriteWithLoader.cpp; path = ../../../src/cpp/AUEscenaSpriteWithLoader.cpp; sourceTree = "<group>"; };
+		2CB066DE1698D5BF00F42D19 /* AUEscenaRuta.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaRuta.cpp; path = ../../../src/cpp/AUEscenaRuta.cpp; sourceTree = SOURCE_ROOT; };
+		2CB066DF1698D5BF00F42D19 /* AUEscenaRuta.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaRuta.h; path = ../../../include/AUEscenaRuta.h; sourceTree = SOURCE_ROOT; };
+		2CB066E51698DA8600F42D19 /* AUEscenaRutaAnimador.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaRutaAnimador.cpp; path = ../../../src/cpp/AUEscenaRutaAnimador.cpp; sourceTree = SOURCE_ROOT; };
+		2CB066E61698DA8600F42D19 /* AUEscenaRutaAnimador.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaRutaAnimador.h; path = ../../../include/AUEscenaRutaAnimador.h; sourceTree = SOURCE_ROOT; };
+		2CB23DE61A55CA2F00D08A16 /* AUFuenteRaster.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUFuenteRaster.h; path = ../../../include/AUFuenteRaster.h; sourceTree = SOURCE_ROOT; };
+		2CB23DE71A55CA3D00D08A16 /* AUFuenteRaster.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUFuenteRaster.cpp; path = ../../../src/cpp/AUFuenteRaster.cpp; sourceTree = SOURCE_ROOT; };
+		2CB23DED1A56FBD200D08A16 /* AUFuenteRender.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUFuenteRender.cpp; path = ../../../src/cpp/AUFuenteRender.cpp; sourceTree = SOURCE_ROOT; };
+		2CB23DF01A56FBDA00D08A16 /* AUFuenteRender.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUFuenteRender.h; path = ../../../include/AUFuenteRender.h; sourceTree = SOURCE_ROOT; };
+		2CB4C1F92156DCBE007BF314 /* AUFuenteVisualModel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUFuenteVisualModel.cpp; path = ../../../src/cpp/AUFuenteVisualModel.cpp; sourceTree = SOURCE_ROOT; };
+		2CB4C1FA2156DCBE007BF314 /* AUFuenteVisualModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUFuenteVisualModel.h; path = ../../../include/AUFuenteVisualModel.h; sourceTree = SOURCE_ROOT; };
+		2CB7D5DC158D8F180061CE87 /* AUEscenaTextoSprites.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaTextoSprites.cpp; path = ../../../src/cpp/AUEscenaTextoSprites.cpp; sourceTree = SOURCE_ROOT; };
+		2CB7D5DD158D8F180061CE87 /* AUEscenaTextoSprites.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaTextoSprites.h; path = ../../../include/AUEscenaTextoSprites.h; sourceTree = SOURCE_ROOT; };
+		2CBA889F16779860000C2831 /* AUEscenaLuzSombra.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaLuzSombra.cpp; path = ../../../src/cpp/AUEscenaLuzSombra.cpp; sourceTree = SOURCE_ROOT; };
+		2CBA88A016779860000C2831 /* AUEscenaLuzSombra.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaLuzSombra.h; path = ../../../include/AUEscenaLuzSombra.h; sourceTree = SOURCE_ROOT; };
+		2CBE082021A37BB1002B86EF /* AUEscenaTextoEditable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaTextoEditable.h; path = ../../../include/AUEscenaTextoEditable.h; sourceTree = "<group>"; };
+		2CBE082121A37BB1002B86EF /* AUEscenaTextoEditable.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaTextoEditable.cpp; path = ../../../src/cpp/AUEscenaTextoEditable.cpp; sourceTree = "<group>"; };
+		2CBFABC715B5CFAB0089361B /* AUEscenaAnimacionI.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaAnimacionI.cpp; path = ../../../src/cpp/AUEscenaAnimacionI.cpp; sourceTree = SOURCE_ROOT; };
+		2CBFABC815B5CFAB0089361B /* AUEscenaAnimacionI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaAnimacionI.h; path = ../../../include/AUEscenaAnimacionI.h; sourceTree = SOURCE_ROOT; };
+		2CBFABCE15B5D1920089361B /* AUEscenaCuerpoI.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaCuerpoI.cpp; path = ../../../src/cpp/AUEscenaCuerpoI.cpp; sourceTree = SOURCE_ROOT; };
+		2CBFABCF15B5D1920089361B /* AUEscenaCuerpoI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaCuerpoI.h; path = ../../../include/AUEscenaCuerpoI.h; sourceTree = SOURCE_ROOT; };
+		2CCDE0601C5A8BFA00284EB2 /* AUParticlesGenerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUParticlesGenerator.h; path = ../../../include/AUParticlesGenerator.h; sourceTree = "<group>"; };
+		2CCDE0611C5A8BFA00284EB2 /* AUParticlesGenerator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUParticlesGenerator.cpp; path = ../../../src/cpp/AUParticlesGenerator.cpp; sourceTree = "<group>"; };
+		2CCE394415AC96EE005EFD49 /* AUEscenaPolea.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaPolea.h; path = ../../../include/AUEscenaPolea.h; sourceTree = SOURCE_ROOT; };
+		2CCE394715AC96FA005EFD49 /* AUEscenaPolea.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaPolea.cpp; path = ../../../src/cpp/AUEscenaPolea.cpp; sourceTree = SOURCE_ROOT; };
+		2CD0132021D6AAD100212030 /* AUEscenaCol.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaCol.cpp; path = ../../../src/cpp/AUEscenaCol.cpp; sourceTree = "<group>"; };
+		2CD0132321D6AAEF00212030 /* AUEscenaCol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AUEscenaCol.h; path = ../../../include/AUEscenaCol.h; sourceTree = "<group>"; };
+		2CD0132421D6AB1000212030 /* AUEscenaCols.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaCols.cpp; path = ../../../src/cpp/AUEscenaCols.cpp; sourceTree = "<group>"; };
+		2CD0132721D6AB3100212030 /* AUEscenaCols.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AUEscenaCols.h; path = ../../../include/AUEscenaCols.h; sourceTree = "<group>"; };
+		2CD0132821D6ADDB00212030 /* AUEscenaContentI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AUEscenaContentI.h; path = ../../../include/AUEscenaContentI.h; sourceTree = "<group>"; };
+		2CD088551C3AC3AB004648E6 /* AUEscenaPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaPanel.h; path = ../../../include/AUEscenaPanel.h; sourceTree = "<group>"; };
+		2CD088561C3AC3AB004648E6 /* AUEscenaPanel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaPanel.cpp; path = ../../../src/cpp/AUEscenaPanel.cpp; sourceTree = "<group>"; };
+		2CD2424316486A7700AEF0DC /* AUEscenaFiltro.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaFiltro.cpp; path = ../../../src/cpp/AUEscenaFiltro.cpp; sourceTree = SOURCE_ROOT; };
+		2CD2424416486A7900AEF0DC /* AUEscenaFiltro.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaFiltro.h; path = ../../../include/AUEscenaFiltro.h; sourceTree = SOURCE_ROOT; };
+		2CD70C7F27055A2D00AFB74F /* MakefileProject.mk */ = {isa = PBXFileReference; lastKnownFileType = text; name = MakefileProject.mk; path = ../../../MakefileProject.mk; sourceTree = "<group>"; };
+		2CD70C8027055A2D00AFB74F /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; name = Makefile; path = ../../../Makefile; sourceTree = "<group>"; };
+		2CDE24E8221B4F1B00AA2D5A /* AUTextoFiltroLimitado.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUTextoFiltroLimitado.cpp; path = ../../../src/cpp/AUTextoFiltroLimitado.cpp; sourceTree = "<group>"; };
+		2CDE24E9221B4F1B00AA2D5A /* AUTextoFiltroLimitado.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUTextoFiltroLimitado.h; path = ../../../include/AUTextoFiltroLimitado.h; sourceTree = "<group>"; };
+		2CDE24EC221B51F100AA2D5A /* AUTextoFiltro.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUTextoFiltro.cpp; path = ../../../src/cpp/AUTextoFiltro.cpp; sourceTree = SOURCE_ROOT; };
+		2CDE24ED221B51F100AA2D5A /* AUTextoFiltro.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUTextoFiltro.h; path = ../../../include/AUTextoFiltro.h; sourceTree = SOURCE_ROOT; };
+		2CDE24F0221B9E2E00AA2D5A /* AUEscenaPanelTexto.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaPanelTexto.h; path = ../../../include/AUEscenaPanelTexto.h; sourceTree = "<group>"; };
+		2CDE24F1221B9E2E00AA2D5A /* AUEscenaPanelTexto.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaPanelTexto.cpp; path = ../../../src/cpp/AUEscenaPanelTexto.cpp; sourceTree = "<group>"; };
+		2CDE24F4221BB1A000AA2D5A /* AUIMsgBox.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUIMsgBox.cpp; path = ../../../src/cpp/AUIMsgBox.cpp; sourceTree = SOURCE_ROOT; };
+		2CDE24F5221BB1A000AA2D5A /* AUIMsgBox.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUIMsgBox.h; path = ../../../include/AUIMsgBox.h; sourceTree = SOURCE_ROOT; };
+		2CDE7A8816AE273B00B045A1 /* AUEscenaGrupoParticulasLinea.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaGrupoParticulasLinea.cpp; path = ../../../src/cpp/AUEscenaGrupoParticulasLinea.cpp; sourceTree = SOURCE_ROOT; };
+		2CDE7A8916AE273B00B045A1 /* AUEscenaGrupoParticulasLinea.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaGrupoParticulasLinea.h; path = ../../../include/AUEscenaGrupoParticulasLinea.h; sourceTree = SOURCE_ROOT; };
+		2CDFC225145397A7007697E7 /* NBGestorEscena.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NBGestorEscena.h; path = ../../../include/NBGestorEscena.h; sourceTree = SOURCE_ROOT; };
+		2CDFC228145397B4007697E7 /* NBGestorEscena.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NBGestorEscena.cpp; path = ../../../src/cpp/NBGestorEscena.cpp; sourceTree = SOURCE_ROOT; };
+		2CE40034167638700041FF16 /* AUEscenaLuzEspejo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaLuzEspejo.cpp; path = ../../../src/cpp/AUEscenaLuzEspejo.cpp; sourceTree = SOURCE_ROOT; };
+		2CE40035167638700041FF16 /* AUEscenaLuzEspejo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaLuzEspejo.h; path = ../../../include/AUEscenaLuzEspejo.h; sourceTree = SOURCE_ROOT; };
+		2CE4004216764AC60041FF16 /* NBFuenteEspejo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NBFuenteEspejo.h; path = ../../../include/NBFuenteEspejo.h; sourceTree = SOURCE_ROOT; };
+		2CE4AC2116EE3E0D000568AB /* AUEscenaPuasLinea.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaPuasLinea.cpp; path = ../../../src/cpp/AUEscenaPuasLinea.cpp; sourceTree = SOURCE_ROOT; };
+		2CE4AC2216EE3E0D000568AB /* AUEscenaPuasLinea.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaPuasLinea.h; path = ../../../include/AUEscenaPuasLinea.h; sourceTree = SOURCE_ROOT; };
+		2CE4AC2A16EE4D45000568AB /* AUEscenaPuasLineaAnimSinc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaPuasLineaAnimSinc.cpp; path = ../../../src/cpp/AUEscenaPuasLineaAnimSinc.cpp; sourceTree = SOURCE_ROOT; };
+		2CE4AC2B16EE4D46000568AB /* AUEscenaPuasLineaAnimSinc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaPuasLineaAnimSinc.h; path = ../../../include/AUEscenaPuasLineaAnimSinc.h; sourceTree = SOURCE_ROOT; };
+		2CE4AC3016EE4F7C000568AB /* AUEscenaPuasLineaDef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaPuasLineaDef.h; path = ../../../include/AUEscenaPuasLineaDef.h; sourceTree = SOURCE_ROOT; };
+		2CE4AC3616EE63D6000568AB /* AUEscenaPuasLineaAnimIndiv.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaPuasLineaAnimIndiv.cpp; path = ../../../src/cpp/AUEscenaPuasLineaAnimIndiv.cpp; sourceTree = SOURCE_ROOT; };
+		2CE4AC3716EE63D6000568AB /* AUEscenaPuasLineaAnimIndiv.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaPuasLineaAnimIndiv.h; path = ../../../include/AUEscenaPuasLineaAnimIndiv.h; sourceTree = SOURCE_ROOT; };
+		2CEA8B181683BA83006B378E /* AULaser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AULaser.cpp; path = ../../../src/cpp/AULaser.cpp; sourceTree = SOURCE_ROOT; };
+		2CEA8B191683BA87006B378E /* AULaser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AULaser.h; path = ../../../include/AULaser.h; sourceTree = SOURCE_ROOT; };
+		2CF3529415F7BA2500593A19 /* AUAnimadorContenedor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUAnimadorContenedor.cpp; path = ../../../src/cpp/AUAnimadorContenedor.cpp; sourceTree = SOURCE_ROOT; };
+		2CF3529515F7BA2500593A19 /* AUAnimadorContenedor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUAnimadorContenedor.h; path = ../../../include/AUAnimadorContenedor.h; sourceTree = SOURCE_ROOT; };
+		2CF3529B15F7C15700593A19 /* AUAnimadorAnimacion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUAnimadorAnimacion.cpp; path = ../../../src/cpp/AUAnimadorAnimacion.cpp; sourceTree = SOURCE_ROOT; };
+		2CF3529C15F7C15700593A19 /* AUAnimadorAnimacion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUAnimadorAnimacion.h; path = ../../../include/AUAnimadorAnimacion.h; sourceTree = SOURCE_ROOT; };
+		2CF51287168208130030963A /* NBGestorEscenaDef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NBGestorEscenaDef.h; path = ../../../include/NBGestorEscenaDef.h; sourceTree = SOURCE_ROOT; };
+		2CF5128D168256780030963A /* AUBateria.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUBateria.cpp; path = ../../../src/cpp/AUBateria.cpp; sourceTree = SOURCE_ROOT; };
+		2CF5128E168256780030963A /* AUBateria.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUBateria.h; path = ../../../include/AUBateria.h; sourceTree = SOURCE_ROOT; };
+		2CF5128F168256780030963A /* AUBombillo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUBombillo.cpp; path = ../../../src/cpp/AUBombillo.cpp; sourceTree = SOURCE_ROOT; };
+		2CF51290168256780030963A /* AUBombillo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUBombillo.h; path = ../../../include/AUBombillo.h; sourceTree = SOURCE_ROOT; };
+		2CF51291168256780030963A /* AUElectronodo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUElectronodo.cpp; path = ../../../src/cpp/AUElectronodo.cpp; sourceTree = SOURCE_ROOT; };
+		2CF51292168256780030963A /* AUElectronodo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUElectronodo.h; path = ../../../include/AUElectronodo.h; sourceTree = SOURCE_ROOT; };
+		2CF51293168256780030963A /* AULanzallamas.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AULanzallamas.cpp; path = ../../../src/cpp/AULanzallamas.cpp; sourceTree = SOURCE_ROOT; };
+		2CF51294168256780030963A /* AULanzallamas.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AULanzallamas.h; path = ../../../include/AULanzallamas.h; sourceTree = SOURCE_ROOT; };
+		2CF51295168256780030963A /* AUNodoElectroCarga.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUNodoElectroCarga.cpp; path = ../../../src/cpp/AUNodoElectroCarga.cpp; sourceTree = SOURCE_ROOT; };
+		2CF51296168256780030963A /* AUNodoElectroCarga.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUNodoElectroCarga.h; path = ../../../include/AUNodoElectroCarga.h; sourceTree = SOURCE_ROOT; };
+		2CF51297168256780030963A /* AUPanelSolar.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUPanelSolar.cpp; path = ../../../src/cpp/AUPanelSolar.cpp; sourceTree = SOURCE_ROOT; };
+		2CF51298168256780030963A /* AUPanelSolar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUPanelSolar.h; path = ../../../include/AUPanelSolar.h; sourceTree = SOURCE_ROOT; };
+		2CFCB7CD1485BC0E001FF423 /* AUEscenaFiguraTransformable.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaFiguraTransformable.cpp; path = ../../../src/cpp/AUEscenaFiguraTransformable.cpp; sourceTree = SOURCE_ROOT; };
+		2CFCB7CE1485BC0F001FF423 /* AUEscenaFiguraTransformable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaFiguraTransformable.h; path = ../../../include/AUEscenaFiguraTransformable.h; sourceTree = SOURCE_ROOT; };
+		2CFF50391942234600D44E24 /* actualizarTodos.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = actualizarTodos.cpp; path = ../../../../../../actualizarTodos.cpp; sourceTree = "<group>"; };
+		B301F7261465A957006A414B /* AUEscenaFigura.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaFigura.cpp; path = ../../../src/cpp/AUEscenaFigura.cpp; sourceTree = SOURCE_ROOT; };
+		B301F7271465A957006A414B /* AUEscenaFigura.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaFigura.h; path = ../../../include/AUEscenaFigura.h; sourceTree = SOURCE_ROOT; };
+		B308DF1F146C1AC500002D00 /* AUFuenteTextura.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUFuenteTextura.h; path = ../../../include/AUFuenteTextura.h; sourceTree = SOURCE_ROOT; };
+		B308DF23146C1AD000002D00 /* AUFuenteTextura.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUFuenteTextura.cpp; path = ../../../src/cpp/AUFuenteTextura.cpp; sourceTree = SOURCE_ROOT; };
+		B308DF26146C4DA600002D00 /* AUEscenaTexto.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaTexto.h; path = ../../../include/AUEscenaTexto.h; sourceTree = SOURCE_ROOT; };
+		B308DF29146C4DBA00002D00 /* AUEscenaTexto.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaTexto.cpp; path = ../../../src/cpp/AUEscenaTexto.cpp; sourceTree = SOURCE_ROOT; };
+		B30CDA8914958958005165B7 /* AUEscenaAnimacion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaAnimacion.h; path = ../../../include/AUEscenaAnimacion.h; sourceTree = SOURCE_ROOT; };
+		B30CDA8C14958962005165B7 /* AUEscenaAnimacion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaAnimacion.cpp; path = ../../../src/cpp/AUEscenaAnimacion.cpp; sourceTree = SOURCE_ROOT; };
+		B32D82C41442B10B003CC40B /* libauframework-media-osx.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libauframework-media-osx.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B345A79E1442171600A297BC /* NBGestorGL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NBGestorGL.cpp; path = ../../../src/cpp/NBGestorGL.cpp; sourceTree = SOURCE_ROOT; };
+		B345A79F1442171600A297BC /* NBGestorGL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NBGestorGL.h; path = ../../../include/NBGestorGL.h; sourceTree = SOURCE_ROOT; };
+		B3A10C70142C13940070BFCA /* libauframework-media-ios.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libauframework-media-ios.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B3A10CB7142C15EF0070BFCA /* AUEscenaContenedor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaContenedor.cpp; path = ../../../src/cpp/AUEscenaContenedor.cpp; sourceTree = SOURCE_ROOT; };
+		B3A10CB8142C15EF0070BFCA /* AUEscenaContenedor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaContenedor.h; path = ../../../include/AUEscenaContenedor.h; sourceTree = SOURCE_ROOT; };
+		B3A10CBB142C15EF0070BFCA /* AUEscenaObjeto.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaObjeto.cpp; path = ../../../src/cpp/AUEscenaObjeto.cpp; sourceTree = SOURCE_ROOT; };
+		B3A10CBC142C15EF0070BFCA /* AUEscenaObjeto.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaObjeto.h; path = ../../../include/AUEscenaObjeto.h; sourceTree = SOURCE_ROOT; };
+		B3A10CBD142C15EF0070BFCA /* AUEscenaSprite.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaSprite.cpp; path = ../../../src/cpp/AUEscenaSprite.cpp; sourceTree = SOURCE_ROOT; };
+		B3A10CBE142C15EF0070BFCA /* AUEscenaSprite.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaSprite.h; path = ../../../include/AUEscenaSprite.h; sourceTree = SOURCE_ROOT; };
+		B3A10CFE142C15F10070BFCA /* AUTextura.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUTextura.cpp; path = ../../../src/cpp/AUTextura.cpp; sourceTree = SOURCE_ROOT; };
+		B3A10CFF142C15F10070BFCA /* AUTextura.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUTextura.h; path = ../../../include/AUTextura.h; sourceTree = SOURCE_ROOT; };
+		B3A10D09142C15F10070BFCA /* NBGestorAnimaciones.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NBGestorAnimaciones.cpp; path = ../../../src/cpp/NBGestorAnimaciones.cpp; sourceTree = SOURCE_ROOT; };
+		B3A10D0A142C15F10070BFCA /* NBGestorAnimaciones.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NBGestorAnimaciones.h; path = ../../../include/NBGestorAnimaciones.h; sourceTree = SOURCE_ROOT; };
+		B3A10D11142C15F10070BFCA /* NBGestorTexturas.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NBGestorTexturas.h; path = ../../../include/NBGestorTexturas.h; sourceTree = SOURCE_ROOT; };
+		B3A10D12142C15F10070BFCA /* NBGestorTexturas.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NBGestorTexturas.cpp; path = ../../../src/cpp/NBGestorTexturas.cpp; sourceTree = SOURCE_ROOT; };
+		B3A10D16142C15F10070BFCA /* NBPropiedadesEnEscena.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NBPropiedadesEnEscena.h; path = ../../../include/NBPropiedadesEnEscena.h; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		B32D82C11442B10B003CC40B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B3A10C6D142C13940070BFCA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		2C14984B171CA908009B1AAB /* datos */ = {
+			isa = PBXGroup;
+			children = (
+				2C149858171CA975009B1AAB /* NBGestorIdiomaDef.h */,
+				2C14985A171CA975009B1AAB /* NBGestorIdioma.h */,
+				2C149859171CA975009B1AAB /* NBGestorIdioma.cpp */,
+				2C14984D171CA917009B1AAB /* AUDialogo.h */,
+				2C14984C171CA917009B1AAB /* AUDialogo.cpp */,
+				2C14984F171CA917009B1AAB /* AUDialogoMutable.h */,
+				2C14984E171CA917009B1AAB /* AUDialogoMutable.cpp */,
+				2C149862171CA9AA009B1AAB /* AUDiccionarioTextoMulti.h */,
+				2C149861171CA9AA009B1AAB /* AUDiccionarioTextoMulti.cpp */,
+			);
+			name = datos;
+			sourceTree = "<group>";
+		};
+		2C217A9E14F3E64F00B3696B /* audio */ = {
+			isa = PBXGroup;
+			children = (
+				2C217AC914F41BDA00B3696B /* NBGestorSonidos.h */,
+				2C217ACC14F41BE300B3696B /* NBGestorSonidos.cpp */,
+			);
+			name = audio;
+			sourceTree = "<group>";
+		};
+		2C285FF715B5C7CF00DB84AB /* intermediarios */ = {
+			isa = PBXGroup;
+			children = (
+				2C285FEF15B5C78E00DB84AB /* AUCargadorAnimacionesI.h */,
+				2C285FF415B5C7C400DB84AB /* AUCargadorAnimaciones.h */,
+				2C285FFB15B5C7F800DB84AB /* AUCargadorAnimaciones.cpp */,
+				2C28600015B5CB0C00DB84AB /* AUCargadorCuerposI.h */,
+				2C285FFF15B5CB0C00DB84AB /* AUCargadorCuerpos.h */,
+				2C285FFE15B5CB0C00DB84AB /* AUCargadorCuerpos.cpp */,
+			);
+			name = intermediarios;
+			sourceTree = "<group>";
+		};
+		2C36A3DB15AB29EF0031166D /* fisica */ = {
+			isa = PBXGroup;
+			children = (
+				2C62D2D11BCEC2420007F3B4 /* NBGestorFisicaDefs.h */,
+				2C36A3C615AB27080031166D /* NBGestorFisica.h */,
+				2C36A3C515AB27080031166D /* NBGestorFisica.cpp */,
+				2C36A3CB15AB273B0031166D /* AUCuerpoDef.h */,
+				2C36A3B015AB26630031166D /* NBGestorCuerpos.h */,
+				2C36A3AF15AB26630031166D /* NBGestorCuerpos.cpp */,
+				2C36A3D815AB29DF0031166D /* IAnimadorFisicaAdicional.h */,
+				2C36A3CD15AB273C0031166D /* AUSimuladorLiquidos.h */,
+				2C36A3CC15AB273B0031166D /* AUSimuladorLiquidos.cpp */,
+				2C36A3E015AB2B6C0031166D /* NBSimuladorLiquidosMotorI.h */,
+				2C36A3DD15AB2B6A0031166D /* NBSimuladorLiquidosMotor1.h */,
+				2C36A3DC15AB2B6A0031166D /* NBSimuladorLiquidosMotor1.cpp */,
+				2C36A3DF15AB2B6B0031166D /* NBSimuladorLiquidosMotor2.h */,
+				2C36A3DE15AB2B6B0031166D /* NBSimuladorLiquidosMotor2.cpp */,
+			);
+			name = fisica;
+			sourceTree = "<group>";
+		};
+		2C3A86F22203613B000625D5 /* fonts */ = {
+			isa = PBXGroup;
+			children = (
+				2C3A86F32203615E000625D5 /* AUMngrFonts.h */,
+				2C3A86F52203618B000625D5 /* AUMngrFonts.cpp */,
+				2C3A86F422036173000625D5 /* NBMngrFonts.h */,
+				2C3A86F82203619D000625D5 /* NBMngrFonts.cpp */,
+			);
+			name = fonts;
+			sourceTree = "<group>";
+		};
+		2C6412AE18C9399400E4F7A2 /* audio */ = {
+			isa = PBXGroup;
+			children = (
+				2C0264711523F62E0085CF06 /* AUEscenaSnd.h */,
+				2C0264751523F63A0085CF06 /* AUEscenaSnd.cpp */,
+				2C217ABE14F405C300B3696B /* AUEscenaSonido.h */,
+				2C217AC114F405D300B3696B /* AUEscenaSonido.cpp */,
+				2C31966214FFFA9300A5B0D3 /* AUEscenaSonidoStream.h */,
+				2C31966514FFFA9C00A5B0D3 /* AUEscenaSonidoStream.cpp */,
+				2C27104C163736A80051BA81 /* AUEscenaSonidoStreamMulti.h */,
+				2C27104B163736A80051BA81 /* AUEscenaSonidoStreamMulti.cpp */,
+			);
+			name = audio;
+			sourceTree = "<group>";
+		};
+		2C9AF8EC165ED224008248C3 /* iluminacion */ = {
+			isa = PBXGroup;
+			children = (
+				2C5E27E316C5E20800A40BFF /* NBSegmentadorFiguras.h */,
+				2C5E27E216C5E20800A40BFF /* NBSegmentadorFiguras.cpp */,
+				2C30502A15556EFB00960074 /* NBFuenteSombra.h */,
+				2C920F38166FCDAA00E39FCC /* NBFuenteIluminacion.h */,
+				2CE4004216764AC60041FF16 /* NBFuenteEspejo.h */,
+			);
+			name = iluminacion;
+			sourceTree = "<group>";
+		};
+		2C9F820F199887A3002692CD /* controles */ = {
+			isa = PBXGroup;
+			children = (
+				2C60A8321C28760C005C7C3E /* AUEscenaListaItemI.h */,
+				2C60A82B1C287557005C7C3E /* AUIButton.h */,
+				2C60A82C1C287557005C7C3E /* AUIButton.cpp */,
+				2C9F82101998880E002692CD /* AUITextBox.h */,
+				2C9F82111998881B002692CD /* AUITextBox.cpp */,
+				2C0BC200213DF804007783AD /* AUIDateBox.h */,
+				2C0BC1FE213DF7EA007783AD /* AUIDateBox.cpp */,
+				2C0BC202213E06F0007783AD /* AUISelectBox.h */,
+				2C0BC203213E070B007783AD /* AUISelectBox.cpp */,
+				2CDE24F5221BB1A000AA2D5A /* AUIMsgBox.h */,
+				2CDE24F4221BB1A000AA2D5A /* AUIMsgBox.cpp */,
+			);
+			name = controles;
+			sourceTree = "<group>";
+		};
+		2CB23DE51A55C9FB00D08A16 /* fuentes */ = {
+			isa = PBXGroup;
+			children = (
+				2CDE24ED221B51F100AA2D5A /* AUTextoFiltro.h */,
+				2CDE24EC221B51F100AA2D5A /* AUTextoFiltro.cpp */,
+				2CDE24E9221B4F1B00AA2D5A /* AUTextoFiltroLimitado.h */,
+				2CDE24E8221B4F1B00AA2D5A /* AUTextoFiltroLimitado.cpp */,
+				2CB4C1FA2156DCBE007BF314 /* AUFuenteVisualModel.h */,
+				2CB4C1F92156DCBE007BF314 /* AUFuenteVisualModel.cpp */,
+				2CB23DF01A56FBDA00D08A16 /* AUFuenteRender.h */,
+				2CB23DED1A56FBD200D08A16 /* AUFuenteRender.cpp */,
+				2CB23DE61A55CA2F00D08A16 /* AUFuenteRaster.h */,
+				2CB23DE71A55CA3D00D08A16 /* AUFuenteRaster.cpp */,
+				B308DF1F146C1AC500002D00 /* AUFuenteTextura.h */,
+				B308DF23146C1AD000002D00 /* AUFuenteTextura.cpp */,
+			);
+			name = fuentes;
+			sourceTree = "<group>";
+		};
+		2CB7D5DA158D76C00061CE87 /* texturas */ = {
+			isa = PBXGroup;
+			children = (
+				B3A10CFF142C15F10070BFCA /* AUTextura.h */,
+				B3A10CFE142C15F10070BFCA /* AUTextura.cpp */,
+				2C0199EA153B8DD300DC70F9 /* AURenderBuffer.h */,
+				2C0199EE153B8DF000DC70F9 /* AURenderBuffer.cpp */,
+			);
+			name = texturas;
+			sourceTree = "<group>";
+		};
+		2CCE394115AC9581005EFD49 /* base */ = {
+			isa = PBXGroup;
+			children = (
+				2CD2424416486A7900AEF0DC /* AUEscenaFiltro.h */,
+				2CD2424316486A7700AEF0DC /* AUEscenaFiltro.cpp */,
+				2C3B292A15EED4C6008941FD /* AUEscenaSensor.h */,
+				2C3B292915EED4C6008941FD /* AUEscenaSensor.cpp */,
+				2C3E7B7D16F3C7E90054AE49 /* AUEscenaLaserDef.h */,
+				2C512B2816F1067B0060E61D /* AUEscenaLaser.h */,
+				2C512B2716F1067A0060E61D /* AUEscenaLaser.cpp */,
+				B3A10CBE142C15EF0070BFCA /* AUEscenaSprite.h */,
+				B3A10CBD142C15EF0070BFCA /* AUEscenaSprite.cpp */,
+				2C3516D3155C053700D38770 /* AUEscenaSpritePorcion.h */,
+				2C3516D2155C053700D38770 /* AUEscenaSpritePorcion.cpp */,
+				2C8D72F91AE9E309009DDCCF /* AUEscenaSpriteElastico.h */,
+				2C8D72FA1AE9E316009DDCCF /* AUEscenaSpriteElastico.cpp */,
+				2C6AFC1715643E4C00AF5E0B /* AUEscenaSpriteMascara.h */,
+				2C6AFC1615643E4C00AF5E0B /* AUEscenaSpriteMascara.cpp */,
+				2C920F3C166FECA000E39FCC /* AUEscenaGrupoParticulasDef.h */,
+				2C56CF1615D4154400177997 /* AUEscenaGrupoParticulas.h */,
+				2C56CF1515D4154400177997 /* AUEscenaGrupoParticulas.cpp */,
+				2CDE7A8916AE273B00B045A1 /* AUEscenaGrupoParticulasLinea.h */,
+				2CDE7A8816AE273B00B045A1 /* AUEscenaGrupoParticulasLinea.cpp */,
+				2C42AC16167BD76F003EEED7 /* AUEscenaGrupoParticulasFuego.h */,
+				2C42AC15167BD76F003EEED7 /* AUEscenaGrupoParticulasFuego.cpp */,
+				2CE4AC3016EE4F7C000568AB /* AUEscenaPuasLineaDef.h */,
+				2CE4AC2216EE3E0D000568AB /* AUEscenaPuasLinea.h */,
+				2CE4AC2116EE3E0D000568AB /* AUEscenaPuasLinea.cpp */,
+				2CE4AC2B16EE4D46000568AB /* AUEscenaPuasLineaAnimSinc.h */,
+				2CE4AC2A16EE4D45000568AB /* AUEscenaPuasLineaAnimSinc.cpp */,
+				2CE4AC3716EE63D6000568AB /* AUEscenaPuasLineaAnimIndiv.h */,
+				2CE4AC3616EE63D6000568AB /* AUEscenaPuasLineaAnimIndiv.cpp */,
+				2C02EDC515DA9B4D00CCBBFA /* AUEscenaGeneradorParticulas.h */,
+				2C02EDC415DA9B4D00CCBBFA /* AUEscenaGeneradorParticulas.cpp */,
+				2C227636167CEC930007AB26 /* AUEscenaElectroRayo.h */,
+				2C227635167CEC930007AB26 /* AUEscenaElectroRayo.cpp */,
+				2CB066DF1698D5BF00F42D19 /* AUEscenaRuta.h */,
+				2CB066DE1698D5BF00F42D19 /* AUEscenaRuta.cpp */,
+				2CB066E61698DA8600F42D19 /* AUEscenaRutaAnimador.h */,
+				2CB066E51698DA8600F42D19 /* AUEscenaRutaAnimador.cpp */,
+				B301F7271465A957006A414B /* AUEscenaFigura.h */,
+				B301F7261465A957006A414B /* AUEscenaFigura.cpp */,
+				2CFCB7CE1485BC0F001FF423 /* AUEscenaFiguraTransformable.h */,
+				2CFCB7CD1485BC0E001FF423 /* AUEscenaFiguraTransformable.cpp */,
+				B308DF26146C4DA600002D00 /* AUEscenaTexto.h */,
+				B308DF29146C4DBA00002D00 /* AUEscenaTexto.cpp */,
+				2CBE082021A37BB1002B86EF /* AUEscenaTextoEditable.h */,
+				2CBE082121A37BB1002B86EF /* AUEscenaTextoEditable.cpp */,
+				2C3066D521ADEEC30098DF8A /* AUEscenaTextoEditableOffscreen.h */,
+				2C3066D421ADEEC30098DF8A /* AUEscenaTextoEditableOffscreen.cpp */,
+				2C52C3071672857F008AE5A9 /* AUEscenaCuerdaDef.h */,
+				2C36A38615AB25D50031166D /* AUEscenaCuerda.h */,
+				2C36A38515AB25D50031166D /* AUEscenaCuerda.cpp */,
+				2C36A38A15AB25D50031166D /* AUEscenaMalla.h */,
+				2C36A38915AB25D50031166D /* AUEscenaMalla.cpp */,
+				2C8F1F211484376300959542 /* AUEscenaLuzRadial.h */,
+				2C8F1F201484376300959542 /* AUEscenaLuzRadial.cpp */,
+				2C7305EF167F8CC100E50226 /* AUEscenaLuzSensor.h */,
+				2C7305EE167F8CC100E50226 /* AUEscenaLuzSensor.cpp */,
+				2CE40035167638700041FF16 /* AUEscenaLuzEspejo.h */,
+				2CE40034167638700041FF16 /* AUEscenaLuzEspejo.cpp */,
+				2CBA88A016779860000C2831 /* AUEscenaLuzSombra.h */,
+				2CBA889F16779860000C2831 /* AUEscenaLuzSombra.cpp */,
+				2C83103215B0813E0024F95C /* AUEscenaIluminacion.h */,
+				2C83103115B0813E0024F95C /* AUEscenaIluminacion.cpp */,
+			);
+			name = base;
+			sourceTree = "<group>";
+		};
+		2CCE394315AC95E4005EFD49 /* compuestos */ = {
+			isa = PBXGroup;
+			children = (
+				2CA4385E1DBD763C008426D1 /* AUEscenaSpriteWithLoader.h */,
+				2CA4385F1DBD763C008426D1 /* AUEscenaSpriteWithLoader.cpp */,
+				2CD088551C3AC3AB004648E6 /* AUEscenaPanel.h */,
+				2CD088561C3AC3AB004648E6 /* AUEscenaPanel.cpp */,
+				2CDE24F0221B9E2E00AA2D5A /* AUEscenaPanelTexto.h */,
+				2CDE24F1221B9E2E00AA2D5A /* AUEscenaPanelTexto.cpp */,
+				2CBFABC815B5CFAB0089361B /* AUEscenaAnimacionI.h */,
+				2CBFABC715B5CFAB0089361B /* AUEscenaAnimacionI.cpp */,
+				B30CDA8914958958005165B7 /* AUEscenaAnimacion.h */,
+				B30CDA8C14958962005165B7 /* AUEscenaAnimacion.cpp */,
+				2CB7D5DD158D8F180061CE87 /* AUEscenaTextoSprites.h */,
+				2CB7D5DC158D8F180061CE87 /* AUEscenaTextoSprites.cpp */,
+				2C36A39615AB25D50031166D /* AUEscenaMallaGelatina.h */,
+				2C36A39515AB25D50031166D /* AUEscenaMallaGelatina.cpp */,
+				2C36A39415AB25D50031166D /* AUEscenaMallaConHueso.h */,
+				2C36A39315AB25D50031166D /* AUEscenaMallaConHueso.cpp */,
+				2C36A39215AB25D50031166D /* AUEscenaMallaBezier.h */,
+				2C36A39115AB25D50031166D /* AUEscenaMallaBezier.cpp */,
+				2C36A39815AB25D50031166D /* AUEscenaMallaXBase.h */,
+				2C36A39715AB25D50031166D /* AUEscenaMallaXBase.cpp */,
+				2C36A38C15AB25D50031166D /* AUEscenaMalla3.h */,
+				2C36A38B15AB25D50031166D /* AUEscenaMalla3.cpp */,
+				2C36A38E15AB25D50031166D /* AUEscenaMalla9.h */,
+				2C36A38D15AB25D50031166D /* AUEscenaMalla9.cpp */,
+				2C36A39015AB25D50031166D /* AUEscenaMalla9Patron.h */,
+				2C36A38F15AB25D50031166D /* AUEscenaMalla9Patron.cpp */,
+				2CBFABCF15B5D1920089361B /* AUEscenaCuerpoI.h */,
+				2CBFABCE15B5D1920089361B /* AUEscenaCuerpoI.cpp */,
+				2C36A38815AB25D50031166D /* AUEscenaCuerpo.h */,
+				2C36A38715AB25D50031166D /* AUEscenaCuerpo.cpp */,
+				2C2E25A215B70E6F001E271F /* AUEscenaCuerpoMulti.h */,
+				2C2E25A115B70E6F001E271F /* AUEscenaCuerpoMulti.cpp */,
+				2CCE394415AC96EE005EFD49 /* AUEscenaPolea.h */,
+				2CCE394715AC96FA005EFD49 /* AUEscenaPolea.cpp */,
+				2CCDE0601C5A8BFA00284EB2 /* AUParticlesGenerator.h */,
+				2CCDE0611C5A8BFA00284EB2 /* AUParticlesGenerator.cpp */,
+				2CD0132821D6ADDB00212030 /* AUEscenaContentI.h */,
+				2CD0132721D6AB3100212030 /* AUEscenaCols.h */,
+				2CD0132421D6AB1000212030 /* AUEscenaCols.cpp */,
+				2CD0132321D6AAEF00212030 /* AUEscenaCol.h */,
+				2CD0132021D6AAD100212030 /* AUEscenaCol.cpp */,
+			);
+			name = compuestos;
+			sourceTree = "<group>";
+		};
+		2CD70C7B27055A0100AFB74F /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				2CD70C8027055A2D00AFB74F /* Makefile */,
+				2CD70C7F27055A2D00AFB74F /* MakefileProject.mk */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		2CF5128C1682562A0030963A /* avanzados */ = {
+			isa = PBXGroup;
+			children = (
+				2CF51296168256780030963A /* AUNodoElectroCarga.h */,
+				2CF51295168256780030963A /* AUNodoElectroCarga.cpp */,
+				2CF5128E168256780030963A /* AUBateria.h */,
+				2CF5128D168256780030963A /* AUBateria.cpp */,
+				2CF51298168256780030963A /* AUPanelSolar.h */,
+				2CF51297168256780030963A /* AUPanelSolar.cpp */,
+				2CF51290168256780030963A /* AUBombillo.h */,
+				2CF5128F168256780030963A /* AUBombillo.cpp */,
+				2CEA8B191683BA87006B378E /* AULaser.h */,
+				2CEA8B181683BA83006B378E /* AULaser.cpp */,
+				2CF51292168256780030963A /* AUElectronodo.h */,
+				2CF51291168256780030963A /* AUElectronodo.cpp */,
+				2CF51294168256780030963A /* AULanzallamas.h */,
+				2CF51293168256780030963A /* AULanzallamas.cpp */,
+			);
+			name = avanzados;
+			sourceTree = "<group>";
+		};
+		B3A10C65142C13940070BFCA = {
+			isa = PBXGroup;
+			children = (
+				2CD70C7B27055A0100AFB74F /* Packages */,
+				2CFF50391942234600D44E24 /* actualizarTodos.cpp */,
+				B3A10C75142C13940070BFCA /* lib-auframework-media */,
+				B3A10C71142C13940070BFCA /* products */,
+			);
+			sourceTree = "<group>";
+		};
+		B3A10C71142C13940070BFCA /* products */ = {
+			isa = PBXGroup;
+			children = (
+				B3A10C70142C13940070BFCA /* libauframework-media-ios.a */,
+				B32D82C41442B10B003CC40B /* libauframework-media-osx.a */,
+			);
+			name = products;
+			sourceTree = "<group>";
+		};
+		B3A10C75142C13940070BFCA /* lib-auframework-media */ = {
+			isa = PBXGroup;
+			children = (
+				2C14987C171CADBB009B1AAB /* AUFrameworkMediaDefiniciones.h */,
+				2C149872171CAD72009B1AAB /* AUFrameworkMedia.h */,
+				2C03B33A1919541500AC54C4 /* AUFrameworkMediaRegistro.h */,
+				2C1BBA8F1901A2EA00FB9C06 /* AUFrameworkMediaRegistro.cpp */,
+				2C149871171CAD72009B1AAB /* AUFrameworkMediaStdAfx.h */,
+				2C149870171CAD72009B1AAB /* AUFrameworkMediaStdAfx.cpp */,
+				2C14984B171CA908009B1AAB /* datos */,
+				2C217A9E14F3E64F00B3696B /* audio */,
+				B3A10DA1142C18BA0070BFCA /* visual */,
+			);
+			name = "lib-auframework-media";
+			sourceTree = "<group>";
+		};
+		B3A10DA1142C18BA0070BFCA /* visual */ = {
+			isa = PBXGroup;
+			children = (
+				B3A10D16142C15F10070BFCA /* NBPropiedadesEnEscena.h */,
+				2C2E98AE149A9D3600583F42 /* NBPropiedadesFijacion.h */,
+				2C9AF8EC165ED224008248C3 /* iluminacion */,
+				B3A10DA4142C18E00070BFCA /* gestores */,
+				B3A10DA3142C18DE0070BFCA /* animadores */,
+				B3A10DA2142C18DB0070BFCA /* escenas */,
+			);
+			name = visual;
+			sourceTree = "<group>";
+		};
+		B3A10DA2142C18DB0070BFCA /* escenas */ = {
+			isa = PBXGroup;
+			children = (
+				2C0123BC2210756D004600BB /* AUEscenaTopItfDefs.h */,
+				2C0123B7220F4E70004600BB /* AUEscenaTopItf.h */,
+				B3A10CBC142C15EF0070BFCA /* AUEscenaObjeto.h */,
+				B3A10CBB142C15EF0070BFCA /* AUEscenaObjeto.cpp */,
+				B3A10CB8142C15EF0070BFCA /* AUEscenaContenedor.h */,
+				B3A10CB7142C15EF0070BFCA /* AUEscenaContenedor.cpp */,
+				2C6B97F71B016E61002635D0 /* AUEscenaContenedorLimitado.h */,
+				2C6B97F81B016E6F002635D0 /* AUEscenaContenedorLimitado.cpp */,
+				2C0123B4220F42A8004600BB /* AUEscenaContenedorRaiz.h */,
+				2C0123B3220F42A8004600BB /* AUEscenaContenedorRaiz.cpp */,
+				2C6412AE18C9399400E4F7A2 /* audio */,
+				2CB23DE51A55C9FB00D08A16 /* fuentes */,
+				2CB7D5DA158D76C00061CE87 /* texturas */,
+				2CCE394115AC9581005EFD49 /* base */,
+				2CCE394315AC95E4005EFD49 /* compuestos */,
+				2C9F820F199887A3002692CD /* controles */,
+				2CF5128C1682562A0030963A /* avanzados */,
+			);
+			name = escenas;
+			sourceTree = "<group>";
+		};
+		B3A10DA3142C18DE0070BFCA /* animadores */ = {
+			isa = PBXGroup;
+			children = (
+				2C9E8EEF15990BF00036D2CD /* AUAnimacionDef.h */,
+				2C725A0C15FA541500A5FC62 /* AUAnimadorPropsDef.h */,
+				2C2B00FB155AB5D200FD6D95 /* AUAnimadorObjetoEscena.h */,
+				2C2B00FF155AB5E000FD6D95 /* AUAnimadorObjetoEscena.cpp */,
+				2CF3529515F7BA2500593A19 /* AUAnimadorContenedor.h */,
+				2CF3529415F7BA2500593A19 /* AUAnimadorContenedor.cpp */,
+				2CF3529C15F7C15700593A19 /* AUAnimadorAnimacion.h */,
+				2CF3529B15F7C15700593A19 /* AUAnimadorAnimacion.cpp */,
+				2C725A1115FA602C00A5FC62 /* AUAnimadorSonido.h */,
+				2C725A1015FA602C00A5FC62 /* AUAnimadorSonido.cpp */,
+				2C585C8814FC104A007D7863 /* AUAnimadorSonidoVolumen.h */,
+				2C585C8B14FC1055007D7863 /* AUAnimadorSonidoVolumen.cpp */,
+			);
+			name = animadores;
+			sourceTree = "<group>";
+		};
+		B3A10DA4142C18E00070BFCA /* gestores */ = {
+			isa = PBXGroup;
+			children = (
+				2C3A86F22203613B000625D5 /* fonts */,
+				2C52C30416724CCE008AE5A9 /* NBGestorGLDef.h */,
+				B345A79F1442171600A297BC /* NBGestorGL.h */,
+				B345A79E1442171600A297BC /* NBGestorGL.cpp */,
+				B3A10D11142C15F10070BFCA /* NBGestorTexturas.h */,
+				B3A10D12142C15F10070BFCA /* NBGestorTexturas.cpp */,
+				2C507BF71CC96DCB0098BDDD /* NBGestorTeclasDefs.h */,
+				2C9F820B19987A03002692CD /* NBGestorTeclas.h */,
+				2C9F820C19987A15002692CD /* NBGestorTeclas.cpp */,
+				2C1714D0150A4B2E0093A1D2 /* NBGestorTouches.h */,
+				2C1714CF150A4B2E0093A1D2 /* NBGestorTouches.cpp */,
+				2CF51287168208130030963A /* NBGestorEscenaDef.h */,
+				2CDFC225145397A7007697E7 /* NBGestorEscena.h */,
+				2CDFC228145397B4007697E7 /* NBGestorEscena.cpp */,
+				B3A10D0A142C15F10070BFCA /* NBGestorAnimaciones.h */,
+				B3A10D09142C15F10070BFCA /* NBGestorAnimaciones.cpp */,
+				2C1498AA171CCE23009B1AAB /* NBGestorPersonajes.h */,
+				2C1498A9171CCE23009B1AAB /* NBGestorPersonajes.cpp */,
+				2C285FF715B5C7CF00DB84AB /* intermediarios */,
+				2C36A3DB15AB29EF0031166D /* fisica */,
+			);
+			name = gestores;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		B32D82C31442B10B003CC40B /* auframework-media-osx */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B32D82C71442B10B003CC40B /* Build configuration list for PBXNativeTarget "auframework-media-osx" */;
+			buildPhases = (
+				B32D82C01442B10B003CC40B /* Sources */,
+				B32D82C11442B10B003CC40B /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "auframework-media-osx";
+			productName = "auframework-media-osx";
+			productReference = B32D82C41442B10B003CC40B /* libauframework-media-osx.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		B3A10C6F142C13940070BFCA /* auframework-media-ios */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B3A10C7A142C13940070BFCA /* Build configuration list for PBXNativeTarget "auframework-media-ios" */;
+			buildPhases = (
+				B3A10C6C142C13940070BFCA /* Sources */,
+				B3A10C6D142C13940070BFCA /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "auframework-media-ios";
+			productName = "auframework-media-ios";
+			productReference = B3A10C70142C13940070BFCA /* libauframework-media-ios.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B3A10C67142C13940070BFCA /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+			};
+			buildConfigurationList = B3A10C6A142C13940070BFCA /* Build configuration list for PBXProject "lib-auframework-media" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				English,
+				en,
+			);
+			mainGroup = B3A10C65142C13940070BFCA;
+			productRefGroup = B3A10C71142C13940070BFCA /* products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				B3A10C6F142C13940070BFCA /* auframework-media-ios */,
+				B32D82C31442B10B003CC40B /* auframework-media-osx */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		B32D82C01442B10B003CC40B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2CDE24F3221B9E2E00AA2D5A /* AUEscenaPanelTexto.cpp in Sources */,
+				2C36A3EB15AB2CD80031166D /* AUEscenaCuerda.cpp in Sources */,
+				2CD0132221D6AAD100212030 /* AUEscenaCol.cpp in Sources */,
+				2C36A3EC15AB2CD80031166D /* AUEscenaCuerpo.cpp in Sources */,
+				2C36A3B515AB26D50031166D /* AUEscenaMalla.cpp in Sources */,
+				2C36A3B615AB26D50031166D /* AUEscenaMallaGelatina.cpp in Sources */,
+				2C3066D221ADE6550098DF8A /* AUITextBox.cpp in Sources */,
+				2C36A3B715AB26D50031166D /* AUEscenaMallaConHueso.cpp in Sources */,
+				2C0BC205213E070B007783AD /* AUISelectBox.cpp in Sources */,
+				2C36A3B815AB26D50031166D /* AUEscenaMallaBezier.cpp in Sources */,
+				2C36A3B915AB26D50031166D /* AUEscenaMallaXBase.cpp in Sources */,
+				2C36A3BA15AB26D50031166D /* AUEscenaMalla3.cpp in Sources */,
+				2C36A3BB15AB26D50031166D /* AUEscenaMalla9.cpp in Sources */,
+				2C9F820E19987A15002692CD /* NBGestorTeclas.cpp in Sources */,
+				2C36A3BC15AB26D50031166D /* AUEscenaMalla9Patron.cpp in Sources */,
+				B32D83741442B37A003CC40B /* NBGestorGL.cpp in Sources */,
+				B32D83751442B37A003CC40B /* NBGestorTexturas.cpp in Sources */,
+				B32D83761442B37A003CC40B /* NBGestorAnimaciones.cpp in Sources */,
+				B32D83791442B37A003CC40B /* AUEscenaObjeto.cpp in Sources */,
+				B32D837A1442B37A003CC40B /* AUEscenaContenedor.cpp in Sources */,
+				B32D837B1442B37A003CC40B /* AUEscenaSprite.cpp in Sources */,
+				2C60A82E1C287557005C7C3E /* AUIButton.cpp in Sources */,
+				2CB23DE91A55CA3D00D08A16 /* AUFuenteRaster.cpp in Sources */,
+				B32D837C1442B37A003CC40B /* AUTextura.cpp in Sources */,
+				2CDFC22A145397B4007697E7 /* NBGestorEscena.cpp in Sources */,
+				B301F7291465A958006A414B /* AUEscenaFigura.cpp in Sources */,
+				B308DF25146C1AD000002D00 /* AUFuenteTextura.cpp in Sources */,
+				2CB4C1FC2156DCBF007BF314 /* AUFuenteVisualModel.cpp in Sources */,
+				2CD0132621D6AB1000212030 /* AUEscenaCols.cpp in Sources */,
+				2CDE24F7221BB1A000AA2D5A /* AUIMsgBox.cpp in Sources */,
+				B308DF2B146C4DBA00002D00 /* AUEscenaTexto.cpp in Sources */,
+				2C8F1F231484376400959542 /* AUEscenaLuzRadial.cpp in Sources */,
+				2CFCB7D01485BC10001FF423 /* AUEscenaFiguraTransformable.cpp in Sources */,
+				B30CDA8E14958962005165B7 /* AUEscenaAnimacion.cpp in Sources */,
+				2C217AC314F405D300B3696B /* AUEscenaSonido.cpp in Sources */,
+				2C217ACE14F41BE300B3696B /* NBGestorSonidos.cpp in Sources */,
+				2C585C8D14FC1055007D7863 /* AUAnimadorSonidoVolumen.cpp in Sources */,
+				2CCDE0631C5A8BFA00284EB2 /* AUParticlesGenerator.cpp in Sources */,
+				2C31966714FFFA9D00A5B0D3 /* AUEscenaSonidoStream.cpp in Sources */,
+				2C1714D2150A4B2E0093A1D2 /* NBGestorTouches.cpp in Sources */,
+				2C0264771523F63A0085CF06 /* AUEscenaSnd.cpp in Sources */,
+				2C0199F0153B8DF000DC70F9 /* AURenderBuffer.cpp in Sources */,
+				2C1BBA911901A2EA00FB9C06 /* AUFrameworkMediaRegistro.cpp in Sources */,
+				2C2B0101155AB5E000FD6D95 /* AUAnimadorObjetoEscena.cpp in Sources */,
+				2C3516D5155C053700D38770 /* AUEscenaSpritePorcion.cpp in Sources */,
+				2C6AFC1915643E4D00AF5E0B /* AUEscenaSpriteMascara.cpp in Sources */,
+				2C36A3B215AB26630031166D /* NBGestorCuerpos.cpp in Sources */,
+				2C36A3C815AB27080031166D /* NBGestorFisica.cpp in Sources */,
+				2C36A3D115AB273C0031166D /* AUSimuladorLiquidos.cpp in Sources */,
+				2C6B97FA1B016E6F002635D0 /* AUEscenaContenedorLimitado.cpp in Sources */,
+				2C36A3E215AB2B6D0031166D /* NBSimuladorLiquidosMotor1.cpp in Sources */,
+				2C36A3E615AB2B6D0031166D /* NBSimuladorLiquidosMotor2.cpp in Sources */,
+				2CCE394915AC96FA005EFD49 /* AUEscenaPolea.cpp in Sources */,
+				2C83103415B0813E0024F95C /* AUEscenaIluminacion.cpp in Sources */,
+				2C285FFD15B5C7F800DB84AB /* AUCargadorAnimaciones.cpp in Sources */,
+				2C28600215B5CB0C00DB84AB /* AUCargadorCuerpos.cpp in Sources */,
+				2C8D72FC1AE9E316009DDCCF /* AUEscenaSpriteElastico.cpp in Sources */,
+				2CBFABCA15B5CFAB0089361B /* AUEscenaAnimacionI.cpp in Sources */,
+				2CBFABD115B5D1920089361B /* AUEscenaCuerpoI.cpp in Sources */,
+				2C0BC201213DFD0D007783AD /* AUIDateBox.cpp in Sources */,
+				2C2E25A415B70E6F001E271F /* AUEscenaCuerpoMulti.cpp in Sources */,
+				2C56CF1815D4154400177997 /* AUEscenaGrupoParticulas.cpp in Sources */,
+				2C02EDC715DA9B4D00CCBBFA /* AUEscenaGeneradorParticulas.cpp in Sources */,
+				2C3B292C15EED4C6008941FD /* AUEscenaSensor.cpp in Sources */,
+				2CF3529715F7BA2500593A19 /* AUAnimadorContenedor.cpp in Sources */,
+				2CF3529E15F7C15700593A19 /* AUAnimadorAnimacion.cpp in Sources */,
+				2C725A1315FA602D00A5FC62 /* AUAnimadorSonido.cpp in Sources */,
+				2C27104E163736A80051BA81 /* AUEscenaSonidoStreamMulti.cpp in Sources */,
+				2CD2424616486A7B00AEF0DC /* AUEscenaFiltro.cpp in Sources */,
+				2CE40037167638700041FF16 /* AUEscenaLuzEspejo.cpp in Sources */,
+				2CDE24EF221B51F100AA2D5A /* AUTextoFiltro.cpp in Sources */,
+				2CBA88A216779860000C2831 /* AUEscenaLuzSombra.cpp in Sources */,
+				2CBE082321A37BB1002B86EF /* AUEscenaTextoEditable.cpp in Sources */,
+				2C3066D721ADEEC30098DF8A /* AUEscenaTextoEditableOffscreen.cpp in Sources */,
+				2C42AC18167BD771003EEED7 /* AUEscenaGrupoParticulasFuego.cpp in Sources */,
+				2C227638167CEC940007AB26 /* AUEscenaElectroRayo.cpp in Sources */,
+				2C3A86F72203618B000625D5 /* AUMngrFonts.cpp in Sources */,
+				2CD088581C3AC3AB004648E6 /* AUEscenaPanel.cpp in Sources */,
+				2C7305F1167F8CC100E50226 /* AUEscenaLuzSensor.cpp in Sources */,
+				2CB23DEF1A56FBD200D08A16 /* AUFuenteRender.cpp in Sources */,
+				2CF5129A168256780030963A /* AUBateria.cpp in Sources */,
+				2CF5129E168256780030963A /* AUBombillo.cpp in Sources */,
+				2CF512A2168256780030963A /* AUElectronodo.cpp in Sources */,
+				2CF512A6168256780030963A /* AULanzallamas.cpp in Sources */,
+				2CF512AA168256780030963A /* AUNodoElectroCarga.cpp in Sources */,
+				2C3A86FB220375A8000625D5 /* NBMngrFonts.cpp in Sources */,
+				2CF512AE168256780030963A /* AUPanelSolar.cpp in Sources */,
+				2CEA8B1B1683BA8E006B378E /* AULaser.cpp in Sources */,
+				2CB066E11698D5BF00F42D19 /* AUEscenaRuta.cpp in Sources */,
+				2CDE24EB221B4F1B00AA2D5A /* AUTextoFiltroLimitado.cpp in Sources */,
+				2CB066E81698DA8600F42D19 /* AUEscenaRutaAnimador.cpp in Sources */,
+				2CDE7A8B16AE273B00B045A1 /* AUEscenaGrupoParticulasLinea.cpp in Sources */,
+				2C5E27E616C5E20800A40BFF /* NBSegmentadorFiguras.cpp in Sources */,
+				2CE4AC2416EE3E0D000568AB /* AUEscenaPuasLinea.cpp in Sources */,
+				2CE4AC2D16EE4D46000568AB /* AUEscenaPuasLineaAnimSinc.cpp in Sources */,
+				2CE4AC3916EE63D7000568AB /* AUEscenaPuasLineaAnimIndiv.cpp in Sources */,
+				2C512B2A16F1067B0060E61D /* AUEscenaLaser.cpp in Sources */,
+				2C149851171CA917009B1AAB /* AUDialogo.cpp in Sources */,
+				2C149855171CA917009B1AAB /* AUDialogoMutable.cpp in Sources */,
+				2C14985E171CA975009B1AAB /* NBGestorIdioma.cpp in Sources */,
+				2C149864171CA9AA009B1AAB /* AUDiccionarioTextoMulti.cpp in Sources */,
+				2CA438621DBD9DE4008426D1 /* AUEscenaSpriteWithLoader.cpp in Sources */,
+				2C0123B6220F42A8004600BB /* AUEscenaContenedorRaiz.cpp in Sources */,
+				2C149875171CAD72009B1AAB /* AUFrameworkMediaStdAfx.cpp in Sources */,
+				2C1498AC171CCE23009B1AAB /* NBGestorPersonajes.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B3A10C6C142C13940070BFCA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2CD0132521D6AB1000212030 /* AUEscenaCols.cpp in Sources */,
+				2CD088571C3AC3AB004648E6 /* AUEscenaPanel.cpp in Sources */,
+				2CBE082221A37BB1002B86EF /* AUEscenaTextoEditable.cpp in Sources */,
+				2CA438601DBD763C008426D1 /* AUEscenaSpriteWithLoader.cpp in Sources */,
+				B3A10D3C142C15F20070BFCA /* AUEscenaContenedor.cpp in Sources */,
+				2C0BC1FF213DF7EA007783AD /* AUIDateBox.cpp in Sources */,
+				B3A10D40142C15F20070BFCA /* AUEscenaObjeto.cpp in Sources */,
+				B3A10D42142C15F20070BFCA /* AUEscenaSprite.cpp in Sources */,
+				2CDE24F2221B9E2E00AA2D5A /* AUEscenaPanelTexto.cpp in Sources */,
+				B3A10D80142C15F20070BFCA /* AUTextura.cpp in Sources */,
+				B3A10D8A142C15F20070BFCA /* NBGestorAnimaciones.cpp in Sources */,
+				B3A10D93142C15F20070BFCA /* NBGestorTexturas.cpp in Sources */,
+				2C0123B5220F42A8004600BB /* AUEscenaContenedorRaiz.cpp in Sources */,
+				B345A7A01442171600A297BC /* NBGestorGL.cpp in Sources */,
+				2CDFC229145397B4007697E7 /* NBGestorEscena.cpp in Sources */,
+				B301F7281465A958006A414B /* AUEscenaFigura.cpp in Sources */,
+				B308DF24146C1AD000002D00 /* AUFuenteTextura.cpp in Sources */,
+				2CDE24EA221B4F1B00AA2D5A /* AUTextoFiltroLimitado.cpp in Sources */,
+				B308DF2A146C4DBA00002D00 /* AUEscenaTexto.cpp in Sources */,
+				2C8F1F221484376400959542 /* AUEscenaLuzRadial.cpp in Sources */,
+				2CFCB7CF1485BC10001FF423 /* AUEscenaFiguraTransformable.cpp in Sources */,
+				2CFF503A1942234600D44E24 /* actualizarTodos.cpp in Sources */,
+				B30CDA8D14958962005165B7 /* AUEscenaAnimacion.cpp in Sources */,
+				2C217AC214F405D300B3696B /* AUEscenaSonido.cpp in Sources */,
+				2C217ACD14F41BE300B3696B /* NBGestorSonidos.cpp in Sources */,
+				2C585C8C14FC1055007D7863 /* AUAnimadorSonidoVolumen.cpp in Sources */,
+				2C31966614FFFA9D00A5B0D3 /* AUEscenaSonidoStream.cpp in Sources */,
+				2C1714D1150A4B2E0093A1D2 /* NBGestorTouches.cpp in Sources */,
+				2C8D72FB1AE9E316009DDCCF /* AUEscenaSpriteElastico.cpp in Sources */,
+				2C0264761523F63A0085CF06 /* AUEscenaSnd.cpp in Sources */,
+				2C0199EF153B8DF000DC70F9 /* AURenderBuffer.cpp in Sources */,
+				2C2B0100155AB5E000FD6D95 /* AUAnimadorObjetoEscena.cpp in Sources */,
+				2C3516D4155C053700D38770 /* AUEscenaSpritePorcion.cpp in Sources */,
+				2C6AFC1815643E4D00AF5E0B /* AUEscenaSpriteMascara.cpp in Sources */,
+				2C36A39915AB25D50031166D /* AUEscenaCuerda.cpp in Sources */,
+				2CB23DE81A55CA3D00D08A16 /* AUFuenteRaster.cpp in Sources */,
+				2C36A39B15AB25D50031166D /* AUEscenaCuerpo.cpp in Sources */,
+				2C36A39D15AB25D50031166D /* AUEscenaMalla.cpp in Sources */,
+				2C36A39F15AB25D50031166D /* AUEscenaMalla3.cpp in Sources */,
+				2C3A86F62203618B000625D5 /* AUMngrFonts.cpp in Sources */,
+				2C36A3A115AB25D50031166D /* AUEscenaMalla9.cpp in Sources */,
+				2C36A3A315AB25D50031166D /* AUEscenaMalla9Patron.cpp in Sources */,
+				2C1BBA901901A2EA00FB9C06 /* AUFrameworkMediaRegistro.cpp in Sources */,
+				2C36A3A515AB25D50031166D /* AUEscenaMallaBezier.cpp in Sources */,
+				2C36A3A715AB25D50031166D /* AUEscenaMallaConHueso.cpp in Sources */,
+				2C36A3A915AB25D50031166D /* AUEscenaMallaGelatina.cpp in Sources */,
+				2C36A3AB15AB25D50031166D /* AUEscenaMallaXBase.cpp in Sources */,
+				2C36A3B115AB26630031166D /* NBGestorCuerpos.cpp in Sources */,
+				2C0BC204213E070B007783AD /* AUISelectBox.cpp in Sources */,
+				2C36A3C715AB27080031166D /* NBGestorFisica.cpp in Sources */,
+				2C36A3D015AB273C0031166D /* AUSimuladorLiquidos.cpp in Sources */,
+				2C36A3E115AB2B6D0031166D /* NBSimuladorLiquidosMotor1.cpp in Sources */,
+				2C36A3E515AB2B6D0031166D /* NBSimuladorLiquidosMotor2.cpp in Sources */,
+				2CDE24F6221BB1A000AA2D5A /* AUIMsgBox.cpp in Sources */,
+				2CCE394815AC96FA005EFD49 /* AUEscenaPolea.cpp in Sources */,
+				2C83103315B0813E0024F95C /* AUEscenaIluminacion.cpp in Sources */,
+				2C285FFC15B5C7F800DB84AB /* AUCargadorAnimaciones.cpp in Sources */,
+				2C28600115B5CB0C00DB84AB /* AUCargadorCuerpos.cpp in Sources */,
+				2CB4C1FB2156DCBF007BF314 /* AUFuenteVisualModel.cpp in Sources */,
+				2CBFABC915B5CFAB0089361B /* AUEscenaAnimacionI.cpp in Sources */,
+				2CBFABD015B5D1920089361B /* AUEscenaCuerpoI.cpp in Sources */,
+				2C9F820D19987A15002692CD /* NBGestorTeclas.cpp in Sources */,
+				2C2E25A315B70E6F001E271F /* AUEscenaCuerpoMulti.cpp in Sources */,
+				2C56CF1715D4154400177997 /* AUEscenaGrupoParticulas.cpp in Sources */,
+				2C02EDC615DA9B4D00CCBBFA /* AUEscenaGeneradorParticulas.cpp in Sources */,
+				2C3B292B15EED4C6008941FD /* AUEscenaSensor.cpp in Sources */,
+				2CF3529615F7BA2500593A19 /* AUAnimadorContenedor.cpp in Sources */,
+				2C60A82D1C287557005C7C3E /* AUIButton.cpp in Sources */,
+				2CF3529D15F7C15700593A19 /* AUAnimadorAnimacion.cpp in Sources */,
+				2CB23DEE1A56FBD200D08A16 /* AUFuenteRender.cpp in Sources */,
+				2C725A1215FA602D00A5FC62 /* AUAnimadorSonido.cpp in Sources */,
+				2C27104D163736A80051BA81 /* AUEscenaSonidoStreamMulti.cpp in Sources */,
+				2CD2424516486A7B00AEF0DC /* AUEscenaFiltro.cpp in Sources */,
+				2CE40036167638700041FF16 /* AUEscenaLuzEspejo.cpp in Sources */,
+				2CBA88A116779860000C2831 /* AUEscenaLuzSombra.cpp in Sources */,
+				2C42AC17167BD771003EEED7 /* AUEscenaGrupoParticulasFuego.cpp in Sources */,
+				2C227637167CEC940007AB26 /* AUEscenaElectroRayo.cpp in Sources */,
+				2C7305F0167F8CC100E50226 /* AUEscenaLuzSensor.cpp in Sources */,
+				2CDE24EE221B51F100AA2D5A /* AUTextoFiltro.cpp in Sources */,
+				2CF51299168256780030963A /* AUBateria.cpp in Sources */,
+				2CF5129D168256780030963A /* AUBombillo.cpp in Sources */,
+				2CF512A1168256780030963A /* AUElectronodo.cpp in Sources */,
+				2C3066D321ADE6550098DF8A /* AUITextBox.cpp in Sources */,
+				2CF512A5168256780030963A /* AULanzallamas.cpp in Sources */,
+				2CF512A9168256780030963A /* AUNodoElectroCarga.cpp in Sources */,
+				2CF512AD168256780030963A /* AUPanelSolar.cpp in Sources */,
+				2CEA8B1A1683BA8E006B378E /* AULaser.cpp in Sources */,
+				2CB066E01698D5BF00F42D19 /* AUEscenaRuta.cpp in Sources */,
+				2CB066E71698DA8600F42D19 /* AUEscenaRutaAnimador.cpp in Sources */,
+				2CDE7A8A16AE273B00B045A1 /* AUEscenaGrupoParticulasLinea.cpp in Sources */,
+				2CD0132121D6AAD100212030 /* AUEscenaCol.cpp in Sources */,
+				2C5E27E516C5E20800A40BFF /* NBSegmentadorFiguras.cpp in Sources */,
+				2CE4AC2316EE3E0D000568AB /* AUEscenaPuasLinea.cpp in Sources */,
+				2CE4AC2C16EE4D46000568AB /* AUEscenaPuasLineaAnimSinc.cpp in Sources */,
+				2CE4AC3816EE63D7000568AB /* AUEscenaPuasLineaAnimIndiv.cpp in Sources */,
+				2C512B2916F1067B0060E61D /* AUEscenaLaser.cpp in Sources */,
+				2C6B97F91B016E6F002635D0 /* AUEscenaContenedorLimitado.cpp in Sources */,
+				2C149850171CA917009B1AAB /* AUDialogo.cpp in Sources */,
+				2C149854171CA917009B1AAB /* AUDialogoMutable.cpp in Sources */,
+				2C14985D171CA975009B1AAB /* NBGestorIdioma.cpp in Sources */,
+				2CCDE0621C5A8BFA00284EB2 /* AUParticlesGenerator.cpp in Sources */,
+				2C3A86FC220375A8000625D5 /* NBMngrFonts.cpp in Sources */,
+				2C149863171CA9AA009B1AAB /* AUDiccionarioTextoMulti.cpp in Sources */,
+				2C3066D621ADEEC30098DF8A /* AUEscenaTextoEditableOffscreen.cpp in Sources */,
+				2C149874171CAD72009B1AAB /* AUFrameworkMediaStdAfx.cpp in Sources */,
+				2C1498AB171CCE23009B1AAB /* NBGestorPersonajes.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		B32D82C51442B10B003CC40B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				EXECUTABLE_PREFIX = lib;
+				GCC_CHAR_IS_UNSIGNED_CHAR = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				ONLY_ACTIVE_ARCH = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		B32D82C61442B10B003CC40B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				EXECUTABLE_PREFIX = lib;
+				GCC_CHAR_IS_UNSIGNED_CHAR = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				ONLY_ACTIVE_ARCH = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+		B3A10C78142C13940070BFCA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LIBRARY = "libc++";
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = DEBUG;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				SKIP_INSTALL = NO;
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../../include $(SRCROOT)/../../../../../sys-nbframework/lib-nbframework-src/include $(SRCROOT)/../../../../lib-auframework-src/include $(SRCROOT)/../../../../lib-nixtla-audio-src/include $(SRCROOT)/../../../../lib-nixtla-audio-src/src/c";
+				USE_HEADERMAP = NO;
+			};
+			name = Debug;
+		};
+		B3A10C79142C13940070BFCA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LIBRARY = "libc++";
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				SKIP_INSTALL = NO;
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../../include $(SRCROOT)/../../../../../sys-nbframework/lib-nbframework-src/include $(SRCROOT)/../../../../lib-auframework-src/include $(SRCROOT)/../../../../lib-nixtla-audio-src/include $(SRCROOT)/../../../../lib-nixtla-audio-src/src/c";
+				USE_HEADERMAP = NO;
+			};
+			name = Release;
+		};
+		B3A10C7B142C13940070BFCA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				DSTROOT = /tmp/AUFrameworkMedia.dst;
+				GCC_CHAR_IS_UNSIGNED_CHAR = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.1;
+				"IPHONEOS_DEPLOYMENT_TARGET[arch=arm64]" = 7.0;
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		B3A10C7C142C13940070BFCA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				DSTROOT = /tmp/AUFrameworkMedia.dst;
+				GCC_CHAR_IS_UNSIGNED_CHAR = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.1;
+				"IPHONEOS_DEPLOYMENT_TARGET[arch=arm64]" = 7.0;
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		B32D82C71442B10B003CC40B /* Build configuration list for PBXNativeTarget "auframework-media-osx" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B32D82C51442B10B003CC40B /* Debug */,
+				B32D82C61442B10B003CC40B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B3A10C6A142C13940070BFCA /* Build configuration list for PBXProject "lib-auframework-media" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B3A10C78142C13940070BFCA /* Debug */,
+				B3A10C79142C13940070BFCA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B3A10C7A142C13940070BFCA /* Build configuration list for PBXNativeTarget "auframework-media-ios" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B3A10C7B142C13940070BFCA /* Debug */,
+				B3A10C7C142C13940070BFCA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = B3A10C67142C13940070BFCA /* Project object */;
+}
