@@ -1,12 +1,9 @@
 # Moved to Github
 
-This repository was moved from another service to Github.
+This repository was moved to Github. My original repository has ~7 years of activity from 2016-04-27 to 2023-01-31:
 
-The original repository has activity:
+https://bitbucket.org/nicaraguabinary/lib-auframework-media-src/
 
-- from  2016-04-27
-- up to 2023-01-31
-  
 # lib-auframework-media-src
 
 Library to build audio and visual cores/tools in C++.
