@@ -87,7 +87,7 @@
     <ClCompile>
       <Optimization>
       </Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\..\..\sys-nbframework\lib-nbframework-src\include;$(ProjectDir)..\..\..\include;$(ProjectDir)..\..\..\..\lib-box2d-src\include;$(ProjectDir)..\..\..\..\lib-auframework-src\include;$(ProjectDir)..\..\..\..\lib-nixtla-audio-src\include;$(ProjectDir)..\..\..\..\lib-nixtla-audio-src\src\c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\..\..\sys-nbframework\sys-nbframework-src\include;$(ProjectDir)..\..\..\include;$(ProjectDir)..\..\..\..\lib-box2d-src\include;$(ProjectDir)..\..\..\..\lib-auframework-src\include;$(ProjectDir)..\..\..\..\lib-nixtla-audio-src\include;$(ProjectDir)..\..\..\..\lib-nixtla-audio-src\src\c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -104,7 +104,7 @@
     <ClCompile>
       <Optimization>
       </Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\..\..\sys-nbframework\lib-nbframework-src\include;$(ProjectDir)..\..\..\include;$(ProjectDir)..\..\..\..\lib-box2d-src\include;$(ProjectDir)..\..\..\..\lib-auframework-src\include;$(ProjectDir)..\..\..\..\lib-nixtla-audio-src\include;$(ProjectDir)..\..\..\..\lib-nixtla-audio-src\src\c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\..\..\sys-nbframework\sys-nbframework-src\include;$(ProjectDir)..\..\..\include;$(ProjectDir)..\..\..\..\lib-box2d-src\include;$(ProjectDir)..\..\..\..\lib-auframework-src\include;$(ProjectDir)..\..\..\..\lib-nixtla-audio-src\include;$(ProjectDir)..\..\..\..\lib-nixtla-audio-src\src\c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>

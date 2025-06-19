@@ -1227,9 +1227,9 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 11.5;
 				SKIP_INSTALL = NO;
-				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../../include $(SRCROOT)/../../../../../sys-nbframework/lib-nbframework-src/include $(SRCROOT)/../../../../lib-auframework-src/include $(SRCROOT)/../../../../lib-nixtla-audio-src/include $(SRCROOT)/../../../../lib-nixtla-audio-src/src/c";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../../include $(SRCROOT)/../../../../../sys-nbframework/sys-nbframework-src/include $(SRCROOT)/../../../../lib-auframework-src/include $(SRCROOT)/../../../../lib-nixtla-audio-src/include $(SRCROOT)/../../../../lib-nixtla-audio-src/src/c";
 				USE_HEADERMAP = NO;
 			};
 			name = Debug;
@@ -1242,9 +1242,9 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 11.5;
 				SKIP_INSTALL = NO;
-				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../../include $(SRCROOT)/../../../../../sys-nbframework/lib-nbframework-src/include $(SRCROOT)/../../../../lib-auframework-src/include $(SRCROOT)/../../../../lib-nixtla-audio-src/include $(SRCROOT)/../../../../lib-nixtla-audio-src/src/c";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../../include $(SRCROOT)/../../../../../sys-nbframework/sys-nbframework-src/include $(SRCROOT)/../../../../lib-auframework-src/include $(SRCROOT)/../../../../lib-nixtla-audio-src/include $(SRCROOT)/../../../../lib-nixtla-audio-src/src/c";
 				USE_HEADERMAP = NO;
 			};
 			name = Release;
