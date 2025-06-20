@@ -1,12 +1,10 @@
 # Moved to Github
 
-This repository was moved to Github. My original repository has ~7 years of activity from 2016-04-27 to 2023-01-31:
-
-https://bitbucket.org/nicaraguabinary/lib-auframework-media-src/
+This repository was moved to Github. My original repository has ~7 years of activity from 2016-04-27 to 2023-01-31: https://bitbucket.org/nicaraguabinary/lib-auframework-media-src/
 
 # lib-auframework-media-src
 
-Library to add audio, images and visual features to build command-line-tools and cores for visual-apps and services in C++.
+Library to add audio, images and visual features into command-line-tools and cores for visual-apps and services in C++.
 
 This library depends of:
 
@@ -19,7 +17,7 @@ Created by [Marcos Ortega](https://mortegam.com/).
 
 This library was designed in spanish, intended to be used by latin-american university students to build academic and professional projects.
 
-[sys-nbframework-src](https://github.com/marcosjom/sys-nbframework-src) is a professionally-intended evolition of this library, in english.
+[sys-nbframework-src](https://github.com/marcosjom/sys-nbframework-src) is a professionally-intended evolution of this library, in english.
 
 # Deprecated
 
