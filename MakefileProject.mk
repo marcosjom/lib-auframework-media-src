@@ -13,7 +13,7 @@ NB_PROJECT_CXXFLAGS       := -std=c++11
 
 NB_PROJECT_INCLUDES       := \
    include \
-   ../../sys-nbframework/lib-nbframework-src/include \
+   ../../sys-nbframework/sys-nbframework-src/include \
    ../lib-auframework-src/include \
    ../lib-nixtla-audio-src/include \
    ../lib-nixtla-audio-src/src/c

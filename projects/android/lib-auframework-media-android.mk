@@ -13,7 +13,7 @@ LOCAL_CFLAGS    += -ffunction-sections -fdata-sections #-fvisibility=hidden
 
 LOCAL_C_INCLUDES	:= \
 $(LOCAL_PATH)/../../include \
-$(LOCAL_PATH)/../../../../sys-nbframework/lib-nbframework-src/include \
+$(LOCAL_PATH)/../../../../sys-nbframework/sys-nbframework-src/include \
 $(LOCAL_PATH)/../../../lib-nixtla-audio-src/include \
 $(LOCAL_PATH)/../../../lib-nixtla-audio-src/src/c \
 $(LOCAL_PATH)/../../../lib-box2d-src/include \
