@@ -9,7 +9,6 @@
 #ifndef AUFramework_NBGestorGLDef_h
 #define AUFramework_NBGestorGLDef_h
 
-
 struct STBloqueGL {
 	UI32	primerElemento;				//verticeGL o indiceGL
 	UI32	cantidadElementos;			//cantidad

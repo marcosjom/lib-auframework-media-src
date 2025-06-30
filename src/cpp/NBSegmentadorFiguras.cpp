@@ -464,19 +464,7 @@ void NBSegmentadorFiguras::producirSombraDosVertices(NBFuenteIluminacionRender* 
 		proyeccionSombra.sombraCubiertaPorOtra	= NBSegmentadorFiguras::sombraEsCubiertaPorOtraYCubrirOtrasDosVertices(arregloSombras->elemento, arregloSombras->conteo, bibVerticesIntermediosSombras->elemento, proyeccionSombra.vectorAnguloMax, proyeccionSombra.vectorAnguloMin);
 		NBASSERT(NBSegmentadorFiguras::debugValidarSombra(&bibVerticesIntermediosSombras->elemento[proyeccionSombra.iPrimerVerticeAdicionalSombra], proyeccionSombra.conteoVerticesAdicionalSombra, proyeccionSombra.vectorAnguloMin, proyeccionSombra.vectorAnguloMax));
 		arregloSombras->agregarElemento(proyeccionSombra);
-		#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_CUERPOS
-		//*propsIluminacion.debugPrtConteoTotalFigurasSombras		+= 1;
-		//*propsIluminacion.debugPrtConteoVerticesSombras			+= conteoVerticesSombra;
-		#endif
 	}
-	#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_CUERPOS
-	/**propsIluminacion.debugPrtConteoCuerpos			+= 1;
-	 *propsIluminacion.debugPtrConteoTotalFigurasFisica	+= _fijaciones->conteo;
-	 SI32 iFijacion;
-	 for(iFijacion=0; iFijacion<_fijaciones->conteo; iFijacion++){
-	 *propsIluminacion.debugPrtConteoVerticesFisica	+= _fijaciones->elemento[iFijacion].vertices->conteo;
-	 }*/
-	#endif
 	AU_GESTOR_PILA_LLAMADAS_POP_3
 }
 
@@ -576,19 +564,7 @@ void NBSegmentadorFiguras::producirSombraMultiVertices(NBFuenteIluminacionRender
 		}
 		NBASSERT(NBSegmentadorFiguras::debugValidarSombra(&bibVerticesIntermediosSombras->elemento[proyeccionSombra.iPrimerVerticeAdicionalSombra], proyeccionSombra.conteoVerticesAdicionalSombra, proyeccionSombra.vectorAnguloMin, proyeccionSombra.vectorAnguloMax));
 		arregloSombras->agregarElemento(proyeccionSombra);
-		#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_CUERPOS
-		//*propsIluminacion.debugPrtConteoTotalFigurasSombras		+= 1;
-		//*propsIluminacion.debugPrtConteoVerticesSombras			+= conteoVerticesSombra;
-		#endif
 	}
-	#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_CUERPOS
-	/**propsIluminacion.debugPrtConteoCuerpos			+= 1;
-	 *propsIluminacion.debugPtrConteoTotalFigurasFisica	+= _fijaciones->conteo;
-	 SI32 iFijacion;
-	 for(iFijacion=0; iFijacion<_fijaciones->conteo; iFijacion++){
-	 *propsIluminacion.debugPrtConteoVerticesFisica	+= _fijaciones->elemento[iFijacion].vertices->conteo;
-	 }*/
-	#endif
 	AU_GESTOR_PILA_LLAMADAS_POP_3
 }
 

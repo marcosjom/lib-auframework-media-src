@@ -87,53 +87,10 @@
 //#define CONFIG_NB_ILUMINACION_DIBUJAR_SOMBRAS_PROYECTADAS
 //#define CONFIG_NB_ILUMINACION_DIBUJAR_CAJA_MASCARAS
 
-//Si defined, entonces se recopilaran las estadisticas de los "AUEscenaObjeto", 
-//tales como: matrices actualizadas, modelos actualizados, modelos renderizados por ciclo ...
-#define CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_OBJETOS
-//Si defined, entonces se recopilaran las estadisticas del NBGestorGL
-//tales como: texturasGL, vertices, indices, cambios de texturas, cambios de unidadesTexturas, ...
-//#define CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL
-//Si defined, entonces se calcula el conteoy area de todos los triangulos renderizados.
-//Ayuda a determinar el equivalente a cuantas veces se pinta la pantalla en cada renderizada.
-//#define CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL_TRIANGULOS_RENDERIZADOS
-//Si defined, entonces se recopilaran las estadisticas del NBGestorTexturas
-//tales como: cantidad de texturas por tipo, MBs de texturas por tipo
-//#define CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_TEXTURAS
-//Si defined, entonces se recopilaran las estadisticas del NBGestorAudio
-//tales como: cantidad de fuentesAL, cantidad de bufferesAL, MBs en bufferes AL, bufferes stream ...
-//#define CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_AUDIO
-//Si defined, entonces se recopilaran las estadisticas del NBGestorEscena
-//tales como: cantidad de escenas renderizadas, cantidad de cambios de bufferesGL, ...
-//#define CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_ESCENA
-//Si defined, entonces se recopilaran las estadisticas de los "AUEscenaCuerpo", 
-//tales como: cantidad de cuerpos, fijaciones/vertices fisica, sombras, iluminacion ...
-//#define CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_CUERPOS
-
 //Si defined entonces, advierte cuando las texturas se presentan ligeramiente estiradas.
 //Permite identificar casos en los que un archivo contenedor hace referencia a una imagen
 //que posteriormente fue editada y por tanto la muestra a una 99%-101%.
 //#define CONFIG_NB_SPRITES_ESCENA_ADVERTIR_ESTIRAMIENTO_LEVE_TEXTURAS
-
-//Si defined, entonces se habilita el GL_SCISSOR_TEST en el NBGestorGL.
-//Esto permite que un destino (renderBUffer o textura) pueda ser utilizado parcialmente
-//y por ende acomodar varias escenas o contenido en uno solo.
-//Nota: afecta el rendimiento inclusive del glClear, porque cada pixel pintado es validado.
-//Recomendacion: es mejor evitar el SCISSOR_TEST.
-//#define CONFIG_NB_GESTOR_GL_IMPLEMENTAR_SCISSOR_TEST
-
-//Si defined, entonces en la creacion de cada nuevo atlas se creará un mapaDeBits de color solido
-//para pasarlo como datos de inicializacion de la textura. Si no defined las texturas se inicializan con un puntero NULO.
-//Advertencia: produce el consumo de grandes cantidades de memoria RAM (4MB para cada atlas RGBA de 1024x1024).
-//Nota: implementado para satisfacer algunas advertencias producidas por Instruments y depuradores GL.
-//Algunos textos sugieren que si no se pasan explicitamente datos al momento de crecion de la textura, no se asegura que se reserva la memoria exacta necesaria.
-//#define CONFIG_NB_GESTOR_TEXTURAS_INICIALIZAR_TEXTURAS_GL_CON_DATOS
-
-//Si defined, entonces las zonas de texturas que se libera son formateadas (util para depuracion de texturas liberadas)
-//#define CONFIG_NB_GESTOR_TEXTURAS_FINALIZAR_AREAS_TEXTURAS_GL_CON_DATOS
-
-//Si defined, entonces se generaran los mipmaps de las texturas al final de cada proceso de carga de texturas.
-//Optimiza el renderizado cuando  se renderiza la escena a una escala distinta a 1:1.
-//#define CONFIG_NB_GESTOR_TEXTURAS_IMPLEMENTAR_MIPMAPS
 
 //Validacion de parametros
 #if defined(CONFIG_NB_INCLUIR_VALIDACIONES_ASSERT_ILUMINACION) && !defined(CONFIG_NB_INCLUIR_VALIDACIONES_ASSERT)

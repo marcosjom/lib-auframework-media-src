@@ -26,7 +26,7 @@
 
 #ifdef CONFIG_NB_GESTOR_ESCENAS_MODELOS_MEDIANTE_INDICES
 #	define NB_GESTOR_GL_DAME_ELEMS_PARA_TRIANGSTRIP_4_ESCNA(TIPOVERTICE, BLOQUEVERTICESGL)											NBGestorEscena::reservarIndicesParaTriangStrip4Independizado(TIPOVERTICE, BLOQUEVERTICESGL.primerElemento)
-#	define NB_GESTOR_GL_DAME_ELEMS_PARA_TRIANGSTRIP_N_ESCNA(TIPOVERTICE, BLOQUEVERTICESGL, CANT_VERTICES_STRIP)					NBGestorEscena::reservarIndicesParaTriangStripIndependizado(TIPOVERTICE, BLOQUEVERTICESGL.primerElemento, CANT_VERTICES_STRIP)
+#	define NB_GESTOR_GL_DAME_ELEMS_PARA_TRIANGSTRIP_N_ESCNA(TIPOVERTICE, BLOQUEVERTICESGL, CANT_VERTICES_STRIP)					    NBGestorEscena::reservarIndicesParaTriangStripIndependizado(TIPOVERTICE, BLOQUEVERTICESGL.primerElemento, CANT_VERTICES_STRIP)
 #	define NB_GESTOR_GL_DAME_ELEMS_PARA_TRIANGSTRIP_N_DESDE_TRIANGFAN_ESCNA(TIPOVERTICE, BLOQUEVERTICESGL, CANT_VERTICES_TRIANGFAN) NBGestorEscena::reservarIndicesParaTriangStripIndependizadoDesdeTriangFan(TIPOVERTICE, BLOQUEVERTICESGL.primerElemento, CANT_VERTICES_TRIANGFAN)
 #	define NB_GESTOR_GL_DAME_ELEMS_PARA_TRIANGSTRIPS_4_ESCNA(TIPOVERTICE, BLOQUEVERTICESGL, CANT_TRIANGSTRIPS)						NBGestorEscena::reservarIndicesParaTriangStrip4IndependizadoMultiples(TIPOVERTICE, BLOQUEVERTICESGL.primerElemento, CANT_TRIANGSTRIPS)
 #	define NB_GESTOR_GL_DAME_ELEMS_PARA_TRIANGSTRIPS_N_ESCNA(TIPOVERTICE, BLOQUEVERTICESGL, CANT_VERTICES_POR_STRIP, CANT_STRIPS)	NBGestorEscena::reservarIndicesParaTriangStripIndependizadoMultiples(TIPOVERTICE, BLOQUEVERTICESGL.primerElemento, CANT_VERTICES_POR_STRIP, CANT_STRIPS);
@@ -41,11 +41,11 @@
 #	define NB_GESTOR_GL_RENDER_TRIANGSTRIP_4(PRIMERO, CONTEO)																	NBGestorGL::acumularIndicesTriangStripIndependiente(PRIMERO, CONTEO)
 #	define NB_GESTOR_GL_RENDER_TRIANGSTRIP_N(PRIMERO, CONTEO)																	NBGestorGL::acumularIndicesTriangStripIndependiente(PRIMERO, CONTEO)
 #	define NB_GESTOR_GL_RENDER_TRIANGSTRIPS_4(PRIMERO, CONTEO)																	NBGestorGL::acumularIndicesTriangStripIndependiente(PRIMERO, CONTEO)
-#	define NB_GESTOR_GL_RENDER_TRIANGSTRIPS_N(PRIMERO, CONTEO, CANT_STRIPS)													NBGestorGL::acumularIndicesTriangStripIndependiente(PRIMERO, CONTEO)
+#	define NB_GESTOR_GL_RENDER_TRIANGSTRIPS_N(PRIMERO, CONTEO, CANT_STRIPS)													    NBGestorGL::acumularIndicesTriangStripIndependiente(PRIMERO, CONTEO)
 #	define NB_GESTOR_GL_RENDER_TRIANGFAN(PRIMERO, CONTEO)																		NBGestorGL::acumularIndicesTriangStripIndependiente(PRIMERO, CONTEO)
 #else
 #	define NB_GESTOR_GL_DAME_ELEMS_PARA_TRIANGSTRIP_4_ESCNA(TIPOVERTICE, BLOQUEVERTICESGL)											BLOQUEVERTICESGL
-#	define NB_GESTOR_GL_DAME_ELEMS_PARA_TRIANGSTRIP_N_ESCNA(TIPOVERTICE, BLOQUEVERTICESGL, CANT_VERTICES_STRIP)					BLOQUEVERTICESGL
+#	define NB_GESTOR_GL_DAME_ELEMS_PARA_TRIANGSTRIP_N_ESCNA(TIPOVERTICE, BLOQUEVERTICESGL, CANT_VERTICES_STRIP)					    BLOQUEVERTICESGL
 #	define NB_GESTOR_GL_DAME_ELEMS_PARA_TRIANGSTRIP_N_DESDE_TRIANGFAN_ESCNA(TIPOVERTICE, BLOQUEVERTICESGL, CANT_VERTICES_TRIANGFAN) BLOQUEVERTICESGL
 #	define NB_GESTOR_GL_DAME_ELEMS_PARA_TRIANGSTRIPS_4_ESCNA(TIPOVERTICE, BLOQUEVERTICESGL, CANT_TRIANGSTRIPS)						BLOQUEVERTICESGL
 #	define NB_GESTOR_GL_DAME_ELEMS_PARA_TRIANGSTRIPS_N_ESCNA(TIPOVERTICE, BLOQUEVERTICESGL, CANT_VERTICES_POR_STRIP, CANT_STRIPS)	BLOQUEVERTICESGL
@@ -60,12 +60,12 @@
 #	define NB_GESTOR_GL_RENDER_TRIANGSTRIP_4(PRIMERO, CONTEO)																	NBGestorGL::drawArrays(GL_TRIANGLE_STRIP, PRIMERO, CONTEO)
 #	define NB_GESTOR_GL_RENDER_TRIANGSTRIP_N(PRIMERO, CONTEO)																	NBGestorGL::drawArrays(GL_TRIANGLE_STRIP, PRIMERO, CONTEO)
 #	define NB_GESTOR_GL_RENDER_TRIANGSTRIPS_4(PRIMERO, CONTEO)																	{ NBASSERT(CONTEO > 3) NBASSERT((CONTEO % 4) == 0) GLint iElem = PRIMERO; const GLint iElemSigUlt = PRIMERO + CONTEO; while(iElem < iElemSigUlt){ NBGestorGL::drawArrays(GL_TRIANGLE_STRIP, iElem, 4); iElem += 4; }}
-#	define NB_GESTOR_GL_RENDER_TRIANGSTRIPS_N(PRIMERO, CONTEO, CANT_STRIPS)													{ NBASSERT(CONTEO > 2) NBASSERT(CANT_STRIPS > 0) NBASSERT((CONTEO % CANT_STRIPS) == 0) const GLsizei cantVertsPorStrip = CONTEO / CANT_STRIPS; const GLint iElemSigUlt = PRIMERO + CONTEO; GLint iElem = PRIMERO; while(iElem < iElemSigUlt){ NBGestorGL::drawArrays(GL_TRIANGLE_STRIP, iElem, cantVertsPorStrip); iElem += cantVertsPorStrip; }}
+#	define NB_GESTOR_GL_RENDER_TRIANGSTRIPS_N(PRIMERO, CONTEO, CANT_STRIPS)													    { NBASSERT(CONTEO > 2) NBASSERT(CANT_STRIPS > 0) NBASSERT((CONTEO % CANT_STRIPS) == 0) const GLsizei cantVertsPorStrip = CONTEO / CANT_STRIPS; const GLint iElemSigUlt = PRIMERO + CONTEO; GLint iElem = PRIMERO; while(iElem < iElemSigUlt){ NBGestorGL::drawArrays(GL_TRIANGLE_STRIP, iElem, cantVertsPorStrip); iElem += cantVertsPorStrip; }}
 #	define NB_GESTOR_GL_RENDER_TRIANGFAN(PRIMERO, CONTEO)																		NBGestorGL::drawArrays(GL_TRIANGLE_FAN, PRIMERO, CONTEO)
 #endif
 
-#define NB_GESTOR_GL_TAMANO_BLOQUE_VERTICES_GL			1024 //8192
-#define NB_GESTOR_GL_TAMANO_BLOQUE_INDICES_GL			1024 //4096
+#define NB_GESTOR_GL_CRECIMIENTO_BLOQUE_VERTICES_GL		1024 //8192
+#define NB_GESTOR_GL_CRECIMIENTO_BLOQUE_INDICES_GL		1024 //4096
 #define NB_GESTOR_GL_MAX_TEXTURA_UNIDADES				32
 #define NB_GESTOR_GL_MAX_LOTE_PRIMITIVAS				256
 
@@ -243,7 +243,7 @@ struct STArregloVerticesGL {
 	GLuint				idBufferGlIndices;
 	#endif
 	STGLEstadoVAO		vaoConfig;
-	//Enlace con adminintrador
+	//Enlace con administrador
 	PTRfuncObtenerDatosVao	funcObtenerDatos;
 	void*					funcObtenerDatosParam;
 };
@@ -332,23 +332,6 @@ typedef struct STGLEstado_ {
 	#endif
 } STGLEstado;
 
-#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL
-struct STGestorGLEstadisticas {
-	UI16				cantCambiosUnidadTexturaCliente;
-	UI16				cantCambiosUnidadTexturaServidor;
-	UI16				cantCambiosFrameBuffers;		//Cada vez que se cambia de FrameBuffer
-	UI16				cantCambiosFrameBuffersTargets;	//Cada vez que se cambia el destino/target del FrameBuffer
-	UI16				cantCambiosDeVBO;			//cada vez que se cambia de monoTextura a biTextura u otro (VBO o VAO si esta disponible)
-	UI16				cantCambiosTexturas;		//cada vez que se cambia de textura ligada
-	#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL_TRIANGULOS_RENDERIZADOS
-	UI32				cantTriangulosRenderizados;
-	float				areaTexelesRenderizados;
-	#endif
-	UI32				cantTriangulosRenderizadosIgnorables;
-	float				areaTexelesRenderizadosIgnorables;
-};
-#endif
-	
 class NBGestorGL {
 	public:
 		static bool					inicializar();
@@ -422,7 +405,8 @@ class NBGestorGL {
 		static void					setTextureCropRect(const STNBRectI16* cropRect);
 		static void					texImage2D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* pixels, STGestorGLTextura* propsTextura);
 		static void					texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void* pixels, STGestorGLTextura* propsTextura);
-		static void					texEnvi(SI32 indiceUnidadTexturaGL, GLenum target, GLenum pname, GLint param);
+        //Unused
+		//static void				texEnvi(SI32 indiceUnidadTexturaGL, GLenum target, GLenum pname, GLint param);
 		static void					activeTexture(SI32 indiceUnidadTextura);
 		static void					generateMipmapEXT(GLenum target, STGestorGLTextura* propsTextura);
 		//Frame buffers (EXTENSIONES)
@@ -431,10 +415,12 @@ class NBGestorGL {
 		static void					bindFramebufferEXT(GLenum target, GLuint frameBuffer);
 		static void					bindFramebufferInicialEXT(GLenum target);
 		static void					framebufferTexture2DEXT(GLenum target, GLenum attachment, GLenum texTarget, GLuint texture, GLint level);
-		static bool					isFramebufferEXT(GLuint frameBuffer);
+        static void                 framebufferRenderbufferEXT(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
 		static GLenum				checkFramebufferStatusEXT(GLenum target);
-		static void					framebufferRenderbufferEXT(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
-		static void					blitFramebufferEXT(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);
+        //Unused
+        //static bool               isFramebufferEXT(GLuint frameBuffer);
+        //Unused
+		//static void				blitFramebufferEXT(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);
 		//Render buffers (EXTENSIONES)
 		static void					genRenderbuffersEXT(GLsizei n, GLuint* renderBuffers);
 		static void					deleteRenderbuffersEXT(GLsizei n, GLuint* renderBuffers);
@@ -446,29 +432,9 @@ class NBGestorGL {
 		//Arreglos de vertices GL
 		static void					prepararVerticesGLParaRenderizado();
 		static void					activarVerticesGL(const SI32 iVao);
-#		ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL
-		static SI32					debugConteoVerticesGLIgnorables();
-		static SI32					debugConteoIndicesGLIgnorables();
-#		endif
 		#ifdef CONFIG_NB_INCLUIR_VALIDACIONES_ASSERT_GL_NOP
 		static void					dbgNombrarActivadorVerticesGL(const char* strNombre);
 		#endif
-		#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL
-		static bool					debugModoAcumularVertsIndsIgnorar();
-		static void					debugEstablecerModoAcumularVertsIndsIgnorar(const bool ignorarActivo);
-		#endif
-		#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL_TRIANGULOS_RENDERIZADOS
-		static bool					debugModoAcumularTriangulosIgnorar();
-		static void					debugEstablecerModoAcumularTriangulosIgnorar(const bool ignorarActivo);
-		#endif
-		//
-		#if defined(CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL) || defined(CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL_TRIANGULOS_RENDERIZADOS)
-		static void					resetearEstadisticas();
-		#endif
-		#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL
-		static STGestorGLEstadisticas estadisticasDeAcciones();
-		#endif
-		//
 		static SI32					maximaDimensionTextura();
 	private:
 		static bool					_gestorInicializado;
@@ -485,20 +451,6 @@ class NBGestorGL {
 		//VAOs y VBOs (vertices e indices)
 		static STArregloVerticesGL*	_vertsGlArrs;
 		static SI32					_vertsGlArrsTam;
-		#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL
-		//Cuando activo, acumula en un contador de los vertices e indices reservados.
-		//Util para que los vertices del ResumenDebug sean restados, y puedan obtenerse estadisticas precisas.
-		//Por defecto, se inicia en 'false'.
-		//static bool				_debugModoAcumularVertsIndsIgnorar;
-		//static UI32				_debugVerticesAcumIgnorables[NB_GESTOR_GL_CANTIDAD_BUFFERES_DATOS];
-		//static UI32				_debugIndicesAcumIgnorables[NB_GESTOR_GL_CANTIDAD_BUFFERES_DATOS];
-		#endif
-		#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL_TRIANGULOS_RENDERIZADOS
-		//Cuando activo, acumula en un contador de los triagulos y areas pintados.
-		//Util para que los triang y areas del ResumenDebug sean restados, y puedan obtenerse estadisticas precisas.
-		//Por defecto, se inicia en 'false'.
-		static bool					_debugModoAcumularTriangulosIgnorar;
-		#endif
 		//DATOS CACHE
 		static STGLEstado			_cacheGL;
 		static NBMatriz				_matrizIdentidad;
@@ -506,10 +458,6 @@ class NBGestorGL {
 		static GLenum				_blendDestFactorRGBAActual;
 		static GLenum				_blendSoucFactorRGBAPorDefecto;
 		static GLenum				_blendDestFactorRGBAPorDefecto;
-		//
-		#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL
-		static STGestorGLEstadisticas _debugEstadisticas;
-		#endif
 		#ifdef NB_GESTOR_ESCENAS_USA_CACHE_LOTE_INSTRUCCIONES
 		static STGestorGLLoteDraw	_loteDrawElemsAcumTriangStrips;
 		#endif
@@ -523,11 +471,6 @@ class NBGestorGL {
 		static void					privDeleteVertexArraysEXT(GLsizei n, GLuint* ids);					//Disponible a partir de iOS4: OES_vertex_array_object
 		static void					privBindVertexArrayEXTParaInicializacion(const SI32 indice, GLuint idVertexArrayGL);	//Disponible a partir de iOS4: OES_vertex_array_object
 		static void					privBindVertexArrayEXT(const SI32 indice, const bool prepararParaConsumir);				//Disponible a partir de iOS4: OES_vertex_array_object
-		//
-		#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL_TRIANGULOS_RENDERIZADOS
-		static void					privAcumularAreaArreglo(GLenum mode, GLint first, GLsizei count);
-		static void					privAcumularAreaIndices(GLenum mode, GLint first, GLsizei count);
-		#endif
 		//
 		static SI32					privUnidadTexturaIndice(GLenum textura);
 		static GLenum				privUnidadTexturaEnumGl(SI32 iTextura);

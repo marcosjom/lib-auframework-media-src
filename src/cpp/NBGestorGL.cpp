@@ -45,23 +45,6 @@ GLenum								NBGestorGL::_blendDestFactorRGBAActual = 0;
 GLenum								NBGestorGL::_blendSoucFactorRGBAPorDefecto = 0;
 GLenum								NBGestorGL::_blendDestFactorRGBAPorDefecto = 0;
 
-#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL
-STGestorGLEstadisticas				NBGestorGL::_debugEstadisticas;
-//Cuando activo, acumula en un contador de los vertices e indices reservados.
-//Util para que los vertices del ResumenDebug sean restados, y puedan obtenerse estadisticas precisas.
-//Por defecto, se inicia en 'false'.
-bool								NBGestorGL::_debugModoAcumularVertsIndsIgnorar = false;
-UI32								NBGestorGL::_debugVerticesAcumIgnorables[NB_GESTOR_GL_CANTIDAD_BUFFERES_DATOS];
-UI32								NBGestorGL::_debugIndicesAcumIgnorables[NB_GESTOR_GL_CANTIDAD_BUFFERES_DATOS];
-#endif
-
-#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL_TRIANGULOS_RENDERIZADOS
-//Cuando activo, acumula en un contador de los triagulos y areas pintados.
-//Util para que los triang y areas del ResumenDebug sean restados, y puedan obtenerse estadisticas precisas.
-//Por defecto, se inicia en 'false'.
-bool								NBGestorGL::_debugModoAcumularTriangulosIgnorar = false;
-#endif
-
 //Modo de dibujo de los triangStrips
 #ifdef NB_GESTOR_ESCENAS_USA_CACHE_LOTE_INSTRUCCIONES
 STGestorGLLoteDraw					NBGestorGL::_loteDrawElemsAcumTriangStrips;
@@ -143,11 +126,6 @@ bool NBGestorGL::inicializar(){
 	{
 		NBMemory_setZeroSt(_matrizIdentidad, NBMatriz);
 		NBMemory_setZeroSt(_cacheGL, STGLEstado);
-#		ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL
-		NBMemory_setZeroSt(_debugEstadisticas, STGestorGLEstadisticas);
-		NBMemory_setZero(_debugVerticesAcumIgnorables);
-		NBMemory_setZero(_debugIndicesAcumIgnorables);
-#		endif
 #		ifdef NB_GESTOR_ESCENAS_USA_CACHE_LOTE_INSTRUCCIONES
 		NBMemory_setZeroSt(_loteDrawElemsAcumTriangStrips, STGestorGLLoteDraw);
 #		endif
@@ -333,35 +311,8 @@ void NBGestorGL::privInicializarCaches(const bool esPrimeraVez){
 		}
 	}
 #	endif
-#	ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL
-	_debugModoAcumularVertsIndsIgnorar	= false;
-	{
-		UI16 i;
-		for(i = 0; i < NB_GESTOR_GL_CANTIDAD_BUFFERES_DATOS; i++){
-			_debugVerticesAcumIgnorables[i]	= 0;
-			_debugIndicesAcumIgnorables[i]	= 0;
-		}
-	}
-#	endif
-#	ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL_TRIANGULOS_RENDERIZADOS
-	_debugModoAcumularTriangulosIgnorar	= false;
-#	endif
 	//
 	NBMATRIZ_ESTABLECER_IDENTIDAD(_matrizIdentidad);
-#	ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL
-	_debugEstadisticas.cantCambiosUnidadTexturaCliente	= 0;
-	_debugEstadisticas.cantCambiosUnidadTexturaServidor	= 0;
-	_debugEstadisticas.cantCambiosDeVBO					= 0;
-	_debugEstadisticas.cantCambiosFrameBuffers			= 0;
-	_debugEstadisticas.cantCambiosFrameBuffersTargets	= 0;
-	_debugEstadisticas.cantCambiosTexturas				= 0;
-#	ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL_TRIANGULOS_RENDERIZADOS
-	_debugEstadisticas.cantTriangulosRenderizados		= 0;
-	_debugEstadisticas.areaTexelesRenderizados			= 0.0f;
-#	endif
-	_debugEstadisticas.cantTriangulosRenderizadosIgnorables	= 0;
-	_debugEstadisticas.areaTexelesRenderizadosIgnorables	= 0.0f;
-#	endif
 #	ifdef NB_GESTOR_ESCENAS_USA_CACHE_LOTE_INSTRUCCIONES
 	_loteDrawElemsAcumTriangStrips.iPrimerElem			= 0;
 	_loteDrawElemsAcumTriangStrips.cantAcumuladaElems	= 0;
@@ -953,9 +904,6 @@ void NBGestorGL::activeTexture(SI32 indiceUnidadTextura){
 		const GLenum enumTexturaGl = NBGestorGL::privUnidadTexturaEnumGl(indiceUnidadTextura);
 		glActiveTexture(enumTexturaGl); GL_CMD_EJECUTADO("glActiveTexture(%s)", STR_GL_TEX_UNIT(enumTexturaGl))
 		_cacheGL.iUnidadTexturaActivaServidor = indiceUnidadTextura;
-#		ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL
-		_debugEstadisticas.cantCambiosUnidadTexturaServidor++;
-#		endif
 		NBGL_ASSERT_CACHE_ACTIVE_TEXTURE
 	}
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
@@ -1286,9 +1234,6 @@ void NBGestorGL::privConfigurarClienteEstado(const ENVerticeGlTipo tipoVertices,
 			if(forzarConfig || _cacheGL.iUnidadTexturaActivaCliente != iTexU){
 				const GLenum enumTexturaGl = privUnidadTexturaEnumGl(iTexU);
 				glClientActiveTexture(enumTexturaGl); GL_CMD_EJECUTADO("glClientActiveTexture(%s)", STR_GL_TEX_UNIT(enumTexturaGl))
-#				ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL
-				_debugEstadisticas.cantCambiosUnidadTexturaCliente++;
-#				endif
 				_cacheGL.iUnidadTexturaActivaCliente = iTexU;
 			}
 			if(forzarConfig || datosCache->unidadesTex[iTexU].coordsHabilitado != texActivar){
@@ -1313,9 +1258,6 @@ void NBGestorGL::privConfigurarClienteEstado(const ENVerticeGlTipo tipoVertices,
 	if(forzarConfig || _cacheGL.iUnidadTexturaActivaCliente != 0){
 		const GLenum enumTexturaGl = privUnidadTexturaEnumGl(0);
 		glClientActiveTexture(enumTexturaGl); GL_CMD_EJECUTADO("glClientActiveTexture(%s)", STR_GL_TEX_UNIT(enumTexturaGl))
-#		ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL
-		_debugEstadisticas.cantCambiosUnidadTexturaCliente++;
-#		endif
 		_cacheGL.iUnidadTexturaActivaCliente = 0;
 	}
 	NBGL_ASSERT_CACHE_CLIENT_STATE
@@ -1361,9 +1303,6 @@ void NBGestorGL::bindTexture(SI32 indiceUnidadTexturaGL, GLuint texture){
 			glBindTexture(GL_TEXTURE_2D, texture); GL_CMD_EJECUTADO("glBindTexture(GL_TEXTURE_2D, %u)", (UI32)texture);
 			datTexU->idTexturaLigada = texture;
 			//
-#			ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL
-			_debugEstadisticas.cantCambiosTexturas++;
-#			endif
 #			ifdef CONFIG_NB_INCLUIR_VALIDACIONES_ASSERT_GL_NOP
 			NBASSERT(datTexU->dbgCantOperacionesConTex != 0) //Si falla, entonces la textura se ligo, pero no se utilizo (codigo fuente de usuario debe optimizarse)
 			datTexU->dbgCantOperacionesConTex = 0;
@@ -1480,6 +1419,8 @@ void NBGestorGL::texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint 
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
 }
 
+/*
+//Unused
 void NBGestorGL::texEnvi(SI32 indiceUnidadTexturaGL, GLenum target, GLenum pname, GLint param){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_GL("NBGestorGL::texEnvi")
 	if(target == GL_TEXTURE_ENV && pname == GL_TEXTURE_ENV_MODE){
@@ -1501,7 +1442,7 @@ void NBGestorGL::texEnvi(SI32 indiceUnidadTexturaGL, GLenum target, GLenum pname
 	_cacheGL.unidadesTex[_cacheGL.iUnidadTexturaActivaServidor].dbgCantOperacionesConTex++;
 #	endif
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
-}
+}*/
 
 STGLEstado NBGestorGL::cacheGL(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_GL("NBGestorGL::cacheGL")
@@ -1712,9 +1653,6 @@ void NBGestorGL::bindFramebufferEXT(GLenum target, GLuint frameBuffer){
 		glBindFramebufferEXT(target, frameBuffer);
 #		endif
 		GL_CMD_EJECUTADO("glBindFramebufferEXT(%d, %u)", (SI32)target, (UI32)frameBuffer)
-#		ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL
-		_debugEstadisticas.cantCambiosFrameBuffers++;
-#		endif
 		_cacheGL.idFrameBufferGlLigado = frameBuffer;
 	}
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
@@ -1736,24 +1674,19 @@ void NBGestorGL::framebufferTexture2DEXT(GLenum target, GLenum attachment, GLenu
 #	else
 	glFramebufferTexture2DEXT(target, attachment, texTarget, texture, level);
 #	endif
-#	ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL
-	_debugEstadisticas.cantCambiosFrameBuffersTargets++;
-#	endif
 	GL_CMD_EJECUTADO("glFramebufferTexture2DEXT")
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
 }
 
-bool NBGestorGL::isFramebufferEXT(GLuint frameBuffer){
-	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_GL("NBGestorGL::isFramebufferEXT")
-	bool r = false;
-#	ifdef NB_LIB_GRAFICA_ES_EMBEDDED
-	r = glIsFramebufferOES(frameBuffer);
-#	else
-	r = glIsFramebufferEXT(frameBuffer);
-#	endif
-	GL_CMD_EJECUTADO("glIsFramebufferEXT")
-	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
-	return r;
+void NBGestorGL::framebufferRenderbufferEXT(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer){
+    AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_GL("NBGestorGL::framebufferRenderbufferEXT")
+#    ifdef NB_LIB_GRAFICA_ES_EMBEDDED
+    glFramebufferRenderbufferOES(target, attachment, renderbuffertarget, renderbuffer);
+#    else
+    glFramebufferRenderbufferEXT(target, attachment, renderbuffertarget, renderbuffer);
+#    endif
+    GL_CMD_EJECUTADO("glFramebufferRenderbufferEXT")
+    AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
 }
 
 GLenum NBGestorGL::checkFramebufferStatusEXT(GLenum target){
@@ -1768,20 +1701,23 @@ GLenum NBGestorGL::checkFramebufferStatusEXT(GLenum target){
 	return r;
 }
 
-void NBGestorGL::framebufferRenderbufferEXT(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer){
-	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_GL("NBGestorGL::framebufferRenderbufferEXT")
-#	ifdef NB_LIB_GRAFICA_ES_EMBEDDED
-	glFramebufferRenderbufferOES(target, attachment, renderbuffertarget, renderbuffer);
-#	else
-	glFramebufferRenderbufferEXT(target, attachment, renderbuffertarget, renderbuffer);
-#	endif
-#	ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL
-	_debugEstadisticas.cantCambiosFrameBuffersTargets++;
-#	endif
-	GL_CMD_EJECUTADO("glFramebufferRenderbufferEXT")
-	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
-}
+/*
+//Unused
+bool NBGestorGL::isFramebufferEXT(GLuint frameBuffer){
+    AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_GL("NBGestorGL::isFramebufferEXT")
+    bool r = false;
+#    ifdef NB_LIB_GRAFICA_ES_EMBEDDED
+    r = glIsFramebufferOES(frameBuffer);
+#    else
+    r = glIsFramebufferEXT(frameBuffer);
+#    endif
+    GL_CMD_EJECUTADO("glIsFramebufferEXT")
+    AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
+    return r;
+}*/
 
+/*
+//Unused
 void NBGestorGL::blitFramebufferEXT(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_GL("NBGestorGL::blitFramebufferEXT")
 	NBGESTORGL_LOTES_TODOS_ASSERT_ESTAN_VACIOS	//Si falla, se omitió flushear los comandos acumulados
@@ -1793,28 +1729,7 @@ void NBGestorGL::blitFramebufferEXT(GLint srcX0, GLint srcY0, GLint srcX1, GLint
 #	endif
 	GL_CMD_EJECUTADO("glBlitFramebufferEXT")
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
-}
-
-#if defined(CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL) || defined(CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL_TRIANGULOS_RENDERIZADOS)
-void NBGestorGL::resetearEstadisticas(){
-	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_GL("NBGestorGL::resetearEstadisticas")
-#	ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL
-	_debugEstadisticas.cantCambiosUnidadTexturaCliente	= 0;
-	_debugEstadisticas.cantCambiosUnidadTexturaServidor	= 0;
-	_debugEstadisticas.cantCambiosDeVBO					= 0;
-	_debugEstadisticas.cantCambiosFrameBuffers			= 0;
-	_debugEstadisticas.cantCambiosFrameBuffersTargets	= 0;
-	_debugEstadisticas.cantCambiosTexturas				= 0;
-#	endif
-#	ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL_TRIANGULOS_RENDERIZADOS
-	_debugEstadisticas.cantTriangulosRenderizados		= 0;
-	_debugEstadisticas.areaTexelesRenderizados			= 0.0f;
-#	endif
-	_debugEstadisticas.cantTriangulosRenderizadosIgnorables	= 0;
-	_debugEstadisticas.areaTexelesRenderizadosIgnorables	= 0.0f;
-	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
-}
-#endif
+}*/
 
 void NBGestorGL::prepararVerticesGLParaRenderizado(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_GL("NBGestorGL::prepararVerticesGLParaRenderizado")
@@ -2002,9 +1917,6 @@ void NBGestorGL::activarVerticesGL(const SI32 iVao){
 	}
 	GL_CMD_EJECUTADO("--activarVerticesGL-end(%d)", iVao)
 	//
-#	ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL
-	_debugEstadisticas.cantCambiosDeVBO++;
-#	endif
 	_cacheGL.iVaoLigado = iVao;
 	//
 	NBGL_ASSERT_CACHE_VAO
@@ -2036,62 +1948,6 @@ SI32 NBGestorGL::maximaDimensionTextura(){
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
 	return _maxDimensionTextura;
 }
-
-#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL
-bool NBGestorGL::debugModoAcumularVertsIndsIgnorar(){
-	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_GL("NBGestorGL::debugModoAcumularVertsIndsIgnorar")
-	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
-	return _debugModoAcumularVertsIndsIgnorar;
-}
-#endif
-
-#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL
-void NBGestorGL::debugEstablecerModoAcumularVertsIndsIgnorar(const bool ignorarActivo){
-	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_GL("NBGestorGL::debugEstablecerModoAcumularVertsIndsIgnorar")
-	_debugModoAcumularVertsIndsIgnorar = ignorarActivo;
-	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
-}
-#endif
-
-#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL_TRIANGULOS_RENDERIZADOS
-bool NBGestorGL::debugModoAcumularTriangulosIgnorar(){
-	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_GL("NBGestorGL::debugModoAcumularTriangulosIgnorar")
-	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
-	return _debugModoAcumularTriangulosIgnorar;
-}
-#endif
-
-#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL_TRIANGULOS_RENDERIZADOS
-void NBGestorGL::debugEstablecerModoAcumularTriangulosIgnorar(const bool ignorarActivo){
-	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_GL("NBGestorGL::debugEstablecerModoAcumularTriangulosIgnorar")
-	_debugModoAcumularTriangulosIgnorar = ignorarActivo;
-	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
-}
-#endif
-
-#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL
-SI32 NBGestorGL::debugConteoVerticesGLIgnorables(){
-	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_GL("NBGestorGL::debugConteoVerticesGLIgnorables")
-	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
-	return _debugVerticesAcumIgnorables[_indiceBufferDatosLeer];
-}
-#endif
-
-#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL
-SI32 NBGestorGL::debugConteoIndicesGLIgnorables(){
-	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_GL("NBGestorGL::debugConteoIndicesGLIgnorables")
-	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
-	return _debugIndicesAcumIgnorables[_indiceBufferDatosLeer];
-}
-#endif
-
-#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL
-STGestorGLEstadisticas NBGestorGL::estadisticasDeAcciones(){
-	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_GL("NBGestorGL::estadisticasDeAcciones")
-	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
-	return _debugEstadisticas;
-}
-#endif
 
 void NBGestorGL::drawTex(GLfloat x, GLfloat y, GLfloat z, GLfloat w, GLfloat h){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_GL("NBGestorGL::drawTex")
@@ -2158,15 +2014,6 @@ void NBGestorGL::drawTex(GLfloat x, GLfloat y, GLfloat z, GLfloat w, GLfloat h){
 		 default:
 		 NBASSERT(false)
 		 break;
-		 }
-		 }*/
-#		endif
-#		ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL_TRIANGULOS_RENDERIZADOS
-		/*{
-		 if(_cacheGL.iVaoLigado < _vertsGlArrsTam){
-		 NBGestorGL::privAcumularAreaArreglo(mode, first, count);
-		 } else {
-		 NBASSERT(false) //Aun no se ha implementado la suma de area mediante puntero directo (no buffer)
 		 }
 		 }*/
 #		endif
@@ -2273,15 +2120,6 @@ void NBGestorGL::drawArrays(GLenum mode, GLint first, GLsizei count){
 			}
 		}*/
 #	endif
-#	ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL_TRIANGULOS_RENDERIZADOS
-		{
-			if(_cacheGL.iVaoLigado < _vertsGlArrsTam){
-				NBGestorGL::privAcumularAreaArreglo(mode, first, count);
-			} else {
-				NBASSERT(false) //Aun no se ha implementado la suma de area mediante puntero directo (no buffer)
-			}
-		}
-#	endif
 #	ifdef CONFIG_NB_INCLUIR_VALIDACIONES_ASSERT_GL_NOP
 	NBGestorGL::privDbgAcumularOperacionRealizada();
 	//Analizar si puede optimizar el comando (uniendo con su anterior)
@@ -2330,13 +2168,6 @@ void NBGestorGL::drawElements(GLenum mode, GLint first, GLsizei count){
 #	endif
 	NBGESTORGL_LOTES_TODOS_PURGAR("NBGestorGL::drawElements")
 	glDrawElements(mode, count, GL_UNSIGNED_SHORT, (GLvoid*)(first * sizeof(GLushort))); GL_CMD_EJECUTADO("glDrawElements(%s, count(%d), GL_UNSIGNED_SHORT, first(%d))", STR_GL_DRAW_MODE(mode), (SI32)count, (SI32)first)
-#	ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL_TRIANGULOS_RENDERIZADOS
-	if(_cacheGL.vaoTipoLigado < _vertsGlArrsTam){
-		NBGestorGL::privAcumularAreaIndices(mode, first, count);
-	} else {
-		NBASSERT(false) //Aun no se ha implementado la suma de area mediante puntero directo (no VBO)
-	}
-#	endif
 #	ifdef CONFIG_NB_INCLUIR_VALIDACIONES_ASSERT_GL_NOP
 	NBGestorGL::privDbgAcumularOperacionRealizada();
 	//Analizar si puede optimizar el comando (uniendo con su anterior)
@@ -2488,169 +2319,3 @@ bool NBGestorGL::dbgModoFormaGLEsIndependizable(GLenum modo){
 	return false;
 }
 #endif
-
-#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL_TRIANGULOS_RENDERIZADOS
-void NBGestorGL::privAcumularAreaArreglo(GLenum mode, GLint first, GLsizei count){
-	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_GL("NBGestorGL::privAcumularAreaArreglo")
-	NBASSERT(_cacheGL.iVaoLigado < _vertsGlArrsTam) //Pendiente de implementar acumular area acorde al puntero ligado y no por buffer
-	//_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].usoArregloVertices
-	NBMatriz matrizModelo = _cacheGL.matrizModelo;
-	float escalaProyeccion = ((float)_cacheGL.puertoDeVision.ancho/(_cacheGL.cajaProyeccion.xMax-_cacheGL.cajaProyeccion.xMin)) * ((float)_cacheGL.puertoDeVision.alto/(_cacheGL.cajaProyeccion.yMax-_cacheGL.cajaProyeccion.yMin));
-	//PRINTF_INFO("Escala de proyeccion: %f\n", escalaProyeccion);
-	if(mode == GL_TRIANGLES){
-		NBASSERT((count%3) == 0);
-		SI32 iVert;
-		for(iVert=0; iVert < count; iVert+=3){
-			NBVerticeGL* v1 = (NBVerticeGL*)&(_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloVertices[(first+iVert)*_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].bytesPorRegistro]);
-			NBVerticeGL* v2 = (NBVerticeGL*)&(_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloVertices[(first+iVert+1)*_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].bytesPorRegistro]);
-			NBVerticeGL* v3 = (NBVerticeGL*)&(_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloVertices[(first+iVert+2)*_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].bytesPorRegistro]);
-			NBPunto p1; NBMATRIZ_MULTIPLICAR_PUNTO(p1, matrizModelo, v1->x, v1->y);
-			NBPunto p2; NBMATRIZ_MULTIPLICAR_PUNTO(p2, matrizModelo, v2->x, v2->y);
-			NBPunto p3; NBMATRIZ_MULTIPLICAR_PUNTO(p3, matrizModelo, v3->x, v3->y);
-			if(NBTRIANGULO_VERTICES_SON_DISTINOS(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y)){
-				float areaTriang; NBTRIANGULO_AREA(areaTriang, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
-				//NBASSERT(areaTriang == areaTriang); //El valor es NaN
-				_debugEstadisticas.areaTexelesRenderizados += (areaTriang * escalaProyeccion);
-				_debugEstadisticas.cantTriangulosRenderizados++; //Solo contabilizar los que tienen area
-				if(_debugModoAcumularTriangulosIgnorar){
-					_debugEstadisticas.areaTexelesRenderizadosIgnorables += (areaTriang * escalaProyeccion);
-					_debugEstadisticas.cantTriangulosRenderizadosIgnorables++;
-				}
-			}
-		}
-	} else if(mode == GL_TRIANGLE_STRIP){
-		NBASSERT(count >= 3);
-		NBVerticeGL* v1 = (NBVerticeGL*)&(_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloVertices[(first+0)*_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].bytesPorRegistro]);
-		NBVerticeGL* v2 = (NBVerticeGL*)&(_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloVertices[(first+1)*_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].bytesPorRegistro]);
-		NBPunto p1; NBMATRIZ_MULTIPLICAR_PUNTO(p1, matrizModelo, v1->x, v1->y);
-		NBPunto p2; NBMATRIZ_MULTIPLICAR_PUNTO(p2, matrizModelo, v2->x, v2->y);
-		SI32 iVert;
-		for(iVert=2; iVert < count; iVert++){
-			NBVerticeGL* v3 = (NBVerticeGL*)&(_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloVertices[(first+iVert)*_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].bytesPorRegistro]);
-			NBPunto p3; NBMATRIZ_MULTIPLICAR_PUNTO(p3, matrizModelo, v3->x, v3->y);
-			if(NBTRIANGULO_VERTICES_SON_DISTINOS(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y)){
-				float areaTriang; NBTRIANGULO_AREA(areaTriang, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
-				//NBASSERT(areaTriang == areaTriang); //El valor es NaN
-				_debugEstadisticas.areaTexelesRenderizados += (areaTriang * escalaProyeccion);
-				_debugEstadisticas.cantTriangulosRenderizados++; //Solo contabilizar los que tienen area
-				if(_debugModoAcumularTriangulosIgnorar){
-					_debugEstadisticas.areaTexelesRenderizadosIgnorables += (areaTriang * escalaProyeccion);
-					_debugEstadisticas.cantTriangulosRenderizadosIgnorables++;
-				}
-			}
-			v1 = v2; p1 = p2;
-			v2 = v3; p2 = p3;
-		}
-	} else if(mode == GL_TRIANGLE_FAN){
-		NBASSERT(count >= 3);
-		NBVerticeGL* v1 = (NBVerticeGL*)&(_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloVertices[(first+0)*_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].bytesPorRegistro]);
-		NBVerticeGL* v2 = (NBVerticeGL*)&(_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloVertices[(first+1)*_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].bytesPorRegistro]);
-		NBPunto p1; NBMATRIZ_MULTIPLICAR_PUNTO(p1, matrizModelo, v1->x, v1->y);
-		NBPunto p2; NBMATRIZ_MULTIPLICAR_PUNTO(p2, matrizModelo, v2->x, v2->y);
-		SI32 iVert;
-		for(iVert=2; iVert < count; iVert++){
-			NBVerticeGL* v3 = (NBVerticeGL*)&(_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloVertices[(first+iVert)*_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].bytesPorRegistro]);
-			NBPunto p3; NBMATRIZ_MULTIPLICAR_PUNTO(p3, matrizModelo, v3->x, v3->y);
-			if(NBTRIANGULO_VERTICES_SON_DISTINOS(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y)){
-				float areaTriang; NBTRIANGULO_AREA(areaTriang, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
-				//NBASSERT(areaTriang == areaTriang); //El valor es NaN
-				_debugEstadisticas.areaTexelesRenderizados += (areaTriang * escalaProyeccion);
-				_debugEstadisticas.cantTriangulosRenderizados++; //Solo contabilizar los que tienen area
-				if(_debugModoAcumularTriangulosIgnorar){
-					_debugEstadisticas.areaTexelesRenderizadosIgnorables += (areaTriang * escalaProyeccion);
-					_debugEstadisticas.cantTriangulosRenderizadosIgnorables++;
-				}
-			}
-			v2 = v3; p2 = p3;
-		}
-	}
-	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
-}
-#endif
-
-#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL_TRIANGULOS_RENDERIZADOS
-void NBGestorGL::privAcumularAreaIndices(GLenum mode, GLint first, GLsizei count){
-	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_GL("NBGestorGL::privAcumularAreaIndices")
-	NBASSERT(_cacheGL.iVaoLigado < _vertsGlArrsTam) //Pendiente de implementar acumular area acorde al puntero ligado y no por buffer
-	NBMatriz matrizModelo = _cacheGL.matrizModelo;
-	float escalaProyeccion = ((float)_cacheGL.puertoDeVision.ancho/(_cacheGL.cajaProyeccion.xMax-_cacheGL.cajaProyeccion.xMin)) * ((float)_cacheGL.puertoDeVision.alto/(_cacheGL.cajaProyeccion.yMax-_cacheGL.cajaProyeccion.yMin));
-	//PRINTF_INFO("Escala de proyeccion: %f\n", escalaProyeccion);
-	if(mode == GL_TRIANGLES){
-		NBASSERT((count%3) == 0);
-		SI32 iVert;
-		for(iVert=0; iVert < count; iVert+=3){
-			NBVerticeGL* v1 = (NBVerticeGL*)&(_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloVertices[_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloIndices[(first+iVert)]*_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].bytesPorRegistro]);
-			NBVerticeGL* v2 = (NBVerticeGL*)&(_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloVertices[_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloIndices[(first+iVert+1)]*_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].bytesPorRegistro]);
-			NBVerticeGL* v3 = (NBVerticeGL*)&(_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloVertices[_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloIndices[(first+iVert+2)]*_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].bytesPorRegistro]);
-			NBPunto p1; NBMATRIZ_MULTIPLICAR_PUNTO(p1, matrizModelo, v1->x, v1->y);
-			NBPunto p2; NBMATRIZ_MULTIPLICAR_PUNTO(p2, matrizModelo, v2->x, v2->y);
-			NBPunto p3; NBMATRIZ_MULTIPLICAR_PUNTO(p3, matrizModelo, v3->x, v3->y);
-			if(NBTRIANGULO_VERTICES_SON_DISTINOS(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y)){
-				float areaTriang; NBTRIANGULO_AREA(areaTriang, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
-				//NBASSERT(areaTriang == areaTriang); //El valor es NaN
-				_debugEstadisticas.areaTexelesRenderizados += (areaTriang * escalaProyeccion);
-				_debugEstadisticas.cantTriangulosRenderizados++; //Solo contabilizar los que tienen area
-				if(_debugModoAcumularTriangulosIgnorar){
-					_debugEstadisticas.areaTexelesRenderizadosIgnorables += (areaTriang * escalaProyeccion);
-					_debugEstadisticas.cantTriangulosRenderizadosIgnorables++;
-				}
-			}
-		}
-	} else if(mode == GL_TRIANGLE_STRIP){
-		NBASSERT(count >= 3);
-		NBVerticeGL* v1 = (NBVerticeGL*)&(_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloVertices[_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloIndices[(first+0)]*_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].bytesPorRegistro]);
-		NBVerticeGL* v2 = (NBVerticeGL*)&(_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloVertices[_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloIndices[(first+1)]*_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].bytesPorRegistro]);
-		NBPunto p1; NBMATRIZ_MULTIPLICAR_PUNTO(p1, matrizModelo, v1->x, v1->y);
-		NBPunto p2; NBMATRIZ_MULTIPLICAR_PUNTO(p2, matrizModelo, v2->x, v2->y);
-		SI32 iVert;
-		for(iVert=2; iVert < count; iVert++){
-			NBVerticeGL* v3 = (NBVerticeGL*)&(_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloVertices[_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloIndices[(first+iVert)]*_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].bytesPorRegistro]);
-			NBPunto p3; NBMATRIZ_MULTIPLICAR_PUNTO(p3, matrizModelo, v3->x, v3->y);
-			if(NBTRIANGULO_VERTICES_SON_DISTINOS(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y)){
-				float areaTriang; NBTRIANGULO_AREA(areaTriang, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
-				//NBASSERT(areaTriang == areaTriang); //El valor es NaN
-				_debugEstadisticas.areaTexelesRenderizados += (areaTriang * escalaProyeccion);
-				_debugEstadisticas.cantTriangulosRenderizados++; //Solo contabilizar los que tienen area
-				if(_debugModoAcumularTriangulosIgnorar){
-					_debugEstadisticas.areaTexelesRenderizadosIgnorables += (areaTriang * escalaProyeccion);
-					_debugEstadisticas.cantTriangulosRenderizadosIgnorables++;
-				}
-			}
-			v1 = v2; p1 = p2;
-			v2 = v3; p2 = p3;
-		}
-	} else if(mode == GL_TRIANGLE_FAN){
-		NBASSERT(count >= 3);
-		NBVerticeGL* v1 = (NBVerticeGL*)&(_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloVertices[_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloIndices[(first+0)]*_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].bytesPorRegistro]);
-		NBVerticeGL* v2 = (NBVerticeGL*)&(_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloVertices[_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloIndices[(first+1)]*_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].bytesPorRegistro]);
-		NBPunto p1; NBMATRIZ_MULTIPLICAR_PUNTO(p1, matrizModelo, v1->x, v1->y);
-		NBPunto p2; NBMATRIZ_MULTIPLICAR_PUNTO(p2, matrizModelo, v2->x, v2->y);
-		SI32 iVert;
-		for(iVert=2; iVert < count; iVert++){
-			NBVerticeGL* v3 = (NBVerticeGL*)&(_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloVertices[_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloIndices[(first+iVert)]*_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].bytesPorRegistro]);
-			NBPunto p3; NBMATRIZ_MULTIPLICAR_PUNTO(p3, matrizModelo, v3->x, v3->y);
-			if(NBTRIANGULO_VERTICES_SON_DISTINOS(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y)){
-				float areaTriang; NBTRIANGULO_AREA(areaTriang, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
-				//NBASSERT(areaTriang == areaTriang); //El valor es NaN
-				_debugEstadisticas.areaTexelesRenderizados += (areaTriang * escalaProyeccion);
-				_debugEstadisticas.cantTriangulosRenderizados++; //Solo contabilizar los que tienen area
-				if(_debugModoAcumularTriangulosIgnorar){
-					_debugEstadisticas.areaTexelesRenderizadosIgnorables += (areaTriang * escalaProyeccion);
-					_debugEstadisticas.cantTriangulosRenderizadosIgnorables++;
-				}
-			}
-			v2 = v3; p2 = p3;
-		}
-	}
-	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
-}
-#endif
-
-
-
-
-
-
-
-
-

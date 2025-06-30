@@ -485,11 +485,9 @@ PTRfunCmdsGL AUEscenaSpriteElastico::actualizarModeloGL(const NBPropRenderizado 
 void AUEscenaSpriteElastico::enviarComandosGL(UI8* punteroDatosModelo){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_2("AUEscenaSpriteElastico::enviarComandosGL")
 	STSpriteElasticoRender* propsRender = (STSpriteElasticoRender*)punteroDatosModelo;
-	//GLfloat dbgColorAntes[4]; glGetFloatv(GL_CURRENT_COLOR, dbgColorAntes);
 	NBGestorGL::activarVerticesGL(ENVerticeGlTipo_MonoTextura); NBGESTORGL_DBG_NOMBRAR_ACTIVADOR_VERTICES_GL("AUEscenaSpriteElastico")
 	//Configurar textura
 	NBGestorGL::bindTexture(0, propsRender->idTexturaGL);
-	//GLfloat dbgColorDesp[4]; glGetFloatv(GL_CURRENT_COLOR, dbgColorDesp);
 	//Acumular triangStrip independiente mediante indices.
 	if(propsRender->esMascaraAlpha){
 		NBGestorGL::blendFunc(GL_ZERO, GL_SRC_ALPHA);

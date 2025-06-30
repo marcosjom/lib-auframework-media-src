@@ -63,22 +63,6 @@ AUEscenaContenedor::~AUEscenaContenedor(){
 
 //
 
-#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_OBJETOS
-	#define AUESCENACONTENEDOR_INCREMENTAR_CONTEO_MATRICES_RECORRIDAS(PROPS_RENDER)				*PROPS_RENDER.debugPtrConteoMatricesRecorridas = *PROPS_RENDER.debugPtrConteoMatricesRecorridas + 1;
-	#define AUESCENACONTENEDOR_INCREMENTAR_CONTEO_MATRICES_ACTUALIZADAS(PROPS_RENDER)			*PROPS_RENDER.debugPtrConteoMatricesActualizadas = *PROPS_RENDER.debugPtrConteoMatricesActualizadas + 1;
-	#define AUESCENACONTENEDOR_INCREMENTAR_CONTEO_MODELOS_RECORRIDOS(PROPS_RENDER)				*PROPS_RENDER.debugPtrConteoModelosRecorridos = *PROPS_RENDER.debugPtrConteoModelosRecorridos + 1;
-	#define AUESCENACONTENEDOR_INCREMENTAR_CONTEO_MODELOS_ACTUALIZADOS(PROPS_RENDER, FUNC_GL)	if(FUNC_GL != NULL) *PROPS_RENDER.debugPtrConteoModelosActualizados = *PROPS_RENDER.debugPtrConteoModelosActualizados + 1;
-	#define AUESCENACONTENEDOR_INCREMENTAR_CONTEO_MODELOS_CONTENEDORES(PROPS_RENDER)			*PROPS_RENDER.debugPtrConteoModelosContenedores = *PROPS_RENDER.debugPtrConteoModelosContenedores + 1;
-	#define AUESCENACONTENEDOR_INCREMENTAR_CONTEO_MODELOS_NO_CONTENEDORES(PROPS_RENDER)			*PROPS_RENDER.debugPtrConteoModelosNoContenedores = *PROPS_RENDER.debugPtrConteoModelosNoContenedores + 1;
-#else
-	#define AUESCENACONTENEDOR_INCREMENTAR_CONTEO_MATRICES_RECORRIDAS(PROPS_RENDER)
-	#define AUESCENACONTENEDOR_INCREMENTAR_CONTEO_MATRICES_ACTUALIZADAS(PROPS_RENDER)
-	#define AUESCENACONTENEDOR_INCREMENTAR_CONTEO_MODELOS_RECORRIDOS(PROPS_RENDER)
-	#define AUESCENACONTENEDOR_INCREMENTAR_CONTEO_MODELOS_ACTUALIZADOS(PROPS_RENDER, FUNC_GL)
-	#define AUESCENACONTENEDOR_INCREMENTAR_CONTEO_MODELOS_CONTENEDORES(PROPS_RENDER)
-	#define AUESCENACONTENEDOR_INCREMENTAR_CONTEO_MODELOS_NO_CONTENEDORES(PROPS_RENDER)
-#endif
-
 #ifdef CONFIG_NB_INCLUIR_VALIDACIONES_ASSERT
 	#define AUESCENACONTENEDOR_APAGAR_BANDERA_CACHE_ACTUALIZADA(OBJ_ESCENA) (OBJ_ESCENA)->_cacheObjEscena.debugCacheActualizada = false;
 #else
@@ -602,14 +586,12 @@ void AUEscenaContenedor::actualizarArbolMatricesEscena(STNBSceneModelsResult* ds
 	AU_OBJETO_ASSERT_IS_ALIVE_THIS
 	//NBASSERT(_debugBloqueadoActualizandoModelos)
 	//Ensuciar las caches en base a las del padre
-	AUESCENACONTENEDOR_INCREMENTAR_CONTEO_MATRICES_RECORRIDAS(propsRenderizado)
 	NBPropHeredadasModelos propsHeredar;
 	//Update container matrix
 	{
 		propsHeredar.matrizModificadaPadre = (propsHeredadas.matrizModificadaPadre || (_sceneMask & AUOBJETOESCENA_BIT_MATRIX_LOCAL_CHANGED) != 0);
 		if(propsHeredar.matrizModificadaPadre){
 			//Actualizar matriz
-			AUESCENACONTENEDOR_INCREMENTAR_CONTEO_MATRICES_ACTUALIZADAS(propsRenderizado)
 			NBMatriz matrizLocal; NBMATRIZ_ESTABLECER_SEGUN_TRANSFORMACIONES_ESCENA_OBJETO(matrizLocal, this->_propiedades.transformaciones)
 			NBMATRIZ_MULTIPLICAR_CON_MATRIZ(_cacheObjEscena.matrizEscena, propsHeredadas.matrizPadre, matrizLocal);
 		}
@@ -641,10 +623,8 @@ void AUEscenaContenedor::actualizarArbolMatricesEscena(STNBSceneModelsResult* ds
 					} else {
 						isSncModelDirty = ((hijo->_sceneMask & (AUOBJETOESCENA_BIT_MODEL_LOCAL_CHANGED | AUOBJETOESCENA_BIT_MODEL_CHILD_CHANGED)) != 0);
 						//Ensuciar las caches en base a las del padre
-						AUESCENACONTENEDOR_INCREMENTAR_CONTEO_MATRICES_RECORRIDAS(propsRenderizado)
 						//Update object matrix
 						if(propsHeredar.matrizModificadaPadre || (hijo->_sceneMask & AUOBJETOESCENA_BIT_MATRIX_LOCAL_CHANGED) != 0){
-							AUESCENACONTENEDOR_INCREMENTAR_CONTEO_MATRICES_ACTUALIZADAS(propsRenderizado)
 							NBMATRIZ_ESTABLECER_SEGUN_TRANSFORMACIONES_ESCENA_OBJETO(matrizLocal, hijo->_propiedades.transformaciones)
 							NBMATRIZ_MULTIPLICAR_CON_MATRIZ(hijo->_cacheObjEscena.matrizEscena, propsHeredar.matrizPadre, matrizLocal);
 							isSncModelDirty = TRUE;
@@ -707,14 +687,8 @@ void AUEscenaContenedor::actualizarArbolModelosGL(const NBPropRenderizado &props
 		STPropRenderModelo renderDatos;
 		renderDatos.indiceDatos		= indiceDatosModelo;
 		renderDatos.funcEnvComadosGL= funcionComandosGL;
-		#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL_TRIANGULOS_RENDERIZADOS
-		renderDatos.debugAcumEnIgnorable = NBGestorGL::debugModoAcumularVertsIndsIgnorar();
-		#endif
 		propsRenderizado.renderModelos->agregarElemento(renderDatos);
 	}
-	AUESCENACONTENEDOR_INCREMENTAR_CONTEO_MODELOS_RECORRIDOS(propsRenderizado)
-	AUESCENACONTENEDOR_INCREMENTAR_CONTEO_MODELOS_ACTUALIZADOS(propsRenderizado, funcionComandosGL)
-	AUESCENACONTENEDOR_INCREMENTAR_CONTEO_MODELOS_CONTENEDORES(propsRenderizado);
 	//Definir propiedades a heredar a hijos
 	NBPropHeredadasRender propsHeredar;
 	propsHeredar.iluminoDependenciaPadre		= (propsHeredadas.iluminoDependenciaPadre && _iluminoDependiente);
@@ -762,14 +736,8 @@ void AUEscenaContenedor::actualizarArbolModelosGL(const NBPropRenderizado &props
 					STPropRenderModelo renderDatos;
 					renderDatos.indiceDatos		= indiceDatosModelo;
 					renderDatos.funcEnvComadosGL= funcionComandosGL;
-					#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL_TRIANGULOS_RENDERIZADOS
-					renderDatos.debugAcumEnIgnorable = NBGestorGL::debugModoAcumularVertsIndsIgnorar();
-					#endif
 					propsRenderizado.renderModelos->agregarElemento(renderDatos);
 				}
-				AUESCENACONTENEDOR_INCREMENTAR_CONTEO_MODELOS_RECORRIDOS(propsRenderizado)
-				AUESCENACONTENEDOR_INCREMENTAR_CONTEO_MODELOS_ACTUALIZADOS(propsRenderizado, funcionComandosGL)
-				AUESCENACONTENEDOR_INCREMENTAR_CONTEO_MODELOS_NO_CONTENEDORES(propsRenderizado)
 			}
 			#ifdef CONFIG_NB_INCLUIR_VALIDACIONES_ASSERT
 			//Validar agrupador de sombras
@@ -778,10 +746,6 @@ void AUEscenaContenedor::actualizarArbolModelosGL(const NBPropRenderizado &props
 				NBASSERT(hijo->_agrupadorSombras == _agrupadorSombras)
 			}
 			#endif
-		#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_OBJETOS
-		} else {
-			*propsRenderizado.debugPtrConteoModelosRecorridos = *propsRenderizado.debugPtrConteoModelosRecorridos + 1;
-		#endif
 		}
 	}
 	AU_GESTOR_PILA_LLAMADAS_POP_2

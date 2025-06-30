@@ -237,15 +237,6 @@ typedef struct STGestorEscenaCapa_ {
 	AUArregloNativoMutableP<IEscenaConsumidorEspejos*>*	consumidoresEspejos;
 	AUArregloNativoMutableP<IEscenaConsumidorCuerdas*>*	consumidoresCuerdas;
 	AUArregloNativoMutableP<IEscenaConsumidorPreModeloGL*>*	consumidoresPreModeloGL;
-	#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_CUERPOS
-	UI32												debugCuerposTotal;
-	UI32												debugFigurasSombrasTotal;
-	UI32												debugFigurasIluminacionTotal;
-	UI32												debugFigurasFisicaTotal;
-	UI32												debugVerticesSombrasTotal;
-	UI32												debugVerticesIluminacionTotal;
-	UI32												debugVerticesFisicaTotal;
-	#endif
 	//
 	bool operator==(const struct STGestorEscenaCapa_ &otro) const {
 		return (idCapa == otro.idCapa && objEscena == otro.objEscena && fuentesIluminacion == otro.fuentesIluminacion);
@@ -327,83 +318,6 @@ typedef struct STGestorEscenaEscena_ {
 		return !(registroOcupado == otro.registroOcupado && iFramebufferEscena == otro.iFramebufferEscena && areaOcupadaDestino == otro.areaOcupadaDestino);
 	}
 } STGestorEscenaEscena;
-
-#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_OBJETOS
-typedef struct STEscenaEstadObjs_ {
-	//actualizaMatricesYModelos
-	UI32	conteoCiclosEnMatrices;
-	UI32	conteoMatricesRecorridas;
-	UI32	conteoMatricesActualizadas;
-	//actualizaModelosGL
-	UI32	conteoCiclosEnModelos;
-	UI32	conteoModelosRecorridos;
-	UI32	conteoModelosActualizados;
-	//dibujaModelos
-	UI32	conteoCiclosEnRenderizado;
-	UI32	conteoModelosEscena;
-	UI32	conteoModelosRenderizados;
-	//
-	UI32	conteoModelosContenedores;
-	UI32	conteoModelosNoContenedores;
-} STEscenaEstadObjs;
-#endif
-
-#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_OBJETOS
-#	define NBESCENA_STATS_PRINT(OBJ_PTR) \
-	if((OBJ_PTR)->conteoMatricesActualizadas != 0 || (OBJ_PTR)->conteoModelosActualizados != 0 || (OBJ_PTR)->conteoModelosRenderizados != 0){ \
-		STNBString str;\
-		NBString_init(&str); \
-		if((OBJ_PTR)->conteoMatricesRecorridas != 0){ \
-			if(str.length != 0) NBString_concat(&str, ", "); \
-			NBString_concat(&str, "matricesRecorridas("); NBString_concatUI32(&str, (OBJ_PTR)->conteoMatricesRecorridas); NBString_concat(&str, ")"); \
-		} \
-		if((OBJ_PTR)->conteoMatricesActualizadas != 0){ \
-			if(str.length != 0) NBString_concat(&str, ", "); \
-			NBString_concat(&str, "matricesActualizadas("); NBString_concatUI32(&str, (OBJ_PTR)->conteoMatricesActualizadas); NBString_concat(&str, ")"); \
-		} \
-		if((OBJ_PTR)->conteoModelosRecorridos != 0){ \
-			if(str.length != 0) NBString_concat(&str, ", "); \
-			NBString_concat(&str, "modelosRecorridos("); NBString_concatUI32(&str, (OBJ_PTR)->conteoModelosRecorridos); NBString_concat(&str, ")"); \
-		} \
-		if((OBJ_PTR)->conteoModelosActualizados != 0){ \
-			if(str.length != 0) NBString_concat(&str, ", "); \
-			NBString_concat(&str, "modelosActualizados("); NBString_concatUI32(&str, (OBJ_PTR)->conteoModelosActualizados); NBString_concat(&str, ")"); \
-		} \
-		if((OBJ_PTR)->conteoModelosEscena != 0){ \
-			if(str.length != 0) NBString_concat(&str, ", "); \
-			NBString_concat(&str, "modelosEscena("); NBString_concatUI32(&str, (OBJ_PTR)->conteoModelosEscena); NBString_concat(&str, ")"); \
-		} \
-		if((OBJ_PTR)->conteoModelosRenderizados != 0){ \
-			if(str.length != 0) NBString_concat(&str, ", "); \
-			NBString_concat(&str, "modelosRenderizados("); NBString_concatUI32(&str, (OBJ_PTR)->conteoModelosRenderizados); NBString_concat(&str, ")"); \
-		} \
-		if(str.length > 0){ \
-			PRINTF_INFO("Escene stats: %s.\n", str.str);\
-		} \
-		NBString_empty(&str); \
-	}
-#else
-#	define NBESCENA_STATS_PRINT(OBJ_PTR)
-#endif
-
-#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_ESCENA
-typedef struct STEscenaEstadisticas_ {
-	UI32	cantLucesRenderizadas;
-	UI32	cantEscenasRenderizadas;
-	UI32	cantCambiosFrameBufer;
-	// Produccion de sombras
-	UI32	cantProductoresSombras;
-	UI32	cantSombrasProducidas;
-	UI32	ciclosProduciendoSombras;	//Total
-	// Consumo de sombras
-	UI32	cantConsumidoresSombras;
-	UI32	ciclosConsumiendoSombras;	//Total
-	UI32	ciclosAgrupandoSombras;		//Parte del total
-	UI32	ciclosActualizandoVertices;	//Parte del total
-	UI32	ciclosSegmentandoFiguras;	//Parte del total
-	UI32	ciclosAcumulandoColores;	//Parte del total
-} STEscenaEstadisticas;
-#endif
 
 typedef struct STBufferVerticesGL_ {
 	//Arreglo de vertices
@@ -651,15 +565,6 @@ class NBGestorEscena {
 		static UI32							debugBytesDeRenderBuffers();
 		#endif
 		//static void						debug_verificaNivelEnEscena();
-		#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_OBJETOS
-		static STEscenaEstadObjs			debugEstadisticasObjs();
-		#endif
-		#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_CUERPOS
-		static void							debugConteoCuerpos(UI32* guardarConteoCuerposEn, UI32* guardarConteoFigurasSombrasEn, UI32* guardarConteoFigurasIluminadasEn, UI32* guardarConteoFigurasFisicaEn, UI32* guardarConteoVerticesSombrasEn, UI32* guardarConteoVerticesIluminadasEn, UI32* guardarConteoVerticesFisicasEn);
-		#endif
-		#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_ESCENA
-		static STEscenaEstadisticas			debugEstadisticasEscenasYResetearCiclos();
-		#endif
 		static UI32							cantidadLucesRenderizadas();
 		static UI32							cantidadEscenasRenderizadas();
 		static UI32							cantidadCambiosFrameBuffer();
@@ -688,13 +593,6 @@ class NBGestorEscena {
 		static ENGestorEscenaBufferEstado	_bufferDatosEstado[NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS];
 		static bool							_bufferDatosBloqueado[NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS];
 		static STBufferVerticesGL			_buffersVertices[NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS][ENVerticeGlTipo_Conteo];
-		//
-		#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_OBJETOS
-		static STEscenaEstadObjs			_debugEstadisticasObjs;
-		#endif
-		#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_ESCENA
-		static STEscenaEstadisticas			_debugEstadisticasEscenas;
-		#endif
 		//
 		static void							privIncializarConfigurarGL();
 		//

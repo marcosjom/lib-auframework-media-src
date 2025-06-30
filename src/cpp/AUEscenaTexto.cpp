@@ -807,28 +807,6 @@ PTRfunCmdsGL AUEscenaTexto::actualizarModeloGL(const NBPropRenderizado &propsRen
 	return AUEscenaTexto::enviarComandosGL;
 }
 
-//ToDo: remove
-/*PTRfunCmdsGL AUEscenaTexto::actualizarModeloGL(const NBPropRenderizado &propsRenderizado, const NBPropIluminacion &propsIluminacion, const NBPropHeredadasRender &propsHeredadas, STBloqueGL* dstVertexBlock, UI8* dstVertexType){
-	AU_GESTOR_PILA_LLAMADAS_PUSH_2("AUEscenaTexto::actualizarModeloGL")
-	NBASSERT(idEscena!=-1) //Solo si esta en escena
-	/ *PTRfunCmdsGL r = NULL;
-	//Release previoud model (if available)
-	if(_textVisual.produceRenderFunc != NULL){
-		NBColor colorMultiplicado; NBCOLOR_MULTIPLICAR_CON_UI8(colorMultiplicado, propsHeredadas.colorPadre, _propiedades.color8);
-		r = (_textVisual.produceRenderFunc)(&_textVisual, propsRenderizado, _cacheObjEscena.matrizEscena, colorMultiplicado, dstVertexBlock, dstVertexType);
-		if(r != NULL){
-			//Retain the font
-			propsRenderizado.piscinaRetecionRender->agregarElemento(_textVisual.font);
-			//
-			_renderMatrixLast = _cacheObjEscena.matrizEscena;
-			_renderColorLast = colorMultiplicado;
-			_renderForceUpdate = false;
-		}
-	}* /
-	AU_GESTOR_PILA_LLAMADAS_POP_2
-	return this->actualizarModeloGL(propsRenderizado, propsIluminacion, propsHeredadas);
-}*/
-
 void AUEscenaTexto::enviarComandosGL(UI8* punteroDatosModelo){
 	BYTE* ptr = (BYTE*)punteroDatosModelo;
 	//Print models

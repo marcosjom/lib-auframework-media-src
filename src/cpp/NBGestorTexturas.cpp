@@ -1184,24 +1184,13 @@ void NBGestorTexturas::privRegenerarAtlasesTexturasEscritura(const bool elimText
 #							endif
 							NBGestorGL::genTextures(1, &idTextura, &atlasTex->propsTexturaGL);
 							NBGestorGL::bindTexture(0, idTextura);
-#							ifdef CONFIG_NB_GESTOR_TEXTURAS_IMPLEMENTAR_MIPMAPS
-							NBGestorGL::configurarTextura(modoPintado, habilitarMipMap, &atlasTex->propsTexturaGL);
-#							else
 							NBGestorGL::configurarTextura(modoPintado, false, &atlasTex->propsTexturaGL);
-#							endif
 							NBASSERT((tipoAlmacenamiento == ENTexturaTipoAlmacenamientoGL_AtlasCompartido && (modoPintado == ENTexturaModoPintado_Imagen_Suavizada || modoPintado == ENTexturaModoPintado_Imagen_Precisa)) ||
 									 (tipoAlmacenamiento == ENTexturaTipoAlmacenamientoGL_AtlasUnico && (modoPintado == ENTexturaModoPintado_Patron_Suavizado || modoPintado == ENTexturaModoPintado_Patron_Preciso)))
 							/*Formatos: GL_ALPHA, GL_RGB, GL_RGBA, GL_LUMINANCE (gris), GL_LUMINANCE_ALPHA (gris+alpha)*/
 							/*Tipos: GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT_5_6_5, GL_UNSIGNED_SHORT_4_4_4_4, GL_UNSIGNED_SHORT_5_5_5_1*/
-#							ifdef CONFIG_NB_GESTOR_TEXTURAS_INICIALIZAR_TEXTURAS_GL_CON_DATOS
-							AUMapaBits* mapaBitsFormateo = new(ENMemoriaTipo_Temporal) AUMapaBits(anchoAtlas, altoAtlas, colorDestino, 0); NB_DEFINE_NOMBRE_PUNTERO(mapaBitsFormateo, "NBGestorTexturas::mapaBitsFormateo")
-							NBGestorGL::texImage2D(GL_TEXTURE_2D, 0, formatoGlLocal, anchoAtlas, altoAtlas, 0, formatoGlDriver, tpoDatoGlDriver, mapaBitsFormateo->datos(), &atlasTex->propsTexturaGL); //el formateo asegura que OpenGL reserve solo la VRAM necesaria (en lugar de siempre RGBA)
-							_texsChangesCount++;
-							mapaBitsFormateo->liberar(NB_RETENEDOR_NULL);
-#							else
 							NBGestorGL::texImage2D(GL_TEXTURE_2D, 0, formatoGlLocal, anchoAtlas, altoAtlas, 0, formatoGlDriver, tpoDatoGlDriver, NULL, &atlasTex->propsTexturaGL);
 							_texsChangesCount++;
-#							endif
 							NBASSERT(NBGestorGL::isTexture(idTextura))
 							//Registrar nuevo Atlas para el Atlas-Textura-GL
 							atlasTex->colorFormato			= colorDestino;
@@ -1236,24 +1225,13 @@ void NBGestorTexturas::privRegenerarAtlasesTexturasEscritura(const bool elimText
 #							endif
 							NBGestorGL::genTextures(1, &idTextura, &atlasTex->propsTexturaGL);
 							NBGestorGL::bindTexture(0, idTextura);
-#							ifdef CONFIG_NB_GESTOR_TEXTURAS_IMPLEMENTAR_MIPMAPS
-							NBGestorGL::configurarTextura(atlasTex->modoPintado, habilitarMipMap, &atlasTex->propsTexturaGL);
-#							else
 							NBGestorGL::configurarTextura(atlasTex->modoPintado, false, &atlasTex->propsTexturaGL);
-#							endif
 							NBASSERT((atlasTex->tipoAlmacenamientoGL == ENTexturaTipoAlmacenamientoGL_AtlasCompartido && (atlasTex->modoPintado == ENTexturaModoPintado_Imagen_Suavizada || atlasTex->modoPintado == ENTexturaModoPintado_Imagen_Precisa)) ||
 									 (atlasTex->tipoAlmacenamientoGL == ENTexturaTipoAlmacenamientoGL_AtlasUnico && (atlasTex->modoPintado == ENTexturaModoPintado_Patron_Suavizado || atlasTex->modoPintado == ENTexturaModoPintado_Patron_Preciso)))
 							/ *Formatos: GL_ALPHA, GL_RGB, GL_RGBA, GL_LUMINANCE (gris), GL_LUMINANCE_ALPHA (gris+alpha)* /
 							/ *Tipos: GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT_5_6_5, GL_UNSIGNED_SHORT_4_4_4_4, GL_UNSIGNED_SHORT_5_5_5_1* /
-#							ifdef CONFIG_NB_GESTOR_TEXTURAS_INICIALIZAR_TEXTURAS_GL_CON_DATOS
-							AUMapaBits* mapaBitsFormateo = new(ENMemoriaTipo_Temporal) AUMapaBits(atlasTexOrig.propsTexturaGL.anchoGL, atlasTexOrig.propsTexturaGL.altoGL, atlasTex->colorFormato, 0); NB_DEFINE_NOMBRE_PUNTERO(mapaBitsFormateo, "NBGestorTexturas::mapaBitsFormateo")
-							NBGestorGL::texImage2D(GL_TEXTURE_2D, 0, formatoGlLocal, atlasTexOrig.propsTexturaGL.anchoGL, atlasTexOrig.propsTexturaGL.altoGL, 0, formatoGlDriver, tpoDatoGlDriver, mapaBitsFormateo->datos(), &atlasTex->propsTexturaGL); //el formateo asegura que OpenGL reserve solo la VRAM necesaria (en lugar de siempre RGBA)
-							_texsChangesCount++;
-							mapaBitsFormateo->liberar(NB_RETENEDOR_NULL);
-#							else
 							NBGestorGL::texImage2D(GL_TEXTURE_2D, 0, formatoGlLocal, atlasTexOrig.propsTexturaGL.anchoGL, atlasTexOrig.propsTexturaGL.altoGL, 0, formatoGlDriver, tpoDatoGlDriver, NULL, &atlasTex->propsTexturaGL);
 							_texsChangesCount++;
-#							endif
 							NBASSERT(NBGestorGL::isTexture(idTextura))
 							//Verificar valores
 #							ifdef CONFIG_NB_INCLUIR_VALIDACIONES_ASSERT
@@ -2005,25 +1983,6 @@ UI16 NBGestorTexturas::liberarTexturasSinReferenciasEnAmbito(UI8 iAmb){
 				}
 				//Free texture
 				if(!algunaSubtexturaEnUso){
-#					ifdef CONFIG_NB_GESTOR_TEXTURAS_FINALIZAR_AREAS_TEXTURAS_GL_CON_DATOS
-					if(atlasTex->mapaAtlas != NULL){
-						//Formatear zona liberada
-						const MapaBitsColor colorMapaBits = atlasTex->colorFormato;
-						GLenum formatoGlLocal = NBGestorTexturas::formatoGlDriver(colorMapaBits); NBASSERT(formatoGlLocal != 0)
-						GLenum tpoDatoGlLocal = NBGestorTexturas::tipoDatoGlLocal(colorMapaBits); NBASSERT(tpoDatoGlLocal != 0)
-						if(formatoGlLocal == 0 || tpoDatoGlLocal == 0){
-							PRINTF_ERROR("NBGestorTexturas, el formatoGl(%d) o tpoDatoGlDriver(%d) no pudo definirse\n", formatoGlLocal, tpoDatoGlLocal);
-							NBASSERT(false)
-						} else {
-							const NBRectanguloUI16 areaTextura = atlasTex->mapaAtlas->areasOcupadas()->elem(iTextura).area;
-							AUMapaBits* mapaBitsFormateo = new(ENMemoriaTipo_Temporal) AUMapaBits(areaTextura.ancho, areaTextura.alto, colorMapaBits);
-							NBGestorGL::bindTexture(0, (GLuint)atlasTex->propsTexturaGL.idTexturaGL);
-							NBGestorGL::texSubImage2D(GL_TEXTURE_2D, 0, areaTextura.x, areaTextura.y, areaTextura.ancho, areaTextura.alto, formatoGlLocal, tpoDatoGlLocal, mapaBitsFormateo->datos(), &atlasTex->propsTexturaGL); //GL_UNSIGNED_BYTE
-							_texsChangesCount++;
-							mapaBitsFormateo->liberar(NB_RETENEDOR_NULL);
-						}
-					}
-#					endif
 					//Remove from unorganized-list
 					{
 						STGestorTexTexturaRef texRef;
@@ -3617,25 +3576,14 @@ SI32 NBGestorTexturas::privCrearAtlasTexturaGL(UI8 iAmbitoTexturas, SI32 anchoAt
 		#endif
 		NBGestorGL::genTextures(1, &idTextura, &descAtlas->propsTexturaGL);
 		NBGestorGL::bindTexture(0, idTextura);
-		#ifdef CONFIG_NB_GESTOR_TEXTURAS_IMPLEMENTAR_MIPMAPS
-		NBGestorGL::configurarTextura(modoPintado, habilitarMipMap, &descAtlas->propsTexturaGL);
-		#else
 		NBGestorGL::configurarTextura(modoPintado, false, &descAtlas->propsTexturaGL);
-		#endif
 		//ToDo: remove; not valid anymore; video stream textures
 		//NBASSERT((tipoAlmacenamiento == ENTexturaTipoAlmacenamientoGL_AtlasCompartido && (modoPintado == ENTexturaModoPintado_Imagen_Suavizada || modoPintado == ENTexturaModoPintado_Imagen_Precisa)) ||
 		//		 (tipoAlmacenamiento == ENTexturaTipoAlmacenamientoGL_AtlasUnico && (modoPintado == ENTexturaModoPintado_Patron_Suavizado || modoPintado == ENTexturaModoPintado_Patron_Preciso)))
 		/*Formatos: GL_ALPHA, GL_RGB, GL_RGBA, GL_LUMINANCE (gris), GL_LUMINANCE_ALPHA (gris+alpha)*/
 		/*Tipos: GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT_5_6_5, GL_UNSIGNED_SHORT_4_4_4_4, GL_UNSIGNED_SHORT_5_5_5_1*/
-		#ifdef CONFIG_NB_GESTOR_TEXTURAS_INICIALIZAR_TEXTURAS_GL_CON_DATOS
-		AUMapaBits* mapaBitsFormateo = new(ENMemoriaTipo_Temporal) AUMapaBits(anchoAtlas, altoAtlas, colorDestino, 0); NB_DEFINE_NOMBRE_PUNTERO(mapaBitsFormateo, "NBGestorTexturas::mapaBitsFormateo")
-		NBGestorGL::texImage2D(GL_TEXTURE_2D, 0, formatoGlLocal, anchoAtlas, altoAtlas, 0, formatoGlDriver, tpoDatoGlDriver, mapaBitsFormateo->datos(), &descAtlas->propsTexturaGL); //el formateo asegura que OpenGL reserve solo la VRAM necesaria (en lugar de siempre RGBA)
-		_texsChangesCount++;
-		mapaBitsFormateo->liberar(NB_RETENEDOR_NULL);
-		#else
 		NBGestorGL::texImage2D(GL_TEXTURE_2D, 0, formatoGlLocal, anchoAtlas, altoAtlas, 0, formatoGlDriver, tpoDatoGlDriver, NULL, &descAtlas->propsTexturaGL);
 		_texsChangesCount++;
-		#endif
 		NBASSERT(NBGestorGL::isTexture(idTextura))
 		//Registrar nuevo Atlas para el Atlas-Textura-GL
 		descAtlas->colorFormato			= colorDestino;
@@ -3866,7 +3814,7 @@ void NBGestorTexturas::volcarAltasHaciaArchivos(){
 				AUMapaBitsMutable* mapaBits 	= new(ENMemoriaTipo_Temporal) AUMapaBitsMutable(tamanoAtlas.ancho, tamanoAtlas.alto, colorTextura, 0); NB_DEFINE_NOMBRE_PUNTERO(mapaBits, "NBGestorTexturas::mapaBits")
 #				ifdef NB_LIB_GRAFICA_ES_EMBEDDED
 				rutaDestino->vaciar();
-				rutaDestino->agregar("/Users/mortegam/altas_mapa_general_");
+				rutaDestino->agregar("altas_mapa_general_");
 				rutaDestino->agregarNumerico(iAmb);
 				rutaDestino->agregar("_");
 				rutaDestino->agregarNumerico(i);
@@ -3925,7 +3873,7 @@ void NBGestorTexturas::volcarAltasHaciaArchivos(){
 			AUMapaBitsMutable* mapaBits 	= new(ENMemoriaTipo_Temporal) AUMapaBitsMutable(tamanoAtlas.ancho, tamanoAtlas.alto, colorTextura, 0); NB_DEFINE_NOMBRE_PUNTERO(mapaBits, "NBGestorTexturas::mapaBits")
 #			ifdef NB_LIB_GRAFICA_ES_EMBEDDED
 			rutaDestino->vaciar();
-			rutaDestino->agregar("/Users/mortegam/altas_mapa_fuente");
+			rutaDestino->agregar("altas_mapa_fuente");
 			rutaDestino->agregarNumerico(iFnt);
 			rutaDestino->agregar("_");
 			rutaDestino->agregarNumerico(iTex);

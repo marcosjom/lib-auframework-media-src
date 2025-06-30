@@ -29,10 +29,6 @@ ENGestorEscenaCambioDef		NBGestorEscena::_cambioDefinicioEstado = ENGestorEscena
 
 AUArregloNativoMutableP<STRangoSombra>* NBGestorEscena::_cacheSombrasFusionadas = NULL;
 
-#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_ESCENA
-STEscenaEstadisticas		NBGestorEscena::_debugEstadisticasEscenas;
-#endif
-
 //Bufferes datos
 SI32						NBGestorEscena::_indiceBufferDatosLeer = 0;
 SI32						NBGestorEscena::_indiceBufferDatosEscribir = 0;
@@ -56,9 +52,6 @@ GLushort*					NBGestorEscena::indicesGL3	= NULL;
 #endif
 
 //
-#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_OBJETOS
-STEscenaEstadObjs			NBGestorEscena::_debugEstadisticasObjs;
-#endif
 
 STGestorEscenaTextura		NBGestorEscena::_texturasParaRenderizadoGL[NBGESTORESCENA_MAX_TEXTURAS_RENDER];
 STGestorEscenaFrameBuffer	NBGestorEscena::_frameBuffersGL[NBGESTORESCENA_MAX_ESCENAS];
@@ -123,13 +116,6 @@ bool NBGestorEscena::inicializar(const float pantallaFrecuencia){
 		}
 	}
 	//
-#	ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_OBJETOS
-	NBMemory_setZero(_debugEstadisticasObjs);
-#	endif
-#	ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_ESCENA
-	NBMemory_setZero(_debugEstadisticasEscenas);
-#	endif
-	//
 	NBGestorEscena::privIncializarConfigurarGL();
 	//Inicializar arreglos de verticesGL
 	{
@@ -140,12 +126,12 @@ bool NBGestorEscena::inicializar(const float pantallaFrecuencia){
 				STBufferVerticesGL* ptrDat = &_buffersVertices[iBuff][iTip];
 				/*Arreglo de verticesGL*/ \
 				ptrDat->bytesPorRegistro		= sizeof(vP.x) + sizeof(vP.y) + sizeof(vP.r) + sizeof(vP.g) + sizeof(vP.b) + sizeof(vP.a) + ((sizeof(vP.tex.x) + sizeof(vP.tex.y)) * iTip); NBASSERT((ptrDat->bytesPorRegistro % 4) == 0) /*Debe ser multiplo de 4 bytes (32 bits)*/
-				ptrDat->tamanoArregloVertices	= NB_GESTOR_GL_TAMANO_BLOQUE_VERTICES_GL;
+				ptrDat->tamanoArregloVertices	= NB_GESTOR_GL_CRECIMIENTO_BLOQUE_VERTICES_GL;
 				ptrDat->arregloVertices			= (BYTE*)NBGestorMemoria::reservarMemoria(ptrDat->tamanoArregloVertices * ptrDat->bytesPorRegistro, ENMemoriaTipo_General); NB_DEFINE_NOMBRE_PUNTERO(ptrDat->arregloVertices, "NBGestorGL::arregloVerticesGL")
 				ptrDat->usoArregloVertices		= 1; /*el primer elemento esta reservado*/ NBASSERT(((ptrDat->bytesPorRegistro * ptrDat->usoArregloVertices) % 4) == 0)
 #				ifdef CONFIG_NB_GESTOR_ESCENAS_MODELOS_MEDIANTE_INDICES
 				/*Arreglo de indicesGL*/
-				ptrDat->tamanoArregloIndices	= NB_GESTOR_GL_TAMANO_BLOQUE_INDICES_GL; NBASSERT(((sizeof(GLushort) * NB_GESTOR_GL_TAMANO_BLOQUE_INDICES_GL) % 4) == 0) /*Debe ser multiplo de 4 bytes (32 bits)*/
+				ptrDat->tamanoArregloIndices	= NB_GESTOR_GL_CRECIMIENTO_BLOQUE_INDICES_GL; NBASSERT(((sizeof(GLushort) * NB_GESTOR_GL_CRECIMIENTO_BLOQUE_INDICES_GL) % 4) == 0) /*Debe ser multiplo de 4 bytes (32 bits)*/
 				ptrDat->arregloIndices			= (GLushort*)NBGestorMemoria::reservarMemoria(ptrDat->tamanoArregloIndices * sizeof(GLushort), ENMemoriaTipo_General); NB_DEFINE_NOMBRE_PUNTERO(ptrDat->arregloIndices, "NBGestorGL::arregloIndicesGL")
 				ptrDat->usoArregloIndices		= 2; /*los primeros dos elementos estan reservados (multiplo de 4 bytes)*/ NBASSERT(((sizeof(GLushort) * ptrDat->usoArregloIndices) % 4) == 0)
 #				endif
@@ -479,11 +465,7 @@ void NBGestorEscena::privIncializarConfigurarGL(){
 	//PENDIENTE: habilitar
 	NBGestorGL::enableInit(GL_BLEND);						//combina los colores entrantes (texturas) con los del buffer (ver glBlendFunc)
 	NBGestorGL::enableInit(GL_TEXTURE_2D);					//Primera unidad textura
-	#ifdef CONFIG_NB_GESTOR_GL_IMPLEMENTAR_SCISSOR_TEST
-	NBGestorGL::enableInit(GL_SCISSOR_TEST);				//descarta los fragmentos que estan fuera del rectangulo de la tijera (ver glScissor) (cuando esta deshabilitado, la scissor se establece en los limites de la pantalla/buffer)
-	#else
 	NBGestorGL::disableInit(GL_SCISSOR_TEST);				//descarta los fragmentos que estan fuera del rectangulo de la tijera (ver glScissor) (cuando esta deshabilitado, la scissor se establece en los limites de la pantalla/buffer)
-	#endif
 	NBGestorGL::disableInit(GL_STENCIL_TEST);				//hace comparaciones de enmascaramiento y actualiza el StencilBuffer
 	NBGestorGL::matrixModeInit(GL_TEXTURE);
 	NBGestorGL::matrixModeInit(GL_MODELVIEW);
@@ -1010,10 +992,6 @@ void NBGestorEscena::resetearVerticesGL(){
 		NBASSERT(((sizeof(GLushort) * datBuff->usoArregloIndices) % 4) == 0)
 #		endif
 	}
-#	ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL
-	_debugVerticesAcumIgnorables[_indiceBufferDatosEscribir]	= 0;
-	_debugIndicesAcumIgnorables[_indiceBufferDatosEscribir]		= 0;
-#	endif
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
 }
 
@@ -1028,7 +1006,7 @@ UI32 NBGestorEscena::reservarVerticesGL(const ENVerticeGlTipo tipo, const UI32 c
 	UI32 indice = 0;
 	//Redimensionar arreglo si es necesario
 	if((ptrDat->usoArregloVertices + cantidadVerticesReservar) > ptrDat->tamanoArregloVertices){
-		const SI32 incremento	= (cantidadVerticesReservar > NB_GESTOR_GL_TAMANO_BLOQUE_VERTICES_GL ? cantidadVerticesReservar : NB_GESTOR_GL_TAMANO_BLOQUE_VERTICES_GL); NBASSERT((ptrDat->usoArregloVertices + cantidadVerticesReservar) < (ptrDat->tamanoArregloVertices + incremento))
+		const SI32 incremento	= (cantidadVerticesReservar > NB_GESTOR_GL_CRECIMIENTO_BLOQUE_VERTICES_GL ? cantidadVerticesReservar : NB_GESTOR_GL_CRECIMIENTO_BLOQUE_VERTICES_GL); NBASSERT((ptrDat->usoArregloVertices + cantidadVerticesReservar) < (ptrDat->tamanoArregloVertices + incremento))
 		SI32 tamanoAnterior		= ptrDat->tamanoArregloVertices;
 		SI32 tamanoNuevo		= tamanoAnterior + incremento;
 		ptrDat->arregloVertices	= (BYTE*)NBGestorMemoria::redimensionarBloqueMemoria(ptrDat->bytesPorRegistro * tamanoNuevo, ptrDat->arregloVertices, ptrDat->bytesPorRegistro * tamanoAnterior); NB_DEFINE_NOMBRE_PUNTERO(ptrDat->arregloVertices, "NBGestorGL::arregloVerticesGL")
@@ -1048,9 +1026,6 @@ UI32 NBGestorEscena::reservarVerticesGL(const ENVerticeGlTipo tipo, const UI32 c
 	//Valor a retornar
 	indice = ptrDat->usoArregloVertices; NBASSERT(indice > 0); //El primer vertice esta reservado
 	ptrDat->usoArregloVertices += cantidadVerticesReservar; NBASSERT(ptrDat->usoArregloVertices <= ptrDat->tamanoArregloVertices)
-#	ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL
-	if(_debugModoAcumularVertsIndsIgnorar) _debugVerticesAcumIgnorables[_indiceBufferDatosEscribir] += cantidadVerticesReservar;
-#	endif
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
 	return indice;
 }
@@ -1083,7 +1058,7 @@ UI32 NBGestorEscena::reservarIndicesGL(const ENVerticeGlTipo tipo, const UI32 ca
 	STBufferVerticesGL* ptrDat = &(_buffersVertices[_indiceBufferDatosEscribir][tipo]);
 	//Redimensionar arreglo si es necesario
 	if((ptrDat->usoArregloIndices + cantidadIndicesReservar) > ptrDat->tamanoArregloIndices){
-		SI32 incremento				= (cantidadIndicesReservar > NB_GESTOR_GL_TAMANO_BLOQUE_INDICES_GL?cantidadIndicesReservar:NB_GESTOR_GL_TAMANO_BLOQUE_INDICES_GL);
+		SI32 incremento				= (cantidadIndicesReservar > NB_GESTOR_GL_CRECIMIENTO_BLOQUE_INDICES_GL?cantidadIndicesReservar:NB_GESTOR_GL_CRECIMIENTO_BLOQUE_INDICES_GL);
 		SI32 tamanoAnterior			= ptrDat->tamanoArregloIndices;
 		SI32 tamanoNuevo			= tamanoAnterior + incremento;
 		ptrDat->arregloIndices		= (GLushort*)NBGestorMemoria::redimensionarBloqueMemoria(sizeof(GLushort) * tamanoNuevo, ptrDat->arregloIndices, sizeof(GLushort) * tamanoAnterior);
@@ -1103,9 +1078,6 @@ UI32 NBGestorEscena::reservarIndicesGL(const ENVerticeGlTipo tipo, const UI32 ca
 	//Valor a retornar
 	indice = ptrDat->usoArregloIndices; NBASSERT(indice > 1); //Los primeros dos indices estan reservados
 	ptrDat->usoArregloIndices += cantidadIndicesReservar;
-#	ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL
-	if(_debugModoAcumularVertsIndsIgnorar) _debugIndicesAcumIgnorables[_indiceBufferDatosEscribir] += cantidadIndicesReservar;
-#	endif
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
 	return indice;
 }
@@ -1386,11 +1358,6 @@ SI32 NBGestorEscena::ticksAcumulados(){
 void NBGestorEscena::resetearTicksAcumulados(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::resetearTicksAcumulados")
 	_ticksAcumulados = 0;
-	#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_OBJETOS
-	_debugEstadisticasObjs.conteoCiclosEnRenderizado	= 0;
-	_debugEstadisticasObjs.conteoCiclosEnMatrices		= 0;
-	_debugEstadisticasObjs.conteoCiclosEnModelos		= 0;
-	#endif
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
 }
 
@@ -2038,15 +2005,6 @@ void NBGestorEscena::agregarObjetoCapa(SI32 iEscena, ENGestorEscenaGrupo idGrupo
 		NBCajaAABB sceneBox; NBMATRIZ_MULTIPLICAR_CAJAAABB(sceneBox, matrizInversaCapa, grp->cajaProyeccion);
 		propiedadesCapa.root->setSceneBox(NBST_P(STNBRectI, (SI32)scn->puertoDeVision.x, (SI32)scn->puertoDeVision.y, (SI32)scn->puertoDeVision.ancho, (SI32)scn->puertoDeVision.alto ), NBST_P(STNBAABox, sceneBox.xMin, sceneBox.xMax, sceneBox.yMin, sceneBox.yMax ));
 	}
-	#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_CUERPOS
-	propiedadesCapa.debugCuerposTotal				= 0;
-	propiedadesCapa.debugFigurasSombrasTotal		= 0;
-	propiedadesCapa.debugFigurasIluminacionTotal	= 0;
-	propiedadesCapa.debugFigurasFisicaTotal			= 0;
-	propiedadesCapa.debugVerticesSombrasTotal		= 0;
-	propiedadesCapa.debugVerticesIluminacionTotal	= 0;
-	propiedadesCapa.debugVerticesFisicaTotal		= 0;
-	#endif
 	//PENDIENTE: optimizacion, convertir "propiedadesCapa.sombrasPorFuenteIluminacion" en un arregloCache,
 	//Asi se evitara que se creen y destruyan los arreglos cache a medida que se agregan y quitan los objetos capas.
 	//
@@ -3930,16 +3888,6 @@ void NBGestorEscena::actualizarMatricesYModelos(STNBSceneModelsResult* dst){
 	NBASSERT(_gestorInicializado);
 	NBASSERT(_bufferDatosEstado[_indiceBufferDatosEscribir] == ENGestorEscenaBufferEstado_Vacio); //No debe estar lleno
 	NBASSERT(_bufferDatosBloqueado[_indiceBufferDatosEscribir]);	//Debe estar bloqueado
-#	ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_OBJETOS
-	_debugEstadisticasObjs.conteoMatricesRecorridas		= 0;
-	_debugEstadisticasObjs.conteoMatricesActualizadas	= 0;
-	_debugEstadisticasObjs.conteoModelosRecorridos		= 0;
-	_debugEstadisticasObjs.conteoModelosActualizados	= 0;
-	_debugEstadisticasObjs.conteoModelosEscena			= 0;
-	_debugEstadisticasObjs.conteoModelosRenderizados	= 0;
-	_debugEstadisticasObjs.conteoModelosContenedores	= 0;
-	_debugEstadisticasObjs.conteoModelosNoContenedores	= 0;
-#	endif
 	_secuencialActualizacionesModelos++;
 	//
 	{
@@ -3963,10 +3911,6 @@ void NBGestorEscena::actualizarMatricesYModelos(STNBSceneModelsResult* dst){
 		if(dst != NULL) dst->countTexChanged = texChanged;
 	}
 	//
-#	ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_OBJETOS
-	_debugEstadisticasObjs.conteoCiclosEnMatrices++;
-	//NBESCENA_STATS_PRINT(&_debugEstadisticasObjs);
-#	endif
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
 }
 
@@ -4003,23 +3947,6 @@ void NBGestorEscena::privActualizarMatricesYModelosDeEscena(const SI32 iEscena, 
 	propsRenderizado.indicesGL2							= &NBGestorEscena::indicesGL2;
 	propsRenderizado.indicesGL3							= &NBGestorEscena::indicesGL3;
 #	endif
-	//
-	#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_OBJETOS
-	propsRenderizado.debugPtrConteoMatricesRecorridas	= &_debugEstadisticasObjs.conteoMatricesRecorridas;
-	propsRenderizado.debugPtrConteoMatricesActualizadas	= &_debugEstadisticasObjs.conteoMatricesActualizadas;
-	propsRenderizado.debugPtrConteoModelosRecorridos	= NULL;
-	propsRenderizado.debugPtrConteoModelosActualizados	= NULL;
-	propsRenderizado.debugPtrConteoModelosContenedores	= NULL;
-	propsRenderizado.debugPtrConteoModelosNoContenedores = NULL;
-	#endif
-	#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_ESCENA
-	propsRenderizado.debugPtrConteoConsumidoresSombras	= NULL;
-	propsRenderizado.debugPtrCiclosConsumiendoSombras	= NULL;
-	propsRenderizado.debugPtrCiclosAgrupandoSombras		= NULL;
-	propsRenderizado.debugPtrCiclosActualizandoVertices	= NULL;
-	propsRenderizado.debugPtrCiclosSegmentandoFiguras	= NULL;
-	propsRenderizado.debugPtrCiclosAcumulandoColores	= NULL;
-	#endif
 	NBPropHeredadasModelos propsParaHijos;
 	propsParaHijos.matrizModificadaPadre				= false;
 	NBMATRIZ_ESTABLECER_IDENTIDAD(propsParaHijos.matrizPadre);
@@ -4041,15 +3968,6 @@ void NBGestorEscena::privActualizarMatricesYModelosDeEscena(const SI32 iEscena, 
 			propiedadesDeCapa->root->setSceneBox(NBST_P(STNBRectI, (SI32)scn->puertoDeVision.x, (SI32)scn->puertoDeVision.y, (SI32)scn->puertoDeVision.ancho, (SI32)scn->puertoDeVision.alto ), NBST_P(STNBAABox, propsRenderizado.cajaProyeccion.xMin, propsRenderizado.cajaProyeccion.xMax, propsRenderizado.cajaProyeccion.yMin, propsRenderizado.cajaProyeccion.yMax ));
 			//Update models
 			if(propiedadesDeCapa->habilitada && !propiedadesDeCapa->objEscena->dormido() && propiedadesDeCapa->objEscena->visible()){
-				#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_CUERPOS
-				propiedadesDeCapa->debugCuerposTotal			= 0;
-				propiedadesDeCapa->debugFigurasSombrasTotal		= 0;
-				propiedadesDeCapa->debugFigurasIluminacionTotal	= 0;
-				propiedadesDeCapa->debugFigurasFisicaTotal		= 0;
-				propiedadesDeCapa->debugVerticesSombrasTotal	= 0;
-				propiedadesDeCapa->debugVerticesIluminacionTotal= 0;
-				propiedadesDeCapa->debugVerticesFisicaTotal		= 0;
-				#endif
 				//--------------------------
 				//-- Actualizar matrices de modelos
 				//--------------------------
@@ -4358,9 +4276,6 @@ void NBGestorEscena::consumirModelosYProducirBufferRender(){
 		}
 	}
 	//
-	#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_OBJETOS
-	_debugEstadisticasObjs.conteoCiclosEnModelos++;
-	#endif
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
 }
 
@@ -4373,9 +4288,6 @@ void NBGestorEscena::privConsumirModelosYProducirBufferRenderDeEscena(const SI32
 	NBASSERT(_bufferDatosEstado[_indiceBufferDatosEscribir] == ENGestorEscenaBufferEstado_Vacio)		//No debe estar lleno
 	NBASSERT(_bufferDatosBloqueado[_indiceBufferDatosEscribir])	//Debe estar bloqueado
 	//
-	#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_ESCENA
-	_debugEstadisticasEscenas.cantLucesRenderizadas = 0;
-	#endif
 	//STGestorEscenaFrameBuffer* datosFB	= &_frameBuffersGL[scn->iFramebufferEscena];
 	scn->renderAreaOcupadaDestino	= scn->areaOcupadaDestino;
 	scn->renderPuertoDeVision		= scn->puertoDeVision;
@@ -4404,23 +4316,6 @@ void NBGestorEscena::privConsumirModelosYProducirBufferRenderDeEscena(const SI32
 	propsRenderizado.indicesGL2							= &NBGestorEscena::indicesGL2;
 	propsRenderizado.indicesGL3							= &NBGestorEscena::indicesGL3;
 #	endif
-	#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_OBJETOS
-	propsRenderizado.debugPtrConteoMatricesRecorridas	= NULL;
-	propsRenderizado.debugPtrConteoMatricesActualizadas	= NULL;
-	propsRenderizado.debugPtrConteoModelosRecorridos	= &_debugEstadisticasObjs.conteoModelosRecorridos;
-	propsRenderizado.debugPtrConteoModelosActualizados	= &_debugEstadisticasObjs.conteoModelosActualizados;
-	propsRenderizado.debugPtrConteoModelosContenedores	= &_debugEstadisticasObjs.conteoModelosContenedores;
-	propsRenderizado.debugPtrConteoModelosNoContenedores = &_debugEstadisticasObjs.conteoModelosNoContenedores;
-	#endif
-	#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_ESCENA
-	_debugEstadisticasEscenas.cantConsumidoresSombras	= 0;
-	propsRenderizado.debugPtrConteoConsumidoresSombras	= &_debugEstadisticasEscenas.cantConsumidoresSombras;
-	propsRenderizado.debugPtrCiclosConsumiendoSombras	= &_debugEstadisticasEscenas.ciclosConsumiendoSombras;
-	propsRenderizado.debugPtrCiclosAgrupandoSombras		= &_debugEstadisticasEscenas.ciclosAgrupandoSombras;
-	propsRenderizado.debugPtrCiclosActualizandoVertices	= &_debugEstadisticasEscenas.ciclosActualizandoVertices;
-	propsRenderizado.debugPtrCiclosSegmentandoFiguras	= &_debugEstadisticasEscenas.ciclosSegmentandoFiguras;
-	propsRenderizado.debugPtrCiclosAcumulandoColores	= &_debugEstadisticasEscenas.ciclosAcumulandoColores;
-	#endif
 	//
 	NBASSERT(scn->renderCapasConsumir[_indiceBufferDatosEscribir] != NULL)
 	NBASSERT(scn->renderCapasProducir[_indiceBufferDatosEscribir] != NULL)
@@ -4438,19 +4333,6 @@ void NBGestorEscena::privConsumirModelosYProducirBufferRenderDeEscena(const SI32
 		propsIluminacion.fuentesIluminacion				= renderCapa->renderIluminacion->elemento;
 		propsIluminacion.sombrasPorFuenteIluminacion	= (AUArregloNativoMutableP<NBFuenteSombra>**)renderCapa->renderSombrasPorIluminacion->elemento; NBASSERT(renderCapa->renderIluminacion->conteo <= renderCapa->renderSombrasPorIluminacion->conteo)
 		propsIluminacion.sombrasVerticesIntermedios		= renderCapa->renderSombrasVerticesIntermedios; //La secuencia de vertices entre el anguloMax y el anguloMin (cuando la sombra es una linea no deposita ningun vertice ene ste arreglo)
-		//
-		#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_CUERPOS
-		propsIluminacion.debugPrtConteoCuerpos				= &propiedadesDeCapa->debugCuerposTotal;
-		propsIluminacion.debugPrtConteoTotalFigurasSombras	= &propiedadesDeCapa->debugFigurasSombrasTotal;
-		propsIluminacion.debugPtrConteoTotalFigurasIluminadas= &propiedadesDeCapa->debugFigurasIluminacionTotal;
-		propsIluminacion.debugPtrConteoTotalFigurasFisica	= &propiedadesDeCapa->debugFigurasFisicaTotal;
-		propsIluminacion.debugPrtConteoVerticesSombras		= &propiedadesDeCapa->debugVerticesSombrasTotal;
-		propsIluminacion.debugPrtConteoVerticesIluminadas	= &propiedadesDeCapa->debugVerticesIluminacionTotal;
-		propsIluminacion.debugPrtConteoVerticesFisica		= &propiedadesDeCapa->debugVerticesFisicaTotal;
-		#endif
-		#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_ESCENA
-		_debugEstadisticasEscenas.cantLucesRenderizadas		+= renderCapa->renderIluminacion->conteo;
-		#endif
 		//Actualizar modelosGL
 		NBMatriz matrizInversaCapa; NBMATRIZ_INVERSA(matrizInversaCapa, renderCapa->renderMatrizCapa)
 		NBMATRIZ_MULTIPLICAR_CAJAAABB(propsRenderizado.cajaProyeccion, matrizInversaCapa, renderCapa->renderCajaProyeccion)
@@ -4467,11 +4349,6 @@ void NBGestorEscena::privProducirSombrasYLucesReflejadas(){
 	NBASSERT(_gestorInicializado);
 	NBASSERT(_bufferDatosBloqueado[_indiceBufferDatosEscribir]);	//Debe estar bloqueado
 	NBASSERT(_bufferDatosEstado[_indiceBufferDatosEscribir] == ENGestorEscenaBufferEstado_Vacio);		//No debe estar lleno
-	#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_ESCENA
-	CICLOS_CPU_TIPO cicloIni; CICLOS_CPU_HILO(cicloIni)
-	_debugEstadisticasEscenas.cantProductoresSombras	= 0;
-	_debugEstadisticasEscenas.cantSombrasProducidas		= 0;
-	#endif
 	if(_lucesSombrasActivos){
 		SI32 iEscena;
 		for(iEscena = (NBGESTORESCENA_MAX_ESCENAS - 1); iEscena >= 0; iEscena--){
@@ -4505,10 +4382,6 @@ void NBGestorEscena::privProducirSombrasYLucesReflejadas(){
 			}
 		}
 	}
-	#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_ESCENA
-	CICLOS_CPU_TIPO cicloFin; CICLOS_CPU_HILO(cicloFin)
-	_debugEstadisticasEscenas.ciclosProduciendoSombras += (cicloFin - cicloIni);
-	#endif
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
 }
 
@@ -4564,9 +4437,6 @@ void NBGestorEscena::privProducirMascarasIluminacion(){
 	NBASSERT(_gestorInicializado);
 	NBASSERT(_bufferDatosBloqueado[_indiceBufferDatosEscribir]);	//Debe estar bloqueado
 	NBASSERT(_bufferDatosEstado[_indiceBufferDatosEscribir] == ENGestorEscenaBufferEstado_Vacio);		//Debe estar no-lleno
-	#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_ESCENA
-	//CICLOS_CPU_TIPO cicloIni; CICLOS_CPU_HILO(cicloIni)
-	#endif
 	// -----------------------------------------
 	// Generar las mascaras de luces individuales
 	// -----------------------------------------
@@ -4648,10 +4518,6 @@ void NBGestorEscena::privProducirMascarasIluminacion(){
 			}
 		}
 	}
-	#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_ESCENA
-	//CICLOS_CPU_TIPO cicloFin; CICLOS_CPU_HILO(cicloFin)
-	//ciclos += (cicloFin - cicloIni);
-	#endif
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
 }
 
@@ -5276,9 +5142,6 @@ void NBGestorEscena::privEnviarComandosDibujarMascarasIluminacion(){
 	NBASSERT(_gestorInicializado);
 	NBASSERT(_bufferDatosBloqueado[_indiceBufferDatosLeer]);	//Debe estar bloqueado
 	NBASSERT(_bufferDatosEstado[_indiceBufferDatosLeer] != ENGestorEscenaBufferEstado_Vacio);		//Debe estar lleno
-	#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_ESCENA
-	//CICLOS_CPU_TIPO cicloIni; CICLOS_CPU_HILO(cicloIni)
-	#endif
 	// -----------------------------------------
 	// Generar las mascaras de luces combinadas
 	// y escena-en-textura
@@ -5364,10 +5227,6 @@ void NBGestorEscena::privEnviarComandosDibujarMascarasIluminacion(){
 	//NBGestorGL::flushCacheLocal(); //Esto provoca el envio de los lotes acumulados locales
 	NBGestorGL::flush(); //Esto provoca el envio de los comando pendiente del cliente al servidor. (pero no espera a que terminen)
 	//NBGestorGL::finish(); //PENDIENTE: comentariar //Esto provoca una espera hasta que todos los comandos GL han sido finalizados.
-	#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_ESCENA
-	//CICLOS_CPU_TIPO cicloFin; CICLOS_CPU_HILO(cicloFin)
-	//ciclos += (cicloFin - cicloIni);
-	#endif
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
 }
 
@@ -5384,23 +5243,11 @@ void NBGestorEscena::privProducirSombrasEnCapa(STGestorEscenaCapaRender* renderC
 	propsIluminacion.fuentesIluminacion							= &renderCapa->renderIluminacion->elemento[iPrimeraLuz];
 	propsIluminacion.sombrasPorFuenteIluminacion				= (AUArregloNativoMutableP<NBFuenteSombra>**)&renderCapa->renderSombrasPorIluminacion->elemento[iPrimeraLuz]; NBASSERT(renderCapa->renderIluminacion->conteo <= renderCapa->renderSombrasPorIluminacion->conteo)
 	propsIluminacion.sombrasVerticesIntermedios					= renderCapa->renderSombrasVerticesIntermedios; //La secuencia de vertices entre el anguloMax y el anguloMin (cuando la sombra es una linea no deposita ningun vertice ene ste arreglo)
-	#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_CUERPOS
-	propsIluminacion.debugPrtConteoCuerpos						= &propiedadesDeCapa->debugCuerposTotal;
-	propsIluminacion.debugPrtConteoTotalFigurasSombras			= &propiedadesDeCapa->debugFigurasSombrasTotal;
-	propsIluminacion.debugPtrConteoTotalFigurasIluminadas		= &propiedadesDeCapa->debugFigurasIluminacionTotal;
-	propsIluminacion.debugPtrConteoTotalFigurasFisica			= &propiedadesDeCapa->debugFigurasFisicaTotal;
-	propsIluminacion.debugPrtConteoVerticesSombras				= &propiedadesDeCapa->debugVerticesSombrasTotal;
-	propsIluminacion.debugPrtConteoVerticesIluminadas			= &propiedadesDeCapa->debugVerticesIluminacionTotal;
-	propsIluminacion.debugPrtConteoVerticesFisica				= &propiedadesDeCapa->debugVerticesFisicaTotal;
-	#endif
 	// Producir las sombras de cada objeto
 	AUArregloNativoP<IEscenaProductorSombras*>* productores		= renderCapa->renderProductoresSombras;
 	UI16 iProd, conteoProd = productores->conteo;
 	for(iProd=0; iProd<conteoProd; iProd++){
 		productores->elemento[iProd]->producirSombras2(propsIluminacion);
-		#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_ESCENA
-		_debugEstadisticasEscenas.cantProductoresSombras++;
-		#endif
 	}
 	// Producir las sombras de cada espejo
 	UI16 iEspejo, conteoEspejos	= renderCapa->renderEspejos->conteo;
@@ -5817,15 +5664,6 @@ void NBGestorEscena::privConsumirLucesEnCapa(STGestorEscenaCapaRender* renderCap
 	propsIluminacion.fuentesIluminacion							= renderCapa->renderIluminacion->elemento;
 	propsIluminacion.sombrasPorFuenteIluminacion				= (AUArregloNativoMutableP<NBFuenteSombra>**)renderCapa->renderSombrasPorIluminacion->elemento; NBASSERT(renderCapa->renderIluminacion->conteo <= renderCapa->renderSombrasPorIluminacion->conteo)
 	propsIluminacion.sombrasVerticesIntermedios					= renderCapa->renderSombrasVerticesIntermedios; //La secuencia de vertices entre el anguloMax y el anguloMin (cuando la sombra es una linea no deposita ningun vertice ene ste arreglo)
-	#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_CUERPOS
-	propsIluminacion.debugPrtConteoCuerpos						= &propiedadesDeCapa->debugCuerposTotal;
-	propsIluminacion.debugPrtConteoTotalFigurasSombras			= &propiedadesDeCapa->debugFigurasSombrasTotal;
-	propsIluminacion.debugPtrConteoTotalFigurasIluminadas		= &propiedadesDeCapa->debugFigurasIluminacionTotal;
-	propsIluminacion.debugPtrConteoTotalFigurasFisica			= &propiedadesDeCapa->debugFigurasFisicaTotal;
-	propsIluminacion.debugPrtConteoVerticesSombras				= &propiedadesDeCapa->debugVerticesSombrasTotal;
-	propsIluminacion.debugPrtConteoVerticesIluminadas			= &propiedadesDeCapa->debugVerticesIluminacionTotal;
-	propsIluminacion.debugPrtConteoVerticesFisica				= &propiedadesDeCapa->debugVerticesFisicaTotal;
-	#endif
 	//
 	IEscenaConsumidorLuces** arrConsumidores = renderCapa->renderConsumidoresLuces->elemento;
 	UI16 iCsm, conteoCsm = renderCapa->renderConsumidoresLuces->conteo;
@@ -5844,9 +5682,6 @@ void NBGestorEscena::consumirBufferRenderYEnviarComandosDibujo(){
 	//PRINTF_INFO("Inicio de ciclo de dibujar modelos\n");
 	_ticksAcumulados++;
 	_secuencialRenderizadasModelosGL++; //NBASSERT(_secuencialRenderizadasModelosGL < 60) //TEMPORAL (para analizar lista de comandosGl ejecutados)
-	#if defined(CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL) || defined(CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL_TRIANGULOS_RENDERIZADOS)
-	NBGestorGL::resetearEstadisticas();
-	#endif
 	//------------------------------
 	// APPLE recomienda que el ciclo de renderizado conste de los siguientes pasos:
 	// 1: BORRAR LOS RENDERBUFFERS con glClear, es una forma eficiente de borrado 
@@ -5864,10 +5699,6 @@ void NBGestorEscena::consumirBufferRenderYEnviarComandosDibujo(){
 		STGestorEscenaEscena* scn = &_escenas[iEscena];
 		scn->pendienteRenderizar = true;
 	}
-	#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_ESCENA
-	_debugEstadisticasEscenas.cantEscenasRenderizadas	= 0;
-	_debugEstadisticasEscenas.cantCambiosFrameBufer		= 0;
-	#endif
 	//Usar VBOs (VRAM) ...
 	NBGestorGL::prepararVerticesGLParaRenderizado();
 	//Producir mascaras de iluminacion renderizadas-hacia-textura
@@ -5914,10 +5745,6 @@ void NBGestorEscena::consumirBufferRenderYEnviarComandosDibujo(){
 				NBGestorGL::clear(GL_COLOR_BUFFER_BIT);
 				NBGestorGL::colorMask(true, true, true, true);
 			}
-			#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_ESCENA
-			_debugEstadisticasEscenas.cantEscenasRenderizadas++;
-			_debugEstadisticasEscenas.cantCambiosFrameBufer++;
-			#endif
 		}
 	}
 	#ifdef CONFIG_NB_INCLUIR_VALIDACIONES_ASSERT
@@ -5932,9 +5759,6 @@ void NBGestorEscena::consumirBufferRenderYEnviarComandosDibujo(){
 	NBGestorGL::flush();  //Esto provoca el envio de los comando pendiente del cliente al servidor. (pero no espera a que terminen)
 	//NBGestorGL::finish(); //PENDIENTE: comentariar //Esto provoca una espera hasta que todos los comandos GL han sido finalizados.
 	//NBGestorTexturas::desbloquear();
-	#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_OBJETOS
-	_debugEstadisticasObjs.conteoCiclosEnRenderizado++;
-	#endif
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
 }
 
@@ -5959,15 +5783,7 @@ void NBGestorEscena::privAsegurarFrameBufferInicializadoParaEscena(const STGesto
 	}
 	if(!escenaInicializada){
 		//Preparar escena
-		#ifdef CONFIG_NB_GESTOR_GL_IMPLEMENTAR_SCISSOR_TEST
-		NBGestorGL::scissor(scn->renderAreaOcupadaDestino.x, scn->renderAreaOcupadaDestino.y, scn->renderAreaOcupadaDestino.ancho, scn->renderAreaOcupadaDestino.alto);
-		//if(scn->renderColorFondo != colorFondoLimpiado && scn->limpiarColorBuffer){
-		//	NBGestorGL::clearColor(scn->renderColorFondo);
-		//	NBGestorGL::clear(GL_COLOR_BUFFER_BIT);
-		//}
-		#else
 		NBASSERT(scn->renderColorFondo == colorFondoLimpiado) //Si falla, entonces se intento limpiar el destino del buffer despues que se habia pintado contenido (el cual se perderia), lo cual no es posible sin el SCISSOR_TEST habilitado
-		#endif
 		escenaInicializada = true;
 	}
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
@@ -6018,22 +5834,8 @@ void NBGestorEscena::privConsumirBufferRenderYEnviarComandosDibujoDeCapa(const S
 		NBASSERT(dbgPrtInicialAnterior[-1] == NBGESTORESCENA_VAL_VERIF_BLOQUE_DATOS_RENDER_INI) //Si falla, algun objeto render escribio en el espacio de datos de otro
 		#endif
 		//
-		#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL_TRIANGULOS_RENDERIZADOS
-		if(propsRender->debugAcumEnIgnorable){
-			NBGestorGL::debugEstablecerModoAcumularTriangulosIgnorar(true);
-			(*propsRender->funcEnvComadosGL)(&(renderCapa->renderModelosDatos->elemento[propsRender->indiceDatos]));
-			NBGestorGL::debugEstablecerModoAcumularTriangulosIgnorar(false);
-		} else {
-			(*propsRender->funcEnvComadosGL)(&renderCapa->renderModelosDatos->elemento[propsRender->indiceDatos]);
-		}
-		#else
 		(*propsRender->funcEnvComadosGL)(&renderCapa->renderModelosDatos->elemento[propsRender->indiceDatos]);
-		#endif
 		//
-		#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_OBJETOS
-		_debugEstadisticasObjs.conteoModelosEscena++;
-		_debugEstadisticasObjs.conteoModelosRenderizados++;
-		#endif
 	}
 	#ifdef CONFIG_NB_GESTOR_ESCENAS_VERIFICAR_FRONTERAS_BLOQUES_DATOS_RENDER
 	if(dbgPrtInicialAnterior != NULL){
@@ -6282,21 +6084,6 @@ void NBGestorEscena::privConsumirBufferRenderYEnviarComandosDibujoDeEscenaPriori
 	}
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
 }
-
-#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_ESCENA
-STEscenaEstadisticas NBGestorEscena::debugEstadisticasEscenasYResetearCiclos(){
-	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::debugEstadisticasEscenasYResetearCiclos")
-	STEscenaEstadisticas copiaEstadisticas = _debugEstadisticasEscenas;
-	_debugEstadisticasEscenas.ciclosConsumiendoSombras		= 0;
-	_debugEstadisticasEscenas.ciclosProduciendoSombras		= 0;
-	_debugEstadisticasEscenas.ciclosActualizandoVertices	= 0;
-	_debugEstadisticasEscenas.ciclosAgrupandoSombras		= 0;
-	_debugEstadisticasEscenas.ciclosSegmentandoFiguras		= 0;
-	_debugEstadisticasEscenas.ciclosAcumulandoColores		= 0;
-	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
-	return copiaEstadisticas;
-}
-#endif
 
 //------------------------------------------
 //- Touches
@@ -6590,54 +6377,6 @@ AUEscenaObjeto* NBGestorEscena::touchObjetoQueConsumeSegunArreglo(const SI32 pos
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
 	return r;
 }
-
-#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_OBJETOS
-STEscenaEstadObjs NBGestorEscena::debugEstadisticasObjs(){
-	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::debugEstadisticasObjs")
-	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
-	return _debugEstadisticasObjs;
-}
-#endif
-
-#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_CUERPOS
-void NBGestorEscena::debugConteoCuerpos(UI32* guardarConteoCuerposEn, UI32* guardarConteoFigurasSombrasEn, UI32* guardarConteoFigurasIluminadasEn, UI32* guardarConteoFigurasFisicaEn, UI32* guardarConteoVerticesSombrasEn, UI32* guardarConteoVerticesIluminadasEn, UI32* guardarConteoVerticesFisicasEn){
-	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::debugConteoCuerpos")
-	UI32 conteoCuerpos = 0;
-	UI32 conteoFigurasSombras = 0, conteoFigurasIluminadas = 0, conteoFigurasFisica = 0;
-	UI32 conteoVerticesSombras = 0, conteoVerticesIluminadas = 0, conteoVerticesFisica = 0;
-	SI32 iEscena;
-	for(iEscena = (NBGESTORESCENA_MAX_ESCENAS - 1); iEscena >= 0; iEscena--){
-		if(scn->registroOcupado && scn->escenaHabilitada){
-			STGestorEscenaEscena* scn = &(_escenas[iEscena]);
-			SI32 iGrupo;
-			for(iGrupo = ENGestorEscenaGrupo_Conteo - 1; iGrupo >= 0; iGrupo--){
-				STGestorEscenaGrupoRender* grupoRender = &(scn->renderGruposModelos->elemento[iGrupo]);
-				int iCapa;
-				for(iCapa=0; iCapa<grupoRender->capas->conteo; iCapa++){
-					STGestorEscenaCapa* propiedadesDeCapa = &(grupoRender->capas->elemento[iCapa]);
-					if(propiedadesDeCapa->habilitada && propiedadesDeCapa->objEscena->visible()){
-						conteoCuerpos				+= propiedadesDeCapa->debugCuerposTotal;
-						conteoFigurasSombras		+= propiedadesDeCapa->debugFigurasSombrasTotal;
-						conteoFigurasIluminadas		+= propiedadesDeCapa->debugFigurasIluminacionTotal;
-						conteoFigurasFisica			+= propiedadesDeCapa->debugFigurasFisicaTotal;
-						conteoVerticesSombras		+= propiedadesDeCapa->debugVerticesSombrasTotal;
-						conteoVerticesIluminadas	+= propiedadesDeCapa->debugVerticesIluminacionTotal;
-						conteoVerticesFisica		+= propiedadesDeCapa->debugVerticesFisicaTotal;
-					}
-				}
-			}
-		}
-	}
-	*guardarConteoCuerposEn				= conteoCuerpos;
-	*guardarConteoFigurasSombrasEn		= conteoFigurasSombras;
-	*guardarConteoFigurasIluminadasEn	= conteoFigurasIluminadas;
-	*guardarConteoFigurasFisicaEn		= conteoFigurasFisica;
-	*guardarConteoVerticesSombrasEn		= conteoVerticesSombras;
-	*guardarConteoVerticesIluminadasEn	= conteoVerticesIluminadas;
-	*guardarConteoVerticesFisicasEn		= conteoVerticesFisica;
-	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
-}
-#endif
 
 #ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTION_MEMORIA
 UI32 NBGestorEscena::debugBytesDeRenderBuffers(){

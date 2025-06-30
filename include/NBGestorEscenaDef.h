@@ -43,9 +43,6 @@ typedef STBloqueGL (*PTRfuncRsvIndGLTStripIndTriagnFan)	(const ENVerticeGlTipo t
 struct STPropRenderModelo {
 	SI32	indiceDatos;						//Indice del primer byte de dato de cada objeto en el ciclo de render
 	PTRfuncEnviarComandosGL funcEnvComadosGL;	//ObjetosEscena en el orden que deben renderizarse (sustituye a la llamada en arbol por una secuencial)
-	#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_GL_TRIANGULOS_RENDERIZADOS
-	bool	debugAcumEnIgnorable;				//Util para cuando se desea excluir de las estadisticas los render de la consola debug. Ver  NBGestorGL::_debugModoAcumularVertsIndsIgnorar;
-	#endif
 };
 
 typedef struct STNBSceneModelsResult_ {
@@ -81,22 +78,6 @@ struct NBPropRenderizado {						//Datos que describen el renderizado en escena (
 	GLushort**										indicesGL2;		//Acceso optimizado hacia el arreglo de indices bitexturas
 	GLushort**										indicesGL3;		//Acceso optimizado hacia el arreglo de indices tritexturas
 #	endif
-#	ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_OBJETOS
-	UI32*				debugPtrConteoMatricesRecorridas;
-	UI32*				debugPtrConteoMatricesActualizadas;
-	UI32*				debugPtrConteoModelosRecorridos;
-	UI32*				debugPtrConteoModelosActualizados;
-	UI32*				debugPtrConteoModelosContenedores;
-	UI32*				debugPtrConteoModelosNoContenedores;
-#	endif
-#	ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTOR_ESCENA
-	UI32*				debugPtrConteoConsumidoresSombras;
-	UI32*				debugPtrCiclosConsumiendoSombras;
-	UI32*				debugPtrCiclosAgrupandoSombras;
-	UI32*				debugPtrCiclosActualizandoVertices;
-	UI32*				debugPtrCiclosSegmentandoFiguras;
-	UI32*				debugPtrCiclosAcumulandoColores;
-#	endif
 };
 	
 struct NBPropIluminacion {		//datos que describen la iluminacion en escena (para un grupo, una capa y un tick)
@@ -104,16 +85,6 @@ struct NBPropIluminacion {		//datos que describen la iluminacion en escena (para
 	NBFuenteIluminacionRender*					fuentesIluminacion;
 	AUArregloNativoMutableP<NBFuenteSombra>**	sombrasPorFuenteIluminacion;
 	AUArregloNativoMutableP<NBPunto>*			sombrasVerticesIntermedios;		//Biblioteca compartida entre todas las sombras
-	//
-	#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_ESCENA_CUERPOS
-	UI32*					debugPrtConteoCuerpos;
-	UI32*					debugPrtConteoTotalFigurasSombras;
-	UI32*					debugPtrConteoTotalFigurasIluminadas;
-	UI32*					debugPtrConteoTotalFigurasFisica;
-	UI32*					debugPrtConteoVerticesSombras;
-	UI32*					debugPrtConteoVerticesIluminadas;
-	UI32*					debugPrtConteoVerticesFisica;
-	#endif
 };
 	
 struct NBPropHeredadasModelos {		//datos que describen las propiedades heredadas de un contenedor a sus hijos (para un objEscena y un tick)

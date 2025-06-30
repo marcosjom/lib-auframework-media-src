@@ -443,7 +443,6 @@ void AUEscenaSprite::enviarComandosGL(UI8* punteroDatosModelo){
 			NBGestorGL::color4f((float)propsRender->color.r / 255.0f, (float)propsRender->color.g / 255.0f, (float)propsRender->color.b / 255.0f, (float)propsRender->color.a / 255.0f);
 			//PRINTF_INFO("Sprite(%f, %f, %f, %f).\n", (float)propsRender->color.r / 255.0f, (float)propsRender->color.g / 255.0f, (float)propsRender->color.b / 255.0f, (float)propsRender->color.a / 255.0f);
 			{
-				//GLfloat dbgColorAntes[4]; glGetFloatv(GL_CURRENT_COLOR, dbgColorAntes);
 				NBGestorGL::activarVerticesGL(ENVerticeGlTipo_MonoTextura); NBGESTORGL_DBG_NOMBRAR_ACTIVADOR_VERTICES_GL("AUEscenaSprite")
 				NBGestorGL::bindTexture(0, propsRender->idTexturaGL);
 				NBGestorGL::setTextureCropRect(&propsRender->texRect);
@@ -462,11 +461,9 @@ void AUEscenaSprite::enviarComandosGL(UI8* punteroDatosModelo){
 	} else {
 		NBASSERT(*type == ENSpriteRenderType_Geom)
 		const STSpriteRenderGeo* propsRender = (const STSpriteRenderGeo*)punteroDatosModelo;
-		//GLfloat dbgColorAntes[4]; glGetFloatv(GL_CURRENT_COLOR, dbgColorAntes);
 		NBGestorGL::activarVerticesGL(ENVerticeGlTipo_MonoTextura); NBGESTORGL_DBG_NOMBRAR_ACTIVADOR_VERTICES_GL("AUEscenaSprite")
 		//Configurar textura
 		NBGestorGL::bindTexture(0, propsRender->idTexturaGL);
-		//GLfloat dbgColorDesp[4]; glGetFloatv(GL_CURRENT_COLOR, dbgColorDesp);
 		//Acumular triangStrip independiente mediante indices.
 		if(propsRender->esMascaraAlpha){
 			NBGestorGL::blendFunc(GL_ZERO, GL_SRC_ALPHA);
@@ -481,33 +478,6 @@ void AUEscenaSprite::enviarComandosGL(UI8* punteroDatosModelo){
 		}
 		//PRINTF_INFO("Sprite color antes(%f, %f, %f, %f) despues(%f, %f, %f, %f).\n", dbgColorAntes[0], dbgColorAntes[1], dbgColorAntes[2], dbgColorAntes[3], dbgColorDesp[0], dbgColorDesp[1], dbgColorDesp[2], dbgColorDesp[3]);
 	}
-	/*STSpriteRender* propsRender = (STSpriteRender*)punteroDatosModelo;
-	if(propsRender->isDrawTexture){
-		const NBVerticeGL* colorVert = &propsRender->verticesGL[0];
-		const STNBRect portRect = {
-			propsRender->verticesGL[0].x,
-			propsRender->verticesGL[0].y,
-			(propsRender->verticesGL[1].x - propsRender->verticesGL[0].x),
-			(propsRender->verticesGL[2].y - propsRender->verticesGL[0].y)
-		};
-		const STNBRectI texRect = {
-			propsRender->verticesGL[0].tex.x,
-			propsRender->verticesGL[0].tex.y,
-			(propsRender->verticesGL[1].tex.x - propsRender->verticesGL[0].tex.x),
-			(propsRender->verticesGL[2].tex.y - propsRender->verticesGL[0].tex.y)
-		};
-		const STNBColor colorRect = {
-			(float)colorVert->r / 255.0f,
-			(float)colorVert->g / 255.0f,
-			(float)colorVert->b / 255.0f,
-			(float)colorVert->a / 255.0f
-		};
-		
-		//Configurar textura
-		
-	} else {
-		
-	}*/
 	AU_GESTOR_PILA_LLAMADAS_POP_2
 }
 
