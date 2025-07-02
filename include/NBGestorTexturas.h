@@ -345,7 +345,6 @@ class NBGestorTexturas {
 		//static STNBFontBitmaps*	fuenteBitmaps(const char* nomFuente, const float fontSz, const bool negrilla, const bool cursiva);
 		static AUFuenteTextura*		fuenteTextura(const char* nombreFuente, const float tamanoFuente, const char* subfamily, const float escalaParaHD = 1.0f);
 		static AUFuenteTextura*		fuenteTextura(const char* nombreFuente, const float tamanoFuente, const bool negrilla, const bool cursiva, const float escalaParaHD = 1.0f);
-		//static BOOL				updateFontTextureToSize(AUFuenteTextura* font, const float newSize, const float newScaleSubtexs);
 		static AUFuenteRaster*		fuenteRaster(const char* nombreFuente, const float tamanoFuente, const char* subfamily);
 		static AUFuenteRaster*		fuenteRaster(const char* nombreFuente, const float tamanoFuente, const bool negrilla, const bool cursiva);
 		//static BOOL				updateFontRasterToSize(AUFuenteRaster* font, const float newSize);

@@ -159,7 +159,6 @@ void AUEscenaGrupoParticulasLinea::privAgregarParticulaHumo(float posX, float po
 	_datosAnimHumo.agregarElemento(datosAnimacion);
 	//
 	NBPropiedadesEnEscena propsParticulas;
-	propsParticulas.visible						= true;
 	propsParticulas.transformaciones.trasladoX	= posX;
 	propsParticulas.transformaciones.trasladoY	= posY;
 	propsParticulas.transformaciones.escalaX	= _escalaInicial;

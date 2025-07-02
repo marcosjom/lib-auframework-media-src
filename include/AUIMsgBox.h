@@ -96,7 +96,6 @@ public:
 	void				setHideWhenGlassTouched(const BOOL hideWhenGlassTouched);
 	void				setTitleAlignment(const ENNBTextLineAlignH align);
 	void				setContentAlignment(const ENNBTextLineAlignH align);
-	void				setTitleColor(const NBColor8 color);
 	void				setTitleColor(const STNBColor8 color);
 	void				setTitleColor(const UI8 r, const UI8 g, const UI8 b, const UI8 a);
 	//

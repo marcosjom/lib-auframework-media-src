@@ -30,11 +30,10 @@ ENGestorEscenaCambioDef		NBGestorEscena::_cambioDefinicioEstado = ENGestorEscena
 AUArregloNativoMutableP<STRangoSombra>* NBGestorEscena::_cacheSombrasFusionadas = NULL;
 
 //Bufferes datos
-SI32						NBGestorEscena::_indiceBufferDatosLeer = 0;
-SI32						NBGestorEscena::_indiceBufferDatosEscribir = 0;
-ENGestorEscenaBufferEstado	NBGestorEscena::_bufferDatosEstado[NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS];
-bool						NBGestorEscena::_bufferDatosBloqueado[NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS];
-STBufferVerticesGL			NBGestorEscena::_buffersVertices[NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS][ENVerticeGlTipo_Conteo];
+ENGestorEscenaBufferEstado	NBGestorEscena::_bufferDatosEstado;
+bool						NBGestorEscena::_bufferDatosBloqueado;
+STBufferVerticesGL			NBGestorEscena::_buffersVertices[ENVerticeGlTipo_Conteo];
+STNBScnRenderRef            NBGestorEscena::_sncRender = NB_OBJREF_NULL;
 /*
  Para asegurar la integridad del proceso del modelo productor/consumidor
  estas variables se mantienen con valor NULL
@@ -72,14 +71,9 @@ bool NBGestorEscena::inicializar(const float pantallaFrecuencia){
 	_secuencialActualizacionesModelosGL	= 2; //El '0' y '1' estan reservados
 	_secuencialRenderizadasModelosGL	= 2; //El '0' y '1' estan reservados
 	_cacheSombrasFusionadas				= new(ENMemoriaTipo_General) AUArregloNativoMutableP<STRangoSombra>(16);
-	//
-	_indiceBufferDatosEscribir			= 0;
-	_indiceBufferDatosLeer				= NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS - 1;
 	{
-		SI32 iBuff; for(iBuff=0; iBuff<NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS; iBuff++){
-			_bufferDatosEstado[iBuff]		= ENGestorEscenaBufferEstado_Vacio;
-			_bufferDatosBloqueado[iBuff]	= false;
-		}
+        _bufferDatosEstado              = ENGestorEscenaBufferEstado_Vacio;
+        _bufferDatosBloqueado           = false;
 	}
 	//Inicializar todos los registros de texturas
 	{
@@ -104,11 +98,10 @@ bool NBGestorEscena::inicializar(const float pantallaFrecuencia){
 			for(iGrp = 0; iGrp < ENGestorEscenaGrupo_Conteo; iGrp++){
 				scn->gruposCapas[iGrp].capas	= NULL;
 			}
-			UI16 iBuffer;
-			for(iBuffer=0; iBuffer<NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS; iBuffer++){
-				scn->renderCapas[iBuffer]		= NULL;
-				scn->renderCapasConsumir[iBuffer] = NULL;
-				scn->renderCapasProducir[iBuffer] = NULL;
+			{
+				scn->renderCapas		        = NULL;
+				scn->renderCapasConsumir        = NULL;
+				scn->renderCapasProducir        = NULL;
 			}
 			scn->agrupadoresParticulas			= NULL;
 			scn->escuchadoresCambioPuertoVision	= NULL;
@@ -119,25 +112,24 @@ bool NBGestorEscena::inicializar(const float pantallaFrecuencia){
 	NBGestorEscena::privIncializarConfigurarGL();
 	//Inicializar arreglos de verticesGL
 	{
-		SI32 iTip, iBuff; NBVerticeGL3 vP;
+		SI32 iTip; NBVerticeGL3 vP;
 		for(iTip = 0; iTip < ENVerticeGlTipo_Conteo; iTip++){
 			const SI32 idBuffer = NBGestorGL::bufferVerticesReservar((ENVerticeGlTipo)iTip, &NBGestorEscena::bufferObtenerDatos, NULL); NBASSERT(idBuffer == iTip)
-			for(iBuff = 0; iBuff < NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS; iBuff++){
-				STBufferVerticesGL* ptrDat = &_buffersVertices[iBuff][iTip];
-				/*Arreglo de verticesGL*/ \
-				ptrDat->bytesPorRegistro		= sizeof(vP.x) + sizeof(vP.y) + sizeof(vP.r) + sizeof(vP.g) + sizeof(vP.b) + sizeof(vP.a) + ((sizeof(vP.tex.x) + sizeof(vP.tex.y)) * iTip); NBASSERT((ptrDat->bytesPorRegistro % 4) == 0) /*Debe ser multiplo de 4 bytes (32 bits)*/
-				ptrDat->tamanoArregloVertices	= NB_GESTOR_GL_CRECIMIENTO_BLOQUE_VERTICES_GL;
-				ptrDat->arregloVertices			= (BYTE*)NBGestorMemoria::reservarMemoria(ptrDat->tamanoArregloVertices * ptrDat->bytesPorRegistro, ENMemoriaTipo_General); NB_DEFINE_NOMBRE_PUNTERO(ptrDat->arregloVertices, "NBGestorGL::arregloVerticesGL")
-				ptrDat->usoArregloVertices		= 1; /*el primer elemento esta reservado*/ NBASSERT(((ptrDat->bytesPorRegistro * ptrDat->usoArregloVertices) % 4) == 0)
-#				ifdef CONFIG_NB_GESTOR_ESCENAS_MODELOS_MEDIANTE_INDICES
-				/*Arreglo de indicesGL*/
-				ptrDat->tamanoArregloIndices	= NB_GESTOR_GL_CRECIMIENTO_BLOQUE_INDICES_GL; NBASSERT(((sizeof(GLushort) * NB_GESTOR_GL_CRECIMIENTO_BLOQUE_INDICES_GL) % 4) == 0) /*Debe ser multiplo de 4 bytes (32 bits)*/
-				ptrDat->arregloIndices			= (GLushort*)NBGestorMemoria::reservarMemoria(ptrDat->tamanoArregloIndices * sizeof(GLushort), ENMemoriaTipo_General); NB_DEFINE_NOMBRE_PUNTERO(ptrDat->arregloIndices, "NBGestorGL::arregloIndicesGL")
-				ptrDat->usoArregloIndices		= 2; /*los primeros dos elementos estan reservados (multiplo de 4 bytes)*/ NBASSERT(((sizeof(GLushort) * ptrDat->usoArregloIndices) % 4) == 0)
-#				endif
-			}
+            STBufferVerticesGL* ptrDat = &_buffersVertices[iTip];
+            /*Arreglo de verticesGL*/
+            ptrDat->bytesPorRegistro        = sizeof(vP.x) + sizeof(vP.y) + sizeof(vP.r) + sizeof(vP.g) + sizeof(vP.b) + sizeof(vP.a) + ((sizeof(vP.tex.x) + sizeof(vP.tex.y)) * iTip); NBASSERT((ptrDat->bytesPorRegistro % 4) == 0) /*Debe ser multiplo de 4 bytes (32 bits)*/
+            ptrDat->tamanoArregloVertices   = NB_GESTOR_GL_CRECIMIENTO_BLOQUE_VERTICES_GL;
+            ptrDat->arregloVertices         = (BYTE*)NBGestorMemoria::reservarMemoria(ptrDat->tamanoArregloVertices * ptrDat->bytesPorRegistro, ENMemoriaTipo_General); NB_DEFINE_NOMBRE_PUNTERO(ptrDat->arregloVertices, "NBGestorGL::arregloVerticesGL")
+            ptrDat->usoArregloVertices      = 1; /*el primer elemento esta reservado*/ NBASSERT(((ptrDat->bytesPorRegistro * ptrDat->usoArregloVertices) % 4) == 0)
+#           ifdef CONFIG_NB_GESTOR_ESCENAS_MODELOS_MEDIANTE_INDICES
+            /*Arreglo de indicesGL*/
+            ptrDat->tamanoArregloIndices    = NB_GESTOR_GL_CRECIMIENTO_BLOQUE_INDICES_GL; NBASSERT(((sizeof(GLushort) * NB_GESTOR_GL_CRECIMIENTO_BLOQUE_INDICES_GL) % 4) == 0) /*Debe ser multiplo de 4 bytes (32 bits)*/
+            ptrDat->arregloIndices          = (GLushort*)NBGestorMemoria::reservarMemoria(ptrDat->tamanoArregloIndices * sizeof(GLushort), ENMemoriaTipo_General); NB_DEFINE_NOMBRE_PUNTERO(ptrDat->arregloIndices, "NBGestorGL::arregloIndicesGL")
+            ptrDat->usoArregloIndices       = 2; /*los primeros dos elementos estan reservados (multiplo de 4 bytes)*/ NBASSERT(((sizeof(GLushort) * ptrDat->usoArregloIndices) % 4) == 0)
+#           endif
 		}
 	}
+    _sncRender = NBScnRender_alloc(NULL);
 	NBSegmentadorFiguras::inicializar();
 	//
 	_gestorInicializado			= true;
@@ -162,9 +154,8 @@ void NBGestorEscena::finalizar(){
 				STGestorEscenaGrupo* grp = &(scn->gruposCapas[iGrp]);
 				if(grp->capas != NULL) grp->capas->liberar(NB_RETENEDOR_NULL); grp->capas = NULL;
 			}
-			SI32 iBuff;
-			for(iBuff=0; iBuff<NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS; iBuff++){
-				AUArregloNativoMutableP<STGestorEscenaCapaRender>* renderCapas = scn->renderCapas[iBuff];
+			{
+				AUArregloNativoMutableP<STGestorEscenaCapaRender>* renderCapas = scn->renderCapas;
 				UI16 iCapa;
 				for(iCapa=0; iCapa<renderCapas->conteo; iCapa++){
 					STGestorEscenaCapaRender* capaRender = &(renderCapas->elemento[iCapa]);
@@ -189,12 +180,12 @@ void NBGestorEscena::finalizar(){
 					capaRender->renderMascLuzLucesConIntensidad->liberar(NB_RETENEDOR_NULL); capaRender->renderMascLuzLucesConIntensidad = NULL;
 					STGestorEscenaTexturaLuz::inicializar(&capaRender->renderMascLucesCombinadas);
 				}
-				scn->renderCapas[iBuff]->liberar(NB_RETENEDOR_NULL);
-				scn->renderCapasConsumir[iBuff]->liberar(NB_RETENEDOR_NULL);
-				scn->renderCapasProducir[iBuff]->liberar(NB_RETENEDOR_NULL);
-				scn->renderCapas[iBuff] = NULL;
-				scn->renderCapasConsumir[iBuff] = NULL;
-				scn->renderCapasProducir[iBuff] = NULL;
+				scn->renderCapas->liberar(NB_RETENEDOR_NULL);
+				scn->renderCapasConsumir->liberar(NB_RETENEDOR_NULL);
+				scn->renderCapasProducir->liberar(NB_RETENEDOR_NULL);
+				scn->renderCapas = NULL;
+				scn->renderCapasConsumir = NULL;
+				scn->renderCapasProducir = NULL;
 			}
 			scn->agrupadoresParticulas->liberar(NB_RETENEDOR_NULL);
 			scn->escuchadoresCambioPuertoVision->liberar(NB_RETENEDOR_NULL);
@@ -235,12 +226,12 @@ void NBGestorEscena::finalizar(){
 	NBGestorEscena::privTexturaRenderLiberarReservasTodas();
 	//Eliminar arreglos de verticesGL
 	{
-		SI32 iTip, iBuff;
+		SI32 iTip;
 		for(iTip = 0; iTip < ENVerticeGlTipo_Conteo; iTip++){
 			NBGestorGL::bufferVerticesLiberar(iTip);
 			//
-			for(iBuff = 0; iBuff < NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS; iBuff++){
-				STBufferVerticesGL* ptrDat = &_buffersVertices[iBuff][iTip];
+			{
+				STBufferVerticesGL* ptrDat = &_buffersVertices[iTip];
 				/*Arreglo de verticesGL*/
 				if(ptrDat->arregloVertices != NULL) NBGestorMemoria::liberarMemoria(ptrDat->arregloVertices); ptrDat->arregloVertices = NULL;
 				ptrDat->bytesPorRegistro		= 0;
@@ -257,6 +248,11 @@ void NBGestorEscena::finalizar(){
 	}
 	//
 	if(_cacheSombrasFusionadas != NULL) _cacheSombrasFusionadas->liberar(NB_RETENEDOR_NULL); _cacheSombrasFusionadas = NULL;
+    //
+    if(NBScnRender_isSet(_sncRender)){
+        NBScnRender_release(&_sncRender);
+        NBScnRender_null(&_sncRender);
+    }
 	_gestorInicializado = false;
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
 }
@@ -593,10 +589,9 @@ bool NBGestorEscena::privFrameBufferCheckStatusEXT(){
 // Texturas recicables
 //
 
-SI32 NBGestorEscena::privTexturaRenderReservarEspacioSinCrearDestino(const SI32 iEscenaPropietaria, const UI8 iBufferDatosPropietario, const MapaBitsColor colorFB, const ENTexturaModoPintado modoPintadoTextura, const UI16 anchoNecesario, const UI16 altoNecesario, NBRectanguloI* guardarAreaReservadaEn){
+SI32 NBGestorEscena::privTexturaRenderReservarEspacioSinCrearDestino(const SI32 iEscenaPropietaria, const MapaBitsColor colorFB, const ENTexturaModoPintado modoPintadoTextura, const UI16 anchoNecesario, const UI16 altoNecesario, NBRectanguloI* guardarAreaReservadaEn){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::privTexturaRenderReservarEspacio")
 	NBASSERT(iEscenaPropietaria >= 0 && iEscenaPropietaria<NBGESTORESCENA_MAX_ESCENAS)
-	NBASSERT(iBufferDatosPropietario<NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS)
 	NBASSERT(_escenas[iEscenaPropietaria].registroOcupado)
 	NBASSERT(colorFB == COLOR_RGBA8)
 	NBASSERT(anchoNecesario>0)
@@ -612,7 +607,6 @@ SI32 NBGestorEscena::privTexturaRenderReservarEspacioSinCrearDestino(const SI32 
 		if(datosTex->registroOcupado && !datosTex->texturaOcupada && datosTex->iEscenaPropietaria == iEscenaPropietaria && datosTex->colorFrameBufferGl == colorFB){
 			if(datosTex->anchoFrameBufferGl >= anchoNecesario && datosTex->altoFrameBufferGl >= altoNecesario){
 				datosTex->texturaOcupada			= true;
-				datosTex->iBufferDatosPropietario	= iBufferDatosPropietario;
 				datosTex->texturaModoPintado		= modoPintadoTextura;
 				guardarAreaReservadaEn->x			= 0;
 				guardarAreaReservadaEn->y			= 0;
@@ -636,8 +630,7 @@ SI32 NBGestorEscena::privTexturaRenderReservarEspacioSinCrearDestino(const SI32 
 		datosTex->texturaOcupada			= true;
 		datosTex->texturaModoPintado		= modoPintadoTextura;
 		datosTex->iEscenaPropietaria		= iEscenaPropietaria;
-		datosTex->iBufferDatosPropietario	= iBufferDatosPropietario;
-		datosTex->idFrameBufferGlPropio		= 0;		//Pendeiente de crear el FB propio si "requiereFBPropio" (no se crear aqui porque este hilo podria no tener acceso al OpenGL). 
+		datosTex->idFrameBufferGlPropio		= 0;		//Pendeiente de crear el FB propio si "requiereFBPropio" (no se crear aqui porque este hilo podria no tener acceso al OpenGL).
 		datosTex->anchoFrameBufferGl		= ladoBase2;
 		datosTex->altoFrameBufferGl			= ladoBase2;
 		datosTex->colorFrameBufferGl		= colorFB;
@@ -661,12 +654,11 @@ SI32 NBGestorEscena::privTexturaRenderReservarEspacioSinCrearDestino(const SI32 
 void NBGestorEscena::privTexturaRenderAsegurarDestinosCreados(const SI32 iEscenaPropietaria){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::privTexturaRenderAsegurarDestinosCreados")
 	NBASSERT(iEscenaPropietaria >= 0 && iEscenaPropietaria<NBGESTORESCENA_MAX_ESCENAS)
-	NBASSERT(_indiceBufferDatosLeer < NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS)
 	NBASSERT(_escenas[iEscenaPropietaria].registroOcupado)
 	SI32 iTex;
 	for(iTex=0; iTex<NBGESTORESCENA_MAX_TEXTURAS_RENDER; iTex++){
 		STGestorEscenaTextura* datosTex = &(_texturasParaRenderizadoGL[iTex]);
-		if(datosTex->registroOcupado && datosTex->texturaOcupada && datosTex->iEscenaPropietaria == iEscenaPropietaria && datosTex->iBufferDatosPropietario == _indiceBufferDatosLeer){
+		if(datosTex->registroOcupado && datosTex->texturaOcupada && datosTex->iEscenaPropietaria == iEscenaPropietaria){
 			if(datosTex->objTexturaAtlas == NULL){
 				AUTextura* objTextura = NBGestorTexturas::texturaDesdeAreaVacia(datosTex->anchoFrameBufferGl, datosTex->altoFrameBufferGl, datosTex->colorFrameBufferGl, ENTexturaTipoAlmacenamientoGL_AtlasUnico, ENTExturaTipoUsoGL_EscrituraLectura, (ENTexturaModoPintado)datosTex->texturaModoPintado, ENTexturaMipMap_Inhabilitado, ENTexturaOrdenV_HaciaAbajo, 1, 1.0f); NB_DEFINE_NOMBRE_PUNTERO(objTextura, "NBGestorEscena::texturaRecicable");
 				if(objTextura != NULL){
@@ -689,14 +681,13 @@ void NBGestorEscena::privTexturaRenderAsegurarDestinosCreados(const SI32 iEscena
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
 }
 
-void NBGestorEscena::privTexturaRenderVaciarReservasDeBuffer(const UI8 iBufferDatosPropietario){
+void NBGestorEscena::privTexturaRenderVaciarReservasDeBuffer(void){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::privTexturaRenderVaciarReservasDeBuffer")
 	//Cuando se liberan las render-to-texture asociadas a un bufferDatos, es para reutilizarlas en otro.
-	NBASSERT(iBufferDatosPropietario<NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS)
 	SI32 iTex;
 	for(iTex=0; iTex<NBGESTORESCENA_MAX_TEXTURAS_RENDER; iTex++){
 		STGestorEscenaTextura* datosTex = &(_texturasParaRenderizadoGL[iTex]);
-		if(datosTex->registroOcupado && datosTex->texturaOcupada && datosTex->iBufferDatosPropietario == iBufferDatosPropietario){
+		if(datosTex->registroOcupado && datosTex->texturaOcupada){
 			NBASSERT(_escenas[datosTex->iEscenaPropietaria].registroOcupado)
 			datosTex->texturaOcupada = false;
 		}
@@ -722,7 +713,6 @@ void NBGestorEscena::privTexturaRenderLiberarReservasDeEscena(const SI32 iEscena
 			GLuint idFB = datosTextura->idFrameBufferGlPropio;
 			if(idFB != 0) NBGestorGL::deleteFramebuffersEXT(1, &idFB); datosTextura->idFrameBufferGlPropio = 0;
 			datosTextura->iEscenaPropietaria		= -1;
-			datosTextura->iBufferDatosPropietario	= 0;
 			datosTextura->registroOcupado			= false;
 			datosTextura->texturaOcupada			= false;
 		}
@@ -745,7 +735,6 @@ void NBGestorEscena::privTexturaRenderLiberarReservasTodas(){
 			GLuint idFB = datosTextura->idFrameBufferGlPropio;
 			if(idFB != 0) NBGestorGL::deleteFramebuffersEXT(1, &idFB); datosTextura->idFrameBufferGlPropio = 0;
 			datosTextura->iEscenaPropietaria		= -1;
-			datosTextura->iBufferDatosPropietario	= 0;
 			datosTextura->registroOcupado			= false;
 			datosTextura->texturaOcupada			= false;
 		}
@@ -757,10 +746,7 @@ void NBGestorEscena::privTexturaRenderLiberarReservasTodas(){
 bool NBGestorEscena::bufferDatosEnLecturaMoverHaciaSiguienteNoBloqueado(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::bufferDatosEnLecturaMoverHaciaSiguienteNoBloqueado")
 	bool exito = false;
-	SI32 indiceLecturaSiguiente = _indiceBufferDatosLeer + 1; if(indiceLecturaSiguiente == NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS) indiceLecturaSiguiente = 0;
-	NBASSERT(indiceLecturaSiguiente < NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS)
-	if(_bufferDatosEstado[indiceLecturaSiguiente] != ENGestorEscenaBufferEstado_Vacio && !_bufferDatosBloqueado[indiceLecturaSiguiente] /*&& indiceLecturaSiguiente != _indiceBufferDatosEscribir*/){
-		_indiceBufferDatosLeer = indiceLecturaSiguiente;
+	if(_bufferDatosEstado != ENGestorEscenaBufferEstado_Vacio && !_bufferDatosBloqueado){
 		exito = true;
 	} else {
 		//PRINTF_WARNING("no se pudo mover a siguiente buffer porque estado(%d == Estado_Vacio) || _bufferDatosBloqueado(%d == true).\n", _bufferDatosEstado[indiceLecturaSiguiente], (SI32)_bufferDatosBloqueado[indiceLecturaSiguiente]);
@@ -772,10 +758,6 @@ bool NBGestorEscena::bufferDatosEnLecturaMoverHaciaSiguienteNoBloqueado(){
 
 void NBGestorEscena::bufferDatosEnLecturaMoverHaciaSiguiente(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::bufferDatosEnLecturaMoverHaciaSiguiente")
-	_indiceBufferDatosLeer++;
-	if(_indiceBufferDatosLeer == NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS){
-		_indiceBufferDatosLeer = 0; NBASSERT(_indiceBufferDatosLeer < NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS)
-	}
 	NBASSERT(false) //PENDIENTE, temporalmente no usar
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
 }
@@ -783,10 +765,7 @@ void NBGestorEscena::bufferDatosEnLecturaMoverHaciaSiguiente(){
 bool NBGestorEscena::bufferDatosEnEscrituraMoverHaciaSiguienteNoBloqueado(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::bufferDatosEnEscrituraMoverHaciaSiguientenoBloqueado")
 	bool exito = false;
-	SI32 indiceEscrituraSiguiente = _indiceBufferDatosEscribir+1; if(indiceEscrituraSiguiente == NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS) indiceEscrituraSiguiente = 0;
-	NBASSERT(indiceEscrituraSiguiente < NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS)
-	if(_bufferDatosEstado[indiceEscrituraSiguiente] == ENGestorEscenaBufferEstado_Vacio && !_bufferDatosBloqueado[indiceEscrituraSiguiente] /*&& indiceEscrituraSiguiente != _indiceBufferDatosLeer*/){
-		_indiceBufferDatosEscribir = indiceEscrituraSiguiente;
+	if(_bufferDatosEstado == ENGestorEscenaBufferEstado_Vacio && !_bufferDatosBloqueado){
 		exito = true;
 	} else {
 		//PRINTF_WARNING("no se pudo mover a siguiente buffer porque estado(%d == Estado_Vacio) || _bufferDatosBloqueado(%d == true).\n", _bufferDatosEstado[indiceEscrituraSiguiente], (SI32)_bufferDatosBloqueado[indiceEscrituraSiguiente]);
@@ -798,34 +777,31 @@ bool NBGestorEscena::bufferDatosEnEscrituraMoverHaciaSiguienteNoBloqueado(){
 
 void NBGestorEscena::bufferDatosEnEscrituraMoverHaciaSiguiente(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::bufferDatosEnEscrituraMoverHaciaSiguiente")
-	_indiceBufferDatosEscribir++;
-	if(_indiceBufferDatosEscribir == NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS){
-		_indiceBufferDatosEscribir = 0; NBASSERT(_indiceBufferDatosEscribir < NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS)
-	}
+    //ToDo: remove
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
 }
 
 bool NBGestorEscena::bufferDatosEnEscrituraBloqueado(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::bufferDatosEnEscrituraBloqueado")
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
-	return _bufferDatosBloqueado[_indiceBufferDatosEscribir];
+	return _bufferDatosBloqueado;
 }
 
 bool NBGestorEscena::bufferDatosEnEscrituraBloquear(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::bufferDatosEnEscrituraBloquear")
 	bool exito = false;
-	NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir]); //No debe estar bloqueado
-	_bufferDatosBloqueado[_indiceBufferDatosEscribir] = true;
+	NBASSERT(!_bufferDatosBloqueado); //No debe estar bloqueado
+	_bufferDatosBloqueado = true;
 	//Establecer punteros (para asegurar la integridad de produccion de modelos)
-	verticesGL0	= (NBVerticeGL0*)_buffersVertices[_indiceBufferDatosEscribir][ENVerticeGlTipo_SinTextura].arregloVertices;
-	verticesGL1	= (NBVerticeGL* )_buffersVertices[_indiceBufferDatosEscribir][ENVerticeGlTipo_MonoTextura].arregloVertices;
-	verticesGL2	= (NBVerticeGL2*)_buffersVertices[_indiceBufferDatosEscribir][ENVerticeGlTipo_BiTextura].arregloVertices;
-	verticesGL3	= (NBVerticeGL3*)_buffersVertices[_indiceBufferDatosEscribir][ENVerticeGlTipo_TriTextura].arregloVertices;
+	verticesGL0	= (NBVerticeGL0*)_buffersVertices[ENVerticeGlTipo_SinTextura].arregloVertices;
+	verticesGL1	= (NBVerticeGL* )_buffersVertices[ENVerticeGlTipo_MonoTextura].arregloVertices;
+	verticesGL2	= (NBVerticeGL2*)_buffersVertices[ENVerticeGlTipo_BiTextura].arregloVertices;
+	verticesGL3	= (NBVerticeGL3*)_buffersVertices[ENVerticeGlTipo_TriTextura].arregloVertices;
 #	ifdef CONFIG_NB_GESTOR_ESCENAS_MODELOS_MEDIANTE_INDICES
-	indicesGL0	= _buffersVertices[_indiceBufferDatosEscribir][ENVerticeGlTipo_SinTextura].arregloIndices;
-	indicesGL1	= _buffersVertices[_indiceBufferDatosEscribir][ENVerticeGlTipo_MonoTextura].arregloIndices;
-	indicesGL2	= _buffersVertices[_indiceBufferDatosEscribir][ENVerticeGlTipo_BiTextura].arregloIndices;
-	indicesGL3	= _buffersVertices[_indiceBufferDatosEscribir][ENVerticeGlTipo_TriTextura].arregloIndices;
+	indicesGL0	= _buffersVertices[ENVerticeGlTipo_SinTextura].arregloIndices;
+	indicesGL1	= _buffersVertices[ENVerticeGlTipo_MonoTextura].arregloIndices;
+	indicesGL2	= _buffersVertices[ENVerticeGlTipo_BiTextura].arregloIndices;
+	indicesGL3	= _buffersVertices[ENVerticeGlTipo_TriTextura].arregloIndices;
 #	endif
 	//
 	exito = true;
@@ -836,14 +812,14 @@ bool NBGestorEscena::bufferDatosEnEscrituraBloquear(){
 bool NBGestorEscena::bufferDatosEnEscrituraDesbloquear(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::bufferDatosEnEscrituraDesbloquear")
 	bool exito = false;
-	NBASSERT(_bufferDatosBloqueado[_indiceBufferDatosEscribir]); //Debe estar bloqueado
+	NBASSERT(_bufferDatosBloqueado); //Debe estar bloqueado
 	//Anular punteros punteros (para asegurar la integridad de produccion de modelos)
 	verticesGL0	= verticesGL1 = verticesGL2 = verticesGL3 = NULL;
 #	ifdef CONFIG_NB_GESTOR_ESCENAS_MODELOS_MEDIANTE_INDICES
 	indicesGL0	= indicesGL1 = indicesGL2 = indicesGL3 = NULL;
 #	endif
 	//
-	_bufferDatosBloqueado[_indiceBufferDatosEscribir] = false;
+	_bufferDatosBloqueado = false;
 	//
 	exito = true;
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
@@ -853,14 +829,14 @@ bool NBGestorEscena::bufferDatosEnEscrituraDesbloquear(){
 bool NBGestorEscena::bufferDatosEnLecturaBloqueado(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::bufferDatosEnLecturaBloqueado")
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
-	return _bufferDatosBloqueado[_indiceBufferDatosLeer];
+	return _bufferDatosBloqueado;
 }
 
 bool NBGestorEscena::bufferDatosEnLecturaBloquear(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::bufferDatosEnLecturaBloquear")
 	bool exito = false;
-	NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosLeer]); //No debe estar bloqueado
-	_bufferDatosBloqueado[_indiceBufferDatosLeer] = true;
+	NBASSERT(!_bufferDatosBloqueado); //No debe estar bloqueado
+	_bufferDatosBloqueado = true;
 	exito = true;
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
 	return exito;
@@ -869,8 +845,8 @@ bool NBGestorEscena::bufferDatosEnLecturaBloquear(){
 bool NBGestorEscena::bufferDatosEnLecturaDesbloquear(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::bufferDatosEnLecturaDesbloquear")
 	bool exito = false;
-	NBASSERT(_bufferDatosBloqueado[_indiceBufferDatosLeer]); //Debe estar bloqueado
-	_bufferDatosBloqueado[_indiceBufferDatosLeer] = false;
+	NBASSERT(_bufferDatosBloqueado); //Debe estar bloqueado
+	_bufferDatosBloqueado = false;
 	exito = true;
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
 	return exito;
@@ -879,8 +855,8 @@ bool NBGestorEscena::bufferDatosEnLecturaDesbloquear(){
 bool NBGestorEscena::bufferDatosEnEscrituraLlenar(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::bufferDatosEnEscrituraLlenar")
 	bool exito = false;
-	NBASSERT(_bufferDatosBloqueado[_indiceBufferDatosEscribir]); //Debe estar bloqueado
-	_bufferDatosEstado[_indiceBufferDatosEscribir] = ENGestorEscenaBufferEstado_Lleno;
+	NBASSERT(_bufferDatosBloqueado); //Debe estar bloqueado
+	_bufferDatosEstado = ENGestorEscenaBufferEstado_Lleno;
 	exito = true;
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
 	return exito;
@@ -889,8 +865,8 @@ bool NBGestorEscena::bufferDatosEnEscrituraLlenar(){
 bool NBGestorEscena::bufferDatosEnEscrituraDescartar(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::bufferDatosEnEscrituraDescartar")
 	bool exito = false;
-	NBASSERT(_bufferDatosBloqueado[_indiceBufferDatosEscribir]); //Debe estar bloqueado
-	_bufferDatosEstado[_indiceBufferDatosEscribir] = ENGestorEscenaBufferEstado_Discarted;
+	NBASSERT(_bufferDatosBloqueado); //Debe estar bloqueado
+	_bufferDatosEstado = ENGestorEscenaBufferEstado_Discarted;
 	exito = true;
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
 	return exito;
@@ -901,43 +877,43 @@ bool NBGestorEscena::bufferDatosEnEscrituraDescartar(){
 
 ENGestorEscenaBufferEstado NBGestorEscena::bufferDatosEnLecturaEstado(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::bufferDatosEnLecturaEstado")
-	NBASSERT(_bufferDatosBloqueado[_indiceBufferDatosLeer]); //Debe estar bloqueado
+	NBASSERT(_bufferDatosBloqueado); //Debe estar bloqueado
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
-	return _bufferDatosEstado[_indiceBufferDatosLeer];
+	return _bufferDatosEstado;
 }
 
 bool NBGestorEscena::bufferDatosEnEscrituraVaciar(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::bufferDatosEnEscrituraVaciar")
-	bool exito = NBGestorEscena::privBufferDatosVaciar(_indiceBufferDatosEscribir);
+	bool exito = NBGestorEscena::privBufferDatosVaciar();
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
 	return exito;
 }
 
 bool NBGestorEscena::bufferDatosEnLecturaVaciar(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::bufferDatosEnLecturaVaciar")
-	bool exito = NBGestorEscena::privBufferDatosVaciar(_indiceBufferDatosLeer);
+	bool exito = NBGestorEscena::privBufferDatosVaciar();
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
 	return exito;
 }
 
-bool NBGestorEscena::privBufferDatosVaciar(const UI16 iBuffer){
+bool NBGestorEscena::privBufferDatosVaciar(void){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::bufferDatosEnLecturaVaciar")
 	bool exito	= false;
-	NBASSERT(_bufferDatosBloqueado[iBuffer]); //Debe estar bloqueado
-	_bufferDatosEstado[iBuffer] = ENGestorEscenaBufferEstado_Vacio;
+	NBASSERT(_bufferDatosBloqueado); //Debe estar bloqueado
+	_bufferDatosEstado = ENGestorEscenaBufferEstado_Vacio;
 	//Liberar los recursos retenidos por el buffer datos
 	SI32 iEscena; for(iEscena = 0; iEscena < NBGESTORESCENA_MAX_ESCENAS; iEscena++){
 		STGestorEscenaEscena* scn = &_escenas[iEscena];
 		NBASSERT((scn->registroOcupado && scn->agrupadoresParticulas != NULL) || (!scn->registroOcupado && scn->agrupadoresParticulas == NULL))
 		NBASSERT((scn->registroOcupado && scn->escuchadoresCambioPuertoVision != NULL && scn->capasEnlazadas != NULL) || (!scn->registroOcupado && scn->escuchadoresCambioPuertoVision == NULL && scn->capasEnlazadas == NULL))
 		if(scn->registroOcupado){
-			NBASSERT(_bufferDatosBloqueado[iBuffer])
-			NBASSERT(scn->renderCapas[iBuffer] != NULL)
-			NBASSERT(scn->renderCapasConsumir[iBuffer] != NULL)
-			NBASSERT(scn->renderCapasProducir[iBuffer] != NULL)
-			scn->renderCapasConsumir[iBuffer]->vaciar();
-			scn->renderCapasProducir[iBuffer]->vaciar();
-			AUArregloNativoP<STGestorEscenaCapaRender>*	renderCapas = scn->renderCapas[iBuffer];
+			NBASSERT(_bufferDatosBloqueado)
+			NBASSERT(scn->renderCapas != NULL)
+			NBASSERT(scn->renderCapasConsumir != NULL)
+			NBASSERT(scn->renderCapasProducir != NULL)
+			scn->renderCapasConsumir->vaciar();
+			scn->renderCapasProducir->vaciar();
+			AUArregloNativoP<STGestorEscenaCapaRender>*	renderCapas = scn->renderCapas;
 			SI32 iCapa, iCapaConteo = renderCapas->conteo;
 			for(iCapa=0; iCapa<iCapaConteo; iCapa++){
 				STGestorEscenaCapaRender* capaRender = &(renderCapas->elemento[iCapa]);
@@ -969,7 +945,7 @@ bool NBGestorEscena::privBufferDatosVaciar(const UI16 iBuffer){
 		}
 	}
 	//Liberar las texturas asociadas al bufferDatos
-	NBGestorEscena::privTexturaRenderVaciarReservasDeBuffer(iBuffer);
+	NBGestorEscena::privTexturaRenderVaciarReservasDeBuffer();
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
 	return exito;
 }
@@ -978,13 +954,13 @@ bool NBGestorEscena::privBufferDatosVaciar(const UI16 iBuffer){
 void NBGestorEscena::resetearVerticesGL(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_GL("NBGestorEscena::resetearVerticesGL")
 	NBASSERT(_gestorInicializado);
-	NBASSERT(_bufferDatosEstado[_indiceBufferDatosEscribir] != ENGestorEscenaBufferEstado_Lleno)		//No debe estar lleno
-	NBASSERT(_bufferDatosBloqueado[_indiceBufferDatosEscribir])		//Debe estar bloqueado
+	NBASSERT(_bufferDatosEstado != ENGestorEscenaBufferEstado_Lleno)		//No debe estar lleno
+	NBASSERT(_bufferDatosBloqueado)		//Debe estar bloqueado
 	////NBGESTORGL_LOTES_TODOS_ASSERT_ESTAN_VACIOS						//Si falla, se omitió flushear los comandos acumulados
 	//
 	SI32 i;
 	for(i = 0; i < ENVerticeGlTipo_Conteo; i++){
-		STBufferVerticesGL* datBuff = &(_buffersVertices[_indiceBufferDatosEscribir][i]);
+		STBufferVerticesGL* datBuff = &(_buffersVertices[i]);
 		datBuff->usoArregloVertices	= 1; /*el primer elemento esta reservado*/
 		NBASSERT(((datBuff->bytesPorRegistro * datBuff->usoArregloVertices) % 4) == 0)
 #		ifdef CONFIG_NB_GESTOR_ESCENAS_MODELOS_MEDIANTE_INDICES
@@ -999,9 +975,9 @@ UI32 NBGestorEscena::reservarVerticesGL(const ENVerticeGlTipo tipo, const UI32 c
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_GL("NBGestorEscena::reservarVerticesGL")
 	NBASSERT(_gestorInicializado);
 	NBASSERT(tipo < ENVerticeGlTipo_Conteo);
-	NBASSERT(_bufferDatosBloqueado[_indiceBufferDatosEscribir])	//Debe estar bloqueado
-	NBASSERT(_bufferDatosEstado[_indiceBufferDatosEscribir] != ENGestorEscenaBufferEstado_Lleno)	//No debe estar lleno
-	STBufferVerticesGL* ptrDat = &(_buffersVertices[_indiceBufferDatosEscribir][tipo]);
+	NBASSERT(_bufferDatosBloqueado)	//Debe estar bloqueado
+	NBASSERT(_bufferDatosEstado != ENGestorEscenaBufferEstado_Lleno)	//No debe estar lleno
+	STBufferVerticesGL* ptrDat = &(_buffersVertices[tipo]);
 	NBASSERT(((ptrDat->bytesPorRegistro * cantidadVerticesReservar) % 4) == 0) //Tamano multiplo de 4 bytes
 	UI32 indice = 0;
 	//Redimensionar arreglo si es necesario
@@ -1012,7 +988,7 @@ UI32 NBGestorEscena::reservarVerticesGL(const ENVerticeGlTipo tipo, const UI32 c
 		ptrDat->arregloVertices	= (BYTE*)NBGestorMemoria::redimensionarBloqueMemoria(ptrDat->bytesPorRegistro * tamanoNuevo, ptrDat->arregloVertices, ptrDat->bytesPorRegistro * tamanoAnterior); NB_DEFINE_NOMBRE_PUNTERO(ptrDat->arregloVertices, "NBGestorGL::arregloVerticesGL")
 		ptrDat->tamanoArregloVertices	= tamanoNuevo;
 		//Actualizar punteros
-		if(_bufferDatosBloqueado[_indiceBufferDatosEscribir]){
+		if(_bufferDatosBloqueado){
 			switch (tipo) {
 				case ENVerticeGlTipo_SinTextura:	verticesGL0	= (NBVerticeGL0*)ptrDat->arregloVertices; break;
 				case ENVerticeGlTipo_MonoTextura:	verticesGL1	= (NBVerticeGL*)ptrDat->arregloVertices; break;
@@ -1021,7 +997,7 @@ UI32 NBGestorEscena::reservarVerticesGL(const ENVerticeGlTipo tipo, const UI32 c
 				default: NBASSERT(false) break;
 			}
 		}
-		PRINTF_INFO("ARREGLO DE VERTICES_GL_%d_%d REDIMENSIONADO A: %d elementos.\n", _indiceBufferDatosEscribir, tipo, ptrDat->tamanoArregloVertices);
+		PRINTF_INFO("ARREGLO DE VERTICES_GL_%d REDIMENSIONADO A: %d elementos.\n", tipo, ptrDat->tamanoArregloVertices);
 	}
 	//Valor a retornar
 	indice = ptrDat->usoArregloVertices; NBASSERT(indice > 0); //El primer vertice esta reservado
@@ -1034,7 +1010,7 @@ bool NBGestorEscena::punteroVerticeGlEsValido(const ENVerticeGlTipo tipo, const 
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_GL("NBGestorEscena::punteroVerticeGlEsValido")
 	NBASSERT(tipo < ENVerticeGlTipo_Conteo);
 	bool r = false;
-	STBufferVerticesGL* ptrDat = &(_buffersVertices[_indiceBufferDatosEscribir][tipo]);
+	STBufferVerticesGL* ptrDat = &(_buffersVertices[tipo]);
 	const void* punteroMin = ptrDat->arregloVertices;
 	if(punteroMin != NULL){
 		const void* punteroSigMaxUso = (BYTE*)ptrDat->arregloVertices + (ptrDat->usoArregloVertices * ptrDat->bytesPorRegistro);
@@ -1051,11 +1027,11 @@ UI32 NBGestorEscena::reservarIndicesGL(const ENVerticeGlTipo tipo, const UI32 ca
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_GL("NBGestorEscena::reservarIndicesGL")
 	NBASSERT(_gestorInicializado);
 	NBASSERT(tipo < ENVerticeGlTipo_Conteo);
-	NBASSERT(_bufferDatosBloqueado[_indiceBufferDatosEscribir])	//Debe estar bloqueado
-	NBASSERT(_bufferDatosEstado[_indiceBufferDatosEscribir] != ENGestorEscenaBufferEstado_Lleno)	//No debe estar lleno bloqueado
+	NBASSERT(_bufferDatosBloqueado)	//Debe estar bloqueado
+	NBASSERT(_bufferDatosEstado != ENGestorEscenaBufferEstado_Lleno)	//No debe estar lleno bloqueado
 	NBASSERT(((sizeof(GLushort) * cantidadIndicesReservar) % 4) == 0)	//Tamano multiplo de 4 bytes
 	UI32 indice = 0;
-	STBufferVerticesGL* ptrDat = &(_buffersVertices[_indiceBufferDatosEscribir][tipo]);
+	STBufferVerticesGL* ptrDat = &(_buffersVertices[tipo]);
 	//Redimensionar arreglo si es necesario
 	if((ptrDat->usoArregloIndices + cantidadIndicesReservar) > ptrDat->tamanoArregloIndices){
 		SI32 incremento				= (cantidadIndicesReservar > NB_GESTOR_GL_CRECIMIENTO_BLOQUE_INDICES_GL?cantidadIndicesReservar:NB_GESTOR_GL_CRECIMIENTO_BLOQUE_INDICES_GL);
@@ -1064,7 +1040,7 @@ UI32 NBGestorEscena::reservarIndicesGL(const ENVerticeGlTipo tipo, const UI32 ca
 		ptrDat->arregloIndices		= (GLushort*)NBGestorMemoria::redimensionarBloqueMemoria(sizeof(GLushort) * tamanoNuevo, ptrDat->arregloIndices, sizeof(GLushort) * tamanoAnterior);
 		ptrDat->tamanoArregloIndices	= tamanoNuevo;
 		/*Actualizar caches optimizadoras*/
-		if(_bufferDatosBloqueado[_indiceBufferDatosEscribir]){
+		if(_bufferDatosBloqueado){
 			switch (tipo) {
 				case ENVerticeGlTipo_SinTextura: indicesGL0 = ptrDat->arregloIndices; break;
 				case ENVerticeGlTipo_MonoTextura:indicesGL1 = ptrDat->arregloIndices; break;
@@ -1073,7 +1049,7 @@ UI32 NBGestorEscena::reservarIndicesGL(const ENVerticeGlTipo tipo, const UI32 ca
 				default: NBASSERT(false) break;
 			}
 		}
-		PRINTF_INFO("ARREGLO DE INDICES_GL_%d_%d REDIMENSIONADO A: %d\n", _indiceBufferDatosEscribir, tipo, ptrDat->tamanoArregloIndices);
+		PRINTF_INFO("ARREGLO DE INDICES_GL_%d REDIMENSIONADO A: %d\n", tipo, ptrDat->tamanoArregloIndices);
 	}
 	//Valor a retornar
 	indice = ptrDat->usoArregloIndices; NBASSERT(indice > 1); //Los primeros dos indices estan reservados
@@ -1091,7 +1067,7 @@ STBloqueGL NBGestorEscena::reservarIndicesParaTriangStrip4Independizado(const EN
 	STBloqueGL bloqueIndGL;
 	bloqueIndGL.cantidadElementos	= 6;
 	bloqueIndGL.primerElemento		= NBGestorEscena::reservarIndicesGL(tipo, 6);
-	GLushort* indicesGL				= &(_buffersVertices[_indiceBufferDatosEscribir][tipo].arregloIndices[bloqueIndGL.primerElemento]);
+	GLushort* indicesGL				= &(_buffersVertices[tipo].arregloIndices[bloqueIndGL.primerElemento]);
 	indicesGL[0]					= iPrimerVertice;	//Se repite el primero
 	indicesGL[1]					= iPrimerVertice++;
 	indicesGL[2]					= iPrimerVertice++;
@@ -1114,7 +1090,7 @@ STBloqueGL NBGestorEscena::reservarIndicesParaTriangStrip4IndependizadoMultiples
 	STBloqueGL bloqueIndGL;
 	bloqueIndGL.cantidadElementos		= cantTriangStrips4 * 6;
 	bloqueIndGL.primerElemento			= NBGestorEscena::reservarIndicesGL(tipo, bloqueIndGL.cantidadElementos);
-	GLushort* indicesGL					= &(_buffersVertices[_indiceBufferDatosEscribir][tipo].arregloIndices[bloqueIndGL.primerElemento]);
+	GLushort* indicesGL					= &(_buffersVertices[tipo].arregloIndices[bloqueIndGL.primerElemento]);
 	GLushort* indicesGLSigUlt			= indicesGL + bloqueIndGL.cantidadElementos;
 	while(indicesGL < indicesGLSigUlt){
 		indicesGL[0]			= iPrimerVertice;	//Se repite el primero
@@ -1125,7 +1101,7 @@ STBloqueGL NBGestorEscena::reservarIndicesParaTriangStrip4IndependizadoMultiples
 		indicesGL[5]			= iPrimerVertice++;	//Se repite el ultimo
 		indicesGL				+= 6;
 	}
-	NBASSERT(indicesGL == &(_buffersVertices[_indiceBufferDatosEscribir][tipo].arregloIndices[bloqueIndGL.primerElemento + bloqueIndGL.cantidadElementos]))
+	NBASSERT(indicesGL == &(_buffersVertices[tipo].arregloIndices[bloqueIndGL.primerElemento + bloqueIndGL.cantidadElementos]))
 	NBASSERT(bloqueIndGL.primerElemento > 1) //Los primeros dos elementos estan reservados
 	NBASSERT(bloqueIndGL.cantidadElementos > 0 && (bloqueIndGL.cantidadElementos % 6) == 0)
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
@@ -1142,7 +1118,7 @@ STBloqueGL NBGestorEscena::reservarIndicesParaTriangStripIndependizado(const ENV
 	STBloqueGL bloqueIndGL;
 	bloqueIndGL.cantidadElementos		= (verticesPorTriangStrip + 2);
 	bloqueIndGL.primerElemento			= NBGestorEscena::reservarIndicesGL(tipo, bloqueIndGL.cantidadElementos);
-	GLushort* indicesGL					= &(_buffersVertices[_indiceBufferDatosEscribir][tipo].arregloIndices[bloqueIndGL.primerElemento]);
+	GLushort* indicesGL					= &(_buffersVertices[tipo].arregloIndices[bloqueIndGL.primerElemento]);
 	GLushort* indiceGLSigUlt			= indicesGL + verticesPorTriangStrip;
 	*indicesGL						= iPrimerVertice; indicesGL++;		//El primero se repite
 	while(indicesGL < indiceGLSigUlt){
@@ -1150,7 +1126,7 @@ STBloqueGL NBGestorEscena::reservarIndicesParaTriangStripIndependizado(const ENV
 	}
 	*indicesGL						= iPrimerVertice; indicesGL++;		//El ultimo se repite
 	*indicesGL						= iPrimerVertice++; indicesGL++;	//El ultimo se repite
-	NBASSERT(indicesGL == &(_buffersVertices[_indiceBufferDatosEscribir][tipo].arregloIndices[bloqueIndGL.primerElemento + bloqueIndGL.cantidadElementos]))
+	NBASSERT(indicesGL == &(_buffersVertices[tipo].arregloIndices[bloqueIndGL.primerElemento + bloqueIndGL.cantidadElementos]))
 	NBASSERT(bloqueIndGL.primerElemento > 1) //Los primeros dos elementos estan reservados
 	NBASSERT(bloqueIndGL.cantidadElementos > 0)
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
@@ -1168,7 +1144,7 @@ STBloqueGL NBGestorEscena::reservarIndicesParaTriangStripIndependizadoMultiples(
 	STBloqueGL bloqueIndGL;
 	bloqueIndGL.cantidadElementos		= (verticesPorTriangStrip + 2) * cantTriangStrips;
 	bloqueIndGL.primerElemento			= NBGestorEscena::reservarIndicesGL(tipo, bloqueIndGL.cantidadElementos);
-	GLushort* indicesGL					= &(_buffersVertices[_indiceBufferDatosEscribir][tipo].arregloIndices[bloqueIndGL.primerElemento]);
+	GLushort* indicesGL					= &(_buffersVertices[tipo].arregloIndices[bloqueIndGL.primerElemento]);
 	UI16 iTriangStrip; GLushort* indiceGLSigUlt;
 	for(iTriangStrip=0; iTriangStrip < cantTriangStrips; iTriangStrip++){
 		indiceGLSigUlt					= indicesGL + verticesPorTriangStrip;
@@ -1179,7 +1155,7 @@ STBloqueGL NBGestorEscena::reservarIndicesParaTriangStripIndependizadoMultiples(
 		*indicesGL						= iPrimerVertice; indicesGL++;		//El ultimo se repite
 		*indicesGL						= iPrimerVertice++; indicesGL++;	//El ultimo se repite
 	}
-	NBASSERT(indicesGL == &(_buffersVertices[_indiceBufferDatosEscribir][tipo].arregloIndices[bloqueIndGL.primerElemento + bloqueIndGL.cantidadElementos]))
+	NBASSERT(indicesGL == &(_buffersVertices[tipo].arregloIndices[bloqueIndGL.primerElemento + bloqueIndGL.cantidadElementos]))
 	NBASSERT(bloqueIndGL.primerElemento > 1) //Los primeros dos elementos estan reservados
 	NBASSERT(bloqueIndGL.cantidadElementos > 0 && (bloqueIndGL.cantidadElementos % 6) == 0)
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
@@ -1203,7 +1179,7 @@ STBloqueGL NBGestorEscena::reservarIndicesParaTriangStripIndependizadoDesdeTrian
 	STBloqueGL bloqueIndGL;
 	bloqueIndGL.cantidadElementos		= conteoVerticesStrip + (conteoVerticesStrip % 2);
 	bloqueIndGL.primerElemento			= NBGestorEscena::reservarIndicesGL(tipo, bloqueIndGL.cantidadElementos);
-	GLushort* indicesGL					= &(_buffersVertices[_indiceBufferDatosEscribir][tipo].arregloIndices[bloqueIndGL.primerElemento]);
+	GLushort* indicesGL					= &(_buffersVertices[tipo].arregloIndices[bloqueIndGL.primerElemento]);
 	//Inicio repetido
 	*indicesGL							= iPrimerVertice + 1; indicesGL++;	//V1 (repetir)
 	//Triangulo inicial
@@ -1222,7 +1198,7 @@ STBloqueGL NBGestorEscena::reservarIndicesParaTriangStripIndependizadoDesdeTrian
 	if((conteoVerticesStrip % 2) != 0){
 		*indicesGL						= iVertCentro; indicesGL++;			//V0 (repetir para conservar numero par de indices)
 	}
-	NBASSERT(indicesGL == &(_buffersVertices[_indiceBufferDatosEscribir][tipo].arregloIndices[bloqueIndGL.primerElemento + bloqueIndGL.cantidadElementos]))
+	NBASSERT(indicesGL == &(_buffersVertices[tipo].arregloIndices[bloqueIndGL.primerElemento + bloqueIndGL.cantidadElementos]))
 	NBASSERT(bloqueIndGL.primerElemento > 1) //Los primeros dos elementos estan reservados
 	NBASSERT(bloqueIndGL.cantidadElementos > 0)
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
@@ -1236,7 +1212,7 @@ SI32 NBGestorEscena::conteoVerticesGLUsados(){
 	SI32 usoVerticesGL = 0;
 	SI32 iBufV;
 	for(iBufV=0; iBufV < ENVerticeGlTipo_Conteo; iBufV++){
-		usoVerticesGL += (_buffersVertices[_indiceBufferDatosLeer][iBufV].usoArregloVertices - 1); //-1 porque el primer elemento esta reservado
+		usoVerticesGL += (_buffersVertices[iBufV].usoArregloVertices - 1); //-1 porque el primer elemento esta reservado
 	}
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
 	return usoVerticesGL;
@@ -1248,7 +1224,7 @@ SI32 NBGestorEscena::conteoVerticesGLEnviadosHaciaBufferGL(){
 	SI32 conteoVerticesGL = 0;
 	SI32 iBufV;
 	for(iBufV=0; iBufV < ENVerticeGlTipo_Conteo; iBufV++){
-		conteoVerticesGL += (_buffersVertices[_indiceBufferDatosLeer][iBufV].usoArregloVertices - 1); //-1 porque el primer elemento esta reservado
+		conteoVerticesGL += (_buffersVertices[iBufV].usoArregloVertices - 1); //-1 porque el primer elemento esta reservado
 	}
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
 	return conteoVerticesGL;
@@ -1260,7 +1236,7 @@ SI32 NBGestorEscena::conteoIndicesGLUsados(){
 	SI32 usoIndicesGL = 0;
 	SI32 iBufV;
 	for(iBufV=0; iBufV < ENVerticeGlTipo_Conteo; iBufV++){
-		usoIndicesGL += (_buffersVertices[_indiceBufferDatosLeer][iBufV].usoArregloIndices - 1); //-1 porque el primer elemento esta reservado
+		usoIndicesGL += (_buffersVertices[iBufV].usoArregloIndices - 1); //-1 porque el primer elemento esta reservado
 	}
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
 	return usoIndicesGL;
@@ -1273,9 +1249,9 @@ void NBGestorEscena::bufferObtenerDatos(void* param, const SI32 iVao, STVertices
 	NBASSERT(_gestorInicializado);
 	NBASSERT(guardarDatosEn != NULL)
 	NBASSERT(iVao >= 0 && iVao < ENVerticeGlTipo_Conteo)
-	NBASSERT(_bufferDatosBloqueado[_indiceBufferDatosLeer])	//Debe estar bloqueado
+	NBASSERT(_bufferDatosBloqueado)	//Debe estar bloqueado
 	if(guardarDatosEn != NULL && iVao >= 0 && iVao < ENVerticeGlTipo_Conteo){
-		STBufferVerticesGL* ptrBuff			= &_buffersVertices[_indiceBufferDatosLeer][iVao];
+		STBufferVerticesGL* ptrBuff			= &_buffersVertices[iVao];
 		guardarDatosEn->verticesDatos		= ptrBuff->arregloVertices;
 		guardarDatosEn->verticesCantBytes	= ptrBuff->usoArregloVertices * ptrBuff->bytesPorRegistro;
 #		ifdef CONFIG_NB_GESTOR_ESCENAS_MODELOS_MEDIANTE_INDICES
@@ -1289,26 +1265,18 @@ void NBGestorEscena::bufferObtenerDatos(void* param, const SI32 iVao, STVertices
 SI32 NBGestorEscena::debugImprimirEstadoBufferes(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::debugImprimirEstadoBufferes")
 	PRINTF_INFO("Estado bufferes: ");
-	SI32 conteoBufferes = 0;
-	SI32 iBuff;
-	for(iBuff=0; iBuff<NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS; iBuff++){
-		PRINTF_INFO("%s-%s ", (_bufferDatosBloqueado[iBuff] ? "BLQ" : "LIB"), (_bufferDatosEstado[iBuff] == ENGestorEscenaBufferEstado_Lleno ? "LLN" : _bufferDatosEstado[iBuff] == ENGestorEscenaBufferEstado_Discarted ? "DISC" : _bufferDatosEstado[iBuff] == ENGestorEscenaBufferEstado_Vacio ? "VAC" : "???"));
-		if(_bufferDatosBloqueado[iBuff]){
-			conteoBufferes++;
-		}
+	{
+		PRINTF_INFO("%s-%s ", (_bufferDatosBloqueado ? "BLQ" : "LIB"), (_bufferDatosEstado == ENGestorEscenaBufferEstado_Lleno ? "LLN" : _bufferDatosEstado == ENGestorEscenaBufferEstado_Discarted ? "DISC" : _bufferDatosEstado == ENGestorEscenaBufferEstado_Vacio ? "VAC" : "???"));
 	}
 	PRINTF_INFO("\n");
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
-	return conteoBufferes;
+	return 1;
 }
 
 SI32 NBGestorEscena::bufferDatosConteoBloqueados(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::bufferDatosConteoBloqueados")
 	SI32 conteoBufferes = 0;
-	SI32 iBuff;
-	for(iBuff=0; iBuff<NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS; iBuff++){
-		if(_bufferDatosBloqueado[iBuff]) conteoBufferes++;
-	}
+    if(_bufferDatosBloqueado) conteoBufferes++;
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
 	return conteoBufferes;
 }
@@ -1316,10 +1284,7 @@ SI32 NBGestorEscena::bufferDatosConteoBloqueados(){
 SI32 NBGestorEscena::bufferDatosConteoLlenos(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::bufferDatosConteoLlenos")
 	SI32 conteoBufferes = 0;
-	SI32 iBuff;
-	for(iBuff=0; iBuff<NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS; iBuff++){
-		if(_bufferDatosEstado[iBuff] != ENGestorEscenaBufferEstado_Vacio) conteoBufferes++;
-	}
+    if(_bufferDatosEstado != ENGestorEscenaBufferEstado_Vacio) conteoBufferes++;
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
 	return conteoBufferes;
 }
@@ -1327,10 +1292,7 @@ SI32 NBGestorEscena::bufferDatosConteoLlenos(){
 /*SI32 NBGestorEscena::conteoBufferDatosVacios(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::conteoBufferDatosVacios")
 	SI32 conteoBufferes = 0;
-	SI32 iBuff;
-	for(iBuff=0; iBuff<NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS; iBuff++){
-		if(_bufferDatosEstado[iBuff] == ENGestorEscenaBufferEstado_Vacio) conteoBufferes++;
-	}
+    if(_bufferDatosEstado == ENGestorEscenaBufferEstado_Vacio) conteoBufferes++;
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
 	return conteoBufferes;
 }*/
@@ -1414,7 +1376,7 @@ NBTamano NBGestorEscena::puntosPorPulgada(const SI32 iEscena){
 
 void NBGestorEscena::establecerCajaProyeccion(SI32 iEscena, float xMin, float xMax, float yMin, float yMax){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::establecerCajaProyeccion")
-	//NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir]); //Ya no necesario validar. Se crea una copia de este dato para el hilo renderizador.
+	//NBASSERT(!_bufferDatosBloqueado); //Ya no necesario validar. Se crea una copia de este dato para el hilo renderizador.
 	NBASSERT(iEscena >= 0 && iEscena < NBGESTORESCENA_MAX_ESCENAS);
 	//NBASSERT(!scn->debugBloqueadoActualizandoModelos)
 	STGestorEscenaEscena* scn = &_escenas[iEscena];
@@ -1853,7 +1815,7 @@ NBColor NBGestorEscena::colorFondo(SI32 iEscena){
 
 void NBGestorEscena::establecerFondoModo(const SI16 iEscena, const ENGestorEscenaFondoModo fondoModo){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::establecerFondoModo")
-	//NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir]); //Ya no necesario validar. Se crea una copia de este dato para el hilo renderizador.
+	//NBASSERT(!_bufferDatosBloqueado); //Ya no necesario validar. Se crea una copia de este dato para el hilo renderizador.
 	NBASSERT(fondoModo >= 0 && fondoModo<ENGestorEscenaFondoModo_Conteo)
 	NBASSERT(iEscena >= 0 && iEscena < NBGESTORESCENA_MAX_ESCENAS);
 	STGestorEscenaEscena* scn = &_escenas[iEscena];
@@ -1864,7 +1826,7 @@ void NBGestorEscena::establecerFondoModo(const SI16 iEscena, const ENGestorEscen
 
 void NBGestorEscena::establecerColorFondo(SI32 iEscena, float r, float g, float b, float a){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::colorFondo")
-	//NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir]); //Ya no necesario validar. Se crea una copia de este dato para el hilo renderizador.
+	//NBASSERT(!_bufferDatosBloqueado); //Ya no necesario validar. Se crea una copia de este dato para el hilo renderizador.
 	NBASSERT(iEscena >= 0 && iEscena < NBGESTORESCENA_MAX_ESCENAS);
 	STGestorEscenaEscena* scn = &_escenas[iEscena];
 	NBASSERT(scn->registroOcupado)
@@ -1874,7 +1836,7 @@ void NBGestorEscena::establecerColorFondo(SI32 iEscena, float r, float g, float 
 
 void NBGestorEscena::establecerColorFondo(SI32 iEscena, NBColor color){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::colorFondo")
-	//NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir]); //Ya no necesario validar. Se crea una copia de este dato para el hilo renderizador.
+	//NBASSERT(!_bufferDatosBloqueado); //Ya no necesario validar. Se crea una copia de este dato para el hilo renderizador.
 	NBASSERT(iEscena >= 0 && iEscena < NBGESTORESCENA_MAX_ESCENAS);
 	STGestorEscenaEscena* scn = &_escenas[iEscena];
 	NBASSERT(scn->registroOcupado)
@@ -1973,7 +1935,7 @@ void NBGestorEscena::agregarObjetoCapa(SI32 iEscena, ENGestorEscenaGrupo idGrupo
 	NBASSERT(iEscena >= 0 && iEscena < NBGESTORESCENA_MAX_ESCENAS);
 	STGestorEscenaEscena* scn = &_escenas[iEscena];
 	NBASSERT(scn->registroOcupado)
-	NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir]);
+	NBASSERT(!_bufferDatosBloqueado);
 	//NBASSERT(!scn->debugBloqueadoActualizandoModelos)
 	//NBASSERT(objetoEscena->esClase(AUEscenaContenedor::idTipoClase)) //Si falla no es un Contenedor. El motor esta optimizado para renderizar contenedores mas que objetos individuales
 	NBASSERT(NBGestorEscena::privPropiedadesCapaPorObjetoEscena(iEscena, objetoEscena) == NULL) //Si falla, se esta agregando el objeto capa dos veces
@@ -2022,7 +1984,7 @@ void NBGestorEscena::quitarObjetoCapa(SI32 iEscena, AUEscenaContenedor* objetoEs
 	NBASSERT(iEscena >= 0 && iEscena < NBGESTORESCENA_MAX_ESCENAS);
 	STGestorEscenaEscena* scn = &_escenas[iEscena];
 	NBASSERT(scn->registroOcupado)
-	NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir]);
+	NBASSERT(!_bufferDatosBloqueado);
 	//NBASSERT(!scn->debugBloqueadoActualizandoModelos)
 	//PRINTF_INFO("Capa quitando %lu retenciones(%d)\n", (unsigned long)objetoEscena, objetoEscena->conteoReferencias());
 	SI32 iGrp; for(iGrp = 0; iGrp < ENGestorEscenaGrupo_Conteo; iGrp++){
@@ -2072,7 +2034,7 @@ void NBGestorEscena::enlaceCapaAgregar(SI16 iEscena, SI16 iEscenaCopiar, SI16 id
 	STGestorEscenaEscena* scnCpy = &_escenas[iEscenaCopiar];
 	NBASSERT(scn->registroOcupado);
 	NBASSERT(scnCpy->registroOcupado);
-	NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir]);
+	NBASSERT(!_bufferDatosBloqueado);
 	//NBASSERT(!scn->debugBloqueadoActualizandoModelos)
 	NBASSERT(!scnCpy->debugBloqueadoActualizandoModelos)
 	STGestorEscenaEnlaceCapa datosEnlace;
@@ -2087,7 +2049,7 @@ void NBGestorEscena::enlaceCapaQuitar(SI16 iEscena, SI16 iEscenaCopiada, SI16 id
 	NBASSERT(iEscena >= 0 && iEscena < NBGESTORESCENA_MAX_ESCENAS);
 	STGestorEscenaEscena* scn = &_escenas[iEscena];
 	NBASSERT(scn->registroOcupado);
-	NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir]);
+	NBASSERT(!_bufferDatosBloqueado);
 	//NBASSERT(!scn->debugBloqueadoActualizandoModelos)
 	SI16 i;
 	for(i=scn->capasEnlazadas->conteo - 1; i >= 0; i--){
@@ -2104,7 +2066,7 @@ void NBGestorEscena::enlaceCapaVaciar(SI16 iEscena){
 	NBASSERT(iEscena >= 0 && iEscena < NBGESTORESCENA_MAX_ESCENAS);
 	STGestorEscenaEscena* scn = &_escenas[iEscena];
 	NBASSERT(scn->registroOcupado);
-	NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir]);
+	NBASSERT(!_bufferDatosBloqueado);
 	//NBASSERT(!scn->debugBloqueadoActualizandoModelos)
 	scn->capasEnlazadas->vaciar();
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
@@ -2117,7 +2079,7 @@ void NBGestorEscena::moverCapasHaciaEscena(SI32 iEscenaOrigen, SI32 iEscenaDesti
 	NBASSERT(iEscenaDestino >= 0 && iEscenaDestino < NBGESTORESCENA_MAX_ESCENAS);
 	STGestorEscenaEscena* scnOrg = &_escenas[iEscenaOrigen]; NBASSERT(scnOrg->registroOcupado);
 	STGestorEscenaEscena* scnDst = &_escenas[iEscenaDestino]; NBASSERT(scnDst->registroOcupado);
-	NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir]);
+	NBASSERT(!_bufferDatosBloqueado);
 	NBASSERT(!scnOrg->debugBloqueadoActualizandoModelos)
 	NBASSERT(!scnDst->debugBloqueadoActualizandoModelos)
 	SI32 iGrp; for(iGrp = 0; iGrp < ENGestorEscenaGrupo_Conteo; iGrp++){
@@ -2143,7 +2105,7 @@ void NBGestorEscena::copiarCajasDeGrupos(SI32 iEscenaOrigen, SI32 iEscenaDestino
 	NBASSERT(iEscenaDestino >= 0 && iEscenaDestino < NBGESTORESCENA_MAX_ESCENAS);
 	const STGestorEscenaEscena* scnOrg = &_escenas[iEscenaOrigen]; NBASSERT(scnOrg->registroOcupado);
 	STGestorEscenaEscena* scnDst = &_escenas[iEscenaDestino]; NBASSERT(scnDst->registroOcupado);
-	NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir]);
+	NBASSERT(!_bufferDatosBloqueado);
 	NBASSERT(!scnOrg->debugBloqueadoActualizandoModelos)
 	NBASSERT(!scnDst->debugBloqueadoActualizandoModelos)
 	SI32 iGrp; for(iGrp = 0; iGrp < ENGestorEscenaGrupo_Conteo; iGrp++){
@@ -2163,7 +2125,7 @@ void NBGestorEscena::habilitarObjetoCapa(SI32 iEscena, AUEscenaContenedor* objet
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::habilitarObjetoCapa")
 	NBASSERT(iEscena >= 0 && iEscena < NBGESTORESCENA_MAX_ESCENAS);
 	STGestorEscenaEscena* scn = &_escenas[iEscena];
-	//NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir]);
+	//NBASSERT(!_bufferDatosBloqueado);
 	//NBASSERT(!scn->debugBloqueadoActualizandoModelos)
 	SI32 iGrp; for(iGrp = 0; iGrp < ENGestorEscenaGrupo_Conteo; iGrp++){
 		STGestorEscenaGrupo* grupoCapa = &(scn->gruposCapas[iGrp]);
@@ -2184,7 +2146,7 @@ void NBGestorEscena::deshabilitarObjetoCapa(SI32 iEscena, AUEscenaContenedor* ob
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::deshabilitarObjetoCapa")
 	NBASSERT(iEscena >= 0 && iEscena < NBGESTORESCENA_MAX_ESCENAS);
 	STGestorEscenaEscena* scn = &_escenas[iEscena];
-	//NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir]);
+	//NBASSERT(!_bufferDatosBloqueado);
 	//NBASSERT(!scn->debugBloqueadoActualizandoModelos)
 	SI32 iGrp; for(iGrp = 0; iGrp < ENGestorEscenaGrupo_Conteo; iGrp++){
 		STGestorEscenaGrupo* grupoCapa = &(scn->gruposCapas[iGrp]);
@@ -2206,7 +2168,7 @@ const STGestorEscenaCapa* NBGestorEscena::propiedadesDeCapa(SI32 iEscena, AUEsce
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::propiedadesDeCapa")
 	NBASSERT(iEscena >= 0 && iEscena < NBGESTORESCENA_MAX_ESCENAS);
 	STGestorEscenaEscena* scn = &_escenas[iEscena];
-	//NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir]);
+	//NBASSERT(!_bufferDatosBloqueado);
 	STGestorEscenaCapa* propsCapa = NULL;
 	SI32 iGrp; for(iGrp = 0; iGrp < ENGestorEscenaGrupo_Conteo && propsCapa == NULL; iGrp++){
 		STGestorEscenaGrupo* grupoCapa = &(scn->gruposCapas[iGrp]);
@@ -2227,7 +2189,7 @@ const STGestorEscenaCapa* NBGestorEscena::propiedadesDeCapa(SI32 iEscena, SI32 i
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::propiedadesDeCapa")
 	NBASSERT(iEscena >= 0 && iEscena < NBGESTORESCENA_MAX_ESCENAS);
 	STGestorEscenaEscena* scn = &_escenas[iEscena];
-	//NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir]);
+	//NBASSERT(!_bufferDatosBloqueado);
 	STGestorEscenaCapa* propsCapa = NULL;
 	SI32 iGrp; for(iGrp = 0; iGrp < ENGestorEscenaGrupo_Conteo && propsCapa == NULL; iGrp++){
 		STGestorEscenaGrupo* grupoCapa = &(scn->gruposCapas[iGrp]);
@@ -2463,7 +2425,7 @@ void NBGestorEscena::vaciarGrupo(SI32 iEscena, ENGestorEscenaGrupo idGrupo){
 	NBASSERT(iEscena >= 0 && iEscena < NBGESTORESCENA_MAX_ESCENAS);
 	STGestorEscenaEscena* scn = &_escenas[iEscena];
 	NBASSERT(idGrupo >= 0 && idGrupo < ENGestorEscenaGrupo_Conteo)
-	NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir]);
+	NBASSERT(!_bufferDatosBloqueado);
 	//NBASSERT(!scn->debugBloqueadoActualizandoModelos)
 	STGestorEscenaGrupo* grupoCapa = &(scn->gruposCapas[idGrupo]);
 	SI32 i; for(i = grupoCapa->capas->conteo - 1; i >= 0; i--){
@@ -2474,7 +2436,7 @@ void NBGestorEscena::vaciarGrupo(SI32 iEscena, ENGestorEscenaGrupo idGrupo){
 
 void NBGestorEscena::vaciarGrupos(SI32 iEscena){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::vaciarGrupos")
-	NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir]);
+	NBASSERT(!_bufferDatosBloqueado);
 	//NBASSERT(!scn->debugBloqueadoActualizandoModelos)
 	SI32 iGrupo; for(iGrupo = ENGestorEscenaGrupo_Conteo - 1; iGrupo >= 0; iGrupo--){
 		NBGestorEscena::vaciarGrupo(iEscena, (ENGestorEscenaGrupo)iGrupo);
@@ -2484,7 +2446,7 @@ void NBGestorEscena::vaciarGrupos(SI32 iEscena){
 
 void NBGestorEscena::normalizaCajaProyeccionEscena(SI32 iEscena){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::normalizaCajaProyeccionEscena")
-	//NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir]);
+	//NBASSERT(!_bufferDatosBloqueado);
 	NBASSERT(iEscena >= 0 && iEscena < NBGESTORESCENA_MAX_ESCENAS);
 	STGestorEscenaEscena* scn = &_escenas[iEscena];
 	NBASSERT(scn->registroOcupado)
@@ -2533,7 +2495,7 @@ void NBGestorEscena::normalizaMatricesCapasEscena(SI32 iEscena){
 	NBASSERT(iEscena >= 0 && iEscena < NBGESTORESCENA_MAX_ESCENAS);
 	STGestorEscenaEscena* scn = &_escenas[iEscena];
 	NBASSERT(scn->registroOcupado)
-	NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir]);
+	NBASSERT(!_bufferDatosBloqueado);
 	//NBASSERT(!scn->debugBloqueadoActualizandoModelos)
 	SI32 iGrp; for(iGrp = 0; iGrp < ENGestorEscenaGrupo_Conteo; iGrp++){
 		AUArregloNativoP<STGestorEscenaCapa>* capas =  scn->gruposCapas[iGrp].capas;
@@ -3144,7 +3106,7 @@ SI32 NBGestorEscena::privCrearEscena(SI32 iEscenaLibre, bool formatearRegistro, 
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::privCrearEscena")
 	NBASSERT(_gestorInicializado);
 	NBASSERT(iEscenaLibre >= 0 && iEscenaLibre < NBGESTORESCENA_MAX_ESCENAS);
-	NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir] || !formatearRegistro);
+	NBASSERT(!_bufferDatosBloqueado || !formatearRegistro);
 	STGestorEscenaEscena* scnNew = &_escenas[iEscenaLibre];
 	NBASSERT(!scnNew->registroOcupado);
 	STGestorEscenaFrameBuffer* frameBuffLibre = &_frameBuffersGL[iEscenaLibre];
@@ -3166,14 +3128,13 @@ SI32 NBGestorEscena::privCrearEscena(SI32 iEscenaLibre, bool formatearRegistro, 
 				scnNew->gruposCapas[iGrp].capas		= new(ENMemoriaTipo_General) AUArregloNativoMutableP<STGestorEscenaCapa>();
 			}
 			//
-			UI16 iBuff;
-			for(iBuff=0; iBuff<NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS; iBuff++){
-				NBASSERT(scnNew->renderCapas[iBuff] == NULL)
-				NBASSERT(scnNew->renderCapasConsumir[iBuff] == NULL)
-				NBASSERT(scnNew->renderCapasProducir[iBuff] == NULL)
-				scnNew->renderCapas[iBuff]			= new(ENMemoriaTipo_General) AUArregloNativoMutableP<STGestorEscenaCapaRender>();
-				scnNew->renderCapasConsumir[iBuff]	= new(ENMemoriaTipo_General) AUArregloNativoMutableP<STGestorEscenaCapaRender*>();
-				scnNew->renderCapasProducir[iBuff]	= new(ENMemoriaTipo_General) AUArregloNativoMutableP<STGestorEscenaCapaRender*>();
+			{
+				NBASSERT(scnNew->renderCapas == NULL)
+				NBASSERT(scnNew->renderCapasConsumir == NULL)
+				NBASSERT(scnNew->renderCapasProducir == NULL)
+				scnNew->renderCapas			        = new(ENMemoriaTipo_General) AUArregloNativoMutableP<STGestorEscenaCapaRender>();
+				scnNew->renderCapasConsumir	        = new(ENMemoriaTipo_General) AUArregloNativoMutableP<STGestorEscenaCapaRender*>();
+				scnNew->renderCapasProducir	        = new(ENMemoriaTipo_General) AUArregloNativoMutableP<STGestorEscenaCapaRender*>();
 			}
 			scnNew->agrupadoresParticulas			= new(ENMemoriaTipo_General) AUArregloMutable();											NB_DEFINE_NOMBRE_PUNTERO(scnNew->agrupadoresParticulas, "NBGestorEscena::.agrupadoresParticulas");
 			scnNew->escuchadoresCambioPuertoVision	= new(ENMemoriaTipo_General) AUArregloNativoMutableP<IEscuchadorCambioPuertoVision*>();		NB_DEFINE_NOMBRE_PUNTERO(scnNew->escuchadoresCambioPuertoVision, "NBGestorEscena::.escuchadoresCambioPuertoVision");
@@ -3429,7 +3390,7 @@ void NBGestorEscena::setTopItf(SI32 iEscena, AUEscenaTopItf* topItf){
 	NBASSERT(iEscena >= 0 && iEscena < NBGESTORESCENA_MAX_ESCENAS);
 	STGestorEscenaEscena* scn = &_escenas[iEscena];
 	NBASSERT(scn->registroOcupado)
-	NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir]);
+	NBASSERT(!_bufferDatosBloqueado);
 	//NBASSERT(!scn->debugBloqueadoActualizandoModelos)
 	//PRINTF_INFO("Capa quitando %lu retenciones(%d)\n", (unsigned long)objetoEscena, objetoEscena->conteoReferencias());
 	//Set
@@ -3467,7 +3428,7 @@ void NBGestorEscena::liberarEscena(SI32 iEscena){
 
 void NBGestorEscena::privLiberarEscena(SI32 iEscena, bool formatearRegistro){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::privLiberarEscena")
-	NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir] || !formatearRegistro);
+	NBASSERT(!_bufferDatosBloqueado || !formatearRegistro);
 	STGestorEscenaEscena* scn = &_escenas[iEscena];
 	NBASSERT(scn->registroOcupado);
 	//NBASSERT(!scn->debugBloqueadoActualizandoModelos)
@@ -3521,9 +3482,8 @@ void NBGestorEscena::privLiberarEscena(SI32 iEscena, bool formatearRegistro){
 			if(grp->capas != NULL) grp->capas->liberar(NB_RETENEDOR_NULL); grp->capas = NULL;
 		}
 		//
-		SI32 iBuff;
-		for(iBuff=0; iBuff<NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS; iBuff++){
-			AUArregloNativoP<STGestorEscenaCapaRender>*	renderCapas = scn->renderCapas[iBuff]; NBASSERT(renderCapas != NULL)
+		{
+			AUArregloNativoP<STGestorEscenaCapaRender>*	renderCapas = scn->renderCapas; NBASSERT(renderCapas != NULL)
 			UI32 iCapa, iCapaConteo = renderCapas->conteo;
 			for(iCapa=0; iCapa<iCapaConteo; iCapa++){
 				STGestorEscenaCapaRender* capaRender = &(renderCapas->elemento[iCapa]);
@@ -3550,12 +3510,12 @@ void NBGestorEscena::privLiberarEscena(SI32 iEscena, bool formatearRegistro){
 				//
 				STGestorEscenaTexturaLuz::inicializar(&capaRender->renderMascLucesCombinadas);
 			}
-			scn->renderCapas[iBuff]->liberar(NB_RETENEDOR_NULL);
-			scn->renderCapasConsumir[iBuff]->liberar(NB_RETENEDOR_NULL);
-			scn->renderCapasProducir[iBuff]->liberar(NB_RETENEDOR_NULL);
-			scn->renderCapas[iBuff]			= NULL;
-			scn->renderCapasConsumir[iBuff]	= NULL;
-			scn->renderCapasProducir[iBuff]	= NULL;
+			scn->renderCapas->liberar(NB_RETENEDOR_NULL);
+			scn->renderCapasConsumir->liberar(NB_RETENEDOR_NULL);
+			scn->renderCapasProducir->liberar(NB_RETENEDOR_NULL);
+			scn->renderCapas			= NULL;
+			scn->renderCapasConsumir	= NULL;
+			scn->renderCapasProducir	= NULL;
 		}
 		scn->agrupadoresParticulas->liberar(NB_RETENEDOR_NULL);
 		scn->agrupadoresParticulas				= NULL;
@@ -3574,42 +3534,39 @@ void NBGestorEscena::liberarRecursosCacheRenderEscenas(){
 		STGestorEscenaEscena* scn = &_escenas[iEscena];
 		if(scn->registroOcupado){
 			//Liberar los grupos de modelos a renderizar
-			SI32 iBuff;
-			for(iBuff = 0; iBuff < NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS; iBuff++){
-				if(!_bufferDatosBloqueado[iBuff]){
-					scn->renderCapasConsumir[iBuff]->vaciar();
-					scn->renderCapasProducir[iBuff]->vaciar();
-					AUArregloNativoP<STGestorEscenaCapaRender>*	renderCapas = scn->renderCapas[iBuff]; NBASSERT(renderCapas != NULL)
-					UI32 iCapa, iCapaConteo = renderCapas->conteo;
-					for(iCapa = 0; iCapa < iCapaConteo; iCapa++){
-						STGestorEscenaCapaRender* capaRender = &(renderCapas->elemento[iCapa]);
-						capaRender->renderModelosDatos->vaciar();
-						capaRender->renderModelos->vaciar();
-						capaRender->renderPiscinaObjetosRetener->vaciar();
-						capaRender->renderIluminacion->vaciar();
-						capaRender->renderEspejos->vaciar();
-						capaRender->renderProductoresSombras->vaciar();
-						capaRender->renderDescriptoresCuerdas->vaciar();
-						capaRender->renderConsumidoresLuces->vaciar();
-						capaRender->renderConsumidoresEspejos->vaciar();
-						capaRender->renderConsumidoresCuerdas->vaciar();
-						capaRender->renderConsumidoresPreModeloGL->vaciar();
-						UI16 iSubElem;
-						for(iSubElem = 0; iSubElem < capaRender->renderSombrasPorIluminacion->conteo; iSubElem++){ ((AUArregloNativoMutableP<NBFuenteSombra>*)capaRender->renderSombrasPorIluminacion->elemento[iSubElem])->vaciar(); }
-						for(iSubElem = 0; iSubElem < capaRender->renderSombrasRangosPorIluminacion->conteo; iSubElem++){ ((AUArregloNativoMutableP<STRangoSombra>*)capaRender->renderSombrasRangosPorIluminacion->elemento[iSubElem])->vaciar(); }
-						//capaRender->renderSombrasPorIluminacion->vaciar(); //Mejor vaciar los subarreglos, porque vaciar el arreglo principal obligaria a volver a crear los subarreglos en el siguiente tick
-						//capaRender->renderSombrasRangosPorIluminacion->vaciar(); //Mejor vaciar los subarreglos, porque vaciar el arreglo principal obligaria a volver a crear los subarreglos en el siguiente tick
-						capaRender->renderSombrasVerticesIntermedios->vaciar();
-						//
-						capaRender->renderConteoLucesAfectanMascara = 0;
-						capaRender->renderMascLuzSumaFigurasTotal	= 0;
-						capaRender->renderMascLuz->vaciar();
-						capaRender->renderMascLuzBloquesGL->vaciar();
-						capaRender->renderMascLuzLucesConIntensidad->vaciar();
-						STGestorEscenaTexturaLuz::inicializar(&capaRender->renderMascLucesCombinadas);
-					}
-				}
-			}
+            if(!_bufferDatosBloqueado){
+                scn->renderCapasConsumir->vaciar();
+                scn->renderCapasProducir->vaciar();
+                AUArregloNativoP<STGestorEscenaCapaRender>*    renderCapas = scn->renderCapas; NBASSERT(renderCapas != NULL)
+                UI32 iCapa, iCapaConteo = renderCapas->conteo;
+                for(iCapa = 0; iCapa < iCapaConteo; iCapa++){
+                    STGestorEscenaCapaRender* capaRender = &(renderCapas->elemento[iCapa]);
+                    capaRender->renderModelosDatos->vaciar();
+                    capaRender->renderModelos->vaciar();
+                    capaRender->renderPiscinaObjetosRetener->vaciar();
+                    capaRender->renderIluminacion->vaciar();
+                    capaRender->renderEspejos->vaciar();
+                    capaRender->renderProductoresSombras->vaciar();
+                    capaRender->renderDescriptoresCuerdas->vaciar();
+                    capaRender->renderConsumidoresLuces->vaciar();
+                    capaRender->renderConsumidoresEspejos->vaciar();
+                    capaRender->renderConsumidoresCuerdas->vaciar();
+                    capaRender->renderConsumidoresPreModeloGL->vaciar();
+                    UI16 iSubElem;
+                    for(iSubElem = 0; iSubElem < capaRender->renderSombrasPorIluminacion->conteo; iSubElem++){ ((AUArregloNativoMutableP<NBFuenteSombra>*)capaRender->renderSombrasPorIluminacion->elemento[iSubElem])->vaciar(); }
+                    for(iSubElem = 0; iSubElem < capaRender->renderSombrasRangosPorIluminacion->conteo; iSubElem++){ ((AUArregloNativoMutableP<STRangoSombra>*)capaRender->renderSombrasRangosPorIluminacion->elemento[iSubElem])->vaciar(); }
+                    //capaRender->renderSombrasPorIluminacion->vaciar(); //Mejor vaciar los subarreglos, porque vaciar el arreglo principal obligaria a volver a crear los subarreglos en el siguiente tick
+                    //capaRender->renderSombrasRangosPorIluminacion->vaciar(); //Mejor vaciar los subarreglos, porque vaciar el arreglo principal obligaria a volver a crear los subarreglos en el siguiente tick
+                    capaRender->renderSombrasVerticesIntermedios->vaciar();
+                    //
+                    capaRender->renderConteoLucesAfectanMascara = 0;
+                    capaRender->renderMascLuzSumaFigurasTotal    = 0;
+                    capaRender->renderMascLuz->vaciar();
+                    capaRender->renderMascLuzBloquesGL->vaciar();
+                    capaRender->renderMascLuzLucesConIntensidad->vaciar();
+                    STGestorEscenaTexturaLuz::inicializar(&capaRender->renderMascLucesCombinadas);
+                }
+            }
 		}
 	}
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
@@ -3693,7 +3650,7 @@ void NBGestorEscena::redimensionarEscena(SI32 iEscena, UI16 anchoEscenaGL, UI16 
 	NBASSERT(iEscena >= 0 && iEscena < NBGESTORESCENA_MAX_ESCENAS);
 	STGestorEscenaEscena* scn = &_escenas[iEscena];
 	NBASSERT(scn->registroOcupado);
-	//NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir]);
+	//NBASSERT(!_bufferDatosBloqueado);
 	//PRINTF_INFO("REDIMENSIONANDO ESCENA: %d\n", iEscena);
 	if(scn->registroOcupado){
 		//PRINTF_INFO("Redimensionando escena de (%d, %d)px a (%d, %d)px.\n", scn->areaOcupadaDestino.ancho, scn->areaOcupadaDestino.alto, anchoEscenaGL, altoEscenaGL);
@@ -3725,7 +3682,7 @@ void NBGestorEscena::notificarObjetosTamanoEscena(SI32 iEscena, const STNBViewPo
 	NBASSERT(iEscena >= 0 && iEscena < NBGESTORESCENA_MAX_ESCENAS);
 	STGestorEscenaEscena* scn = &_escenas[iEscena];
 	NBASSERT(scn->registroOcupado)
-	//NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir]);
+	//NBASSERT(!_bufferDatosBloqueado);
 	//Notificar a el arbol de la escena
 	SI32 iGrp; for(iGrp = 0; iGrp < ENGestorEscenaGrupo_Conteo; iGrp++){
 		STGestorEscenaGrupo* grupoCapas = &(scn->gruposCapas[iGrp]); NBASSERT(grupoCapas != NULL)
@@ -3766,7 +3723,7 @@ void NBGestorEscena::agregarAgrupadorParticulas(SI32 iEscena, AUEscenaGrupoParti
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::agregarAgrupadorParticulas")
 	NBASSERT(iEscena >= 0 && iEscena < NBGESTORESCENA_MAX_ESCENAS);
 	STGestorEscenaEscena* scn = &_escenas[iEscena];
-	NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir]);
+	NBASSERT(!_bufferDatosBloqueado);
 	//NBASSERT(!scn->debugBloqueadoActualizandoModelos)
 	NBASSERT(scn->agrupadoresParticulas->indiceDe(grupoParticulas) == -1) //Si falla, el escuchador ya esta en el arreglo
 	scn->agrupadoresParticulas->agregarElemento(grupoParticulas);
@@ -3777,7 +3734,7 @@ void NBGestorEscena::quitarAgrupadorParticulas(SI32 iEscena, AUEscenaGrupoPartic
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::quitarAgrupadorParticulas")
 	NBASSERT(iEscena >= 0 && iEscena < NBGESTORESCENA_MAX_ESCENAS);
 	STGestorEscenaEscena* scn = &_escenas[iEscena];
-	NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir]);
+	NBASSERT(!_bufferDatosBloqueado);
 	//NBASSERT(!scn->debugBloqueadoActualizandoModelos)
 	scn->agrupadoresParticulas->quitarElemento(grupoParticulas);
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
@@ -3787,7 +3744,7 @@ void NBGestorEscena::agregarEscuchadorCambioPuertoVision(SI32 iEscena, IEscuchad
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::agregarEscuchadorCambioPuertoVision")
 	NBASSERT(iEscena >= 0 && iEscena < NBGESTORESCENA_MAX_ESCENAS);
 	STGestorEscenaEscena* scn = &_escenas[iEscena];
-	NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir]);
+	NBASSERT(!_bufferDatosBloqueado);
 	//NBASSERT(!scn->debugBloqueadoActualizandoModelos)
 	NBASSERT(scn->escuchadoresCambioPuertoVision->indiceDe(escuchador) == -1) //Si falla, el escuchador ya esta en el arreglo
 	scn->escuchadoresCambioPuertoVision->agregarElemento(escuchador);
@@ -3798,7 +3755,7 @@ void NBGestorEscena::quitarEscuchadorCambioPuertoVision(SI32 iEscena, IEscuchado
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::quitarEscuchadorCambioPuertoVision")
 	NBASSERT(iEscena >= 0 && iEscena < NBGESTORESCENA_MAX_ESCENAS);
 	STGestorEscenaEscena* scn = &_escenas[iEscena];
-	NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir]);
+	NBASSERT(!_bufferDatosBloqueado);
 	//NBASSERT(!scn->debugBloqueadoActualizandoModelos)
 	scn->escuchadoresCambioPuertoVision->quitarElemento(escuchador);
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
@@ -3816,7 +3773,7 @@ void NBGestorEscena::establecerCapaDebugHabilitada(SI32 iEscena, bool habilitada
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::establecerCapaDebugHabilitada")
 	NBASSERT(iEscena >= 0 && iEscena < NBGESTORESCENA_MAX_ESCENAS);
 	STGestorEscenaEscena* scn = &_escenas[iEscena];
-	//NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir]); //Ya no necesario validar. Se crea una copia de este dato para el hilo renderizador.
+	//NBASSERT(!_bufferDatosBloqueado); //Ya no necesario validar. Se crea una copia de este dato para el hilo renderizador.
 	if(scn->capaDebugHabilitada != habilitada){
 		scn->capaDebugHabilitada = habilitada;
 		scn->sceneMask |= AUOBJETOESCENA_BIT_MODEL_LOCAL_CHANGED;
@@ -3886,8 +3843,8 @@ void NBGestorEscena::privDebugMarcarBloqueoModelosEscena(const SI32 iEscena, con
 void NBGestorEscena::actualizarMatricesYModelos(STNBSceneModelsResult* dst){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::actualizarMatricesYModelos")
 	NBASSERT(_gestorInicializado);
-	NBASSERT(_bufferDatosEstado[_indiceBufferDatosEscribir] == ENGestorEscenaBufferEstado_Vacio); //No debe estar lleno
-	NBASSERT(_bufferDatosBloqueado[_indiceBufferDatosEscribir]);	//Debe estar bloqueado
+	NBASSERT(_bufferDatosEstado == ENGestorEscenaBufferEstado_Vacio); //No debe estar lleno
+	NBASSERT(_bufferDatosBloqueado);	//Debe estar bloqueado
 	_secuencialActualizacionesModelos++;
 	//
 	{
@@ -3920,8 +3877,8 @@ void NBGestorEscena::privActualizarMatricesYModelosDeEscena(const SI32 iEscena, 
 	NBASSERT(iEscena >= 0 && iEscena < NBGESTORESCENA_MAX_ESCENAS);
 	STGestorEscenaEscena* scn = &_escenas[iEscena];
 	NBASSERT(scn->registroOcupado);
-	NBASSERT(_bufferDatosEstado[_indiceBufferDatosEscribir] == ENGestorEscenaBufferEstado_Vacio);		//No debe estar lleno
-	NBASSERT(_bufferDatosBloqueado[_indiceBufferDatosEscribir]);	//Debe estar bloqueado
+	NBASSERT(_bufferDatosEstado == ENGestorEscenaBufferEstado_Vacio);		//No debe estar lleno
+	NBASSERT(_bufferDatosBloqueado);	//Debe estar bloqueado
 	//
 	//PRINTF_INFO("ACTUALIZANDO MODELOS escena(%d) idFBO(%d) idTextureGl(%d)\n", iEscena, scn->idGlFrameBuffer, scn->idGlTextura);
 	NBPropRenderizado propsRenderizado;
@@ -3951,8 +3908,8 @@ void NBGestorEscena::privActualizarMatricesYModelosDeEscena(const SI32 iEscena, 
 	propsParaHijos.matrizModificadaPadre				= false;
 	NBMATRIZ_ESTABLECER_IDENTIDAD(propsParaHijos.matrizPadre);
 	//
-	NBASSERT(scn->renderCapasConsumir[_indiceBufferDatosEscribir]->conteo == 0)
-	NBASSERT(scn->renderCapasProducir[_indiceBufferDatosEscribir]->conteo == 0)
+	NBASSERT(scn->renderCapasConsumir->conteo == 0)
+	NBASSERT(scn->renderCapasProducir->conteo == 0)
 	//
 	UI16 renderRegistrosCapasUsados						= 0;
 	UI16 iGrp; for(iGrp = 0; iGrp < ENGestorEscenaGrupo_Conteo; iGrp++){
@@ -3976,10 +3933,10 @@ void NBGestorEscena::privActualizarMatricesYModelosDeEscena(const SI32 iEscena, 
 				//--------------------------
 				//-- Preparar cacheRender de la capa
 				//--------------------------
-				NBGestorEscena::privInicializarCacheRender(scn->renderCapas[_indiceBufferDatosEscribir], propiedadesDeCapa, grupoCapas->cajaProyeccion, renderRegistrosCapasUsados);
-				STGestorEscenaCapaRender* capaRenderProducir = &(scn->renderCapas[_indiceBufferDatosEscribir]->elemento[renderRegistrosCapasUsados]);
-				scn->renderCapasConsumir[_indiceBufferDatosEscribir]->agregarElemento(capaRenderProducir);
-				scn->renderCapasProducir[_indiceBufferDatosEscribir]->agregarElemento(capaRenderProducir);
+				NBGestorEscena::privInicializarCacheRender(scn->renderCapas, propiedadesDeCapa, grupoCapas->cajaProyeccion, renderRegistrosCapasUsados);
+				STGestorEscenaCapaRender* capaRenderProducir = &(scn->renderCapas->elemento[renderRegistrosCapasUsados]);
+				scn->renderCapasConsumir->agregarElemento(capaRenderProducir);
+				scn->renderCapasProducir->agregarElemento(capaRenderProducir);
 				renderRegistrosCapasUsados++;
 				//--------------------------
 				//-- Consumir los espejos
@@ -4003,8 +3960,8 @@ void NBGestorEscena::privActualizarMatricesYModelosDeEscena(const SI32 iEscena, 
 						for(i=0; i<uso; i++){
 							if(arrEnlaces[i].iEscena == iEscena && arrEnlaces[i].idCapa == propiedadesDeCapa->idCapa){
 								NBASSERT(iOtraEscena != iEscena) //No tendria sentido, se pintaria dos veces consecutivas la misma capa
-								NBASSERT(_escenas[iOtraEscena].renderCapasConsumir[_indiceBufferDatosEscribir] != NULL)
-								_escenas[iOtraEscena].renderCapasConsumir[_indiceBufferDatosEscribir]->agregarElemento(capaRenderProducir);
+								NBASSERT(_escenas[iOtraEscena].renderCapasConsumir != NULL)
+								_escenas[iOtraEscena].renderCapasConsumir->agregarElemento(capaRenderProducir);
 							}
 						}
 					}
@@ -4261,8 +4218,8 @@ void NBGestorEscena::consumirModelosYProducirBufferRender(){
 	NBGestorEscena::privProducirSombrasYLucesReflejadas();
 	//
 	NBASSERT(_gestorInicializado);
-	NBASSERT(_bufferDatosBloqueado[_indiceBufferDatosEscribir]);	//Debe estar bloqueado
-	NBASSERT(_bufferDatosEstado[_indiceBufferDatosEscribir] == ENGestorEscenaBufferEstado_Vacio);		//No debe estar lleno
+	NBASSERT(_bufferDatosBloqueado);	//Debe estar bloqueado
+	NBASSERT(_bufferDatosEstado == ENGestorEscenaBufferEstado_Vacio);		//No debe estar lleno
 	_secuencialActualizacionesModelosGL++;
 	NBGestorEscena::resetearVerticesGL();
 	//Producir logica de mascaras de iluminacion que seran renderizadas-hacia-texturas
@@ -4285,8 +4242,8 @@ void NBGestorEscena::privConsumirModelosYProducirBufferRenderDeEscena(const SI32
 	NBASSERT(iEscena >= 0 && iEscena < NBGESTORESCENA_MAX_ESCENAS)
 	STGestorEscenaEscena* scn = &_escenas[iEscena];
 	NBASSERT(scn->registroOcupado)
-	NBASSERT(_bufferDatosEstado[_indiceBufferDatosEscribir] == ENGestorEscenaBufferEstado_Vacio)		//No debe estar lleno
-	NBASSERT(_bufferDatosBloqueado[_indiceBufferDatosEscribir])	//Debe estar bloqueado
+	NBASSERT(_bufferDatosEstado == ENGestorEscenaBufferEstado_Vacio)		//No debe estar lleno
+	NBASSERT(_bufferDatosBloqueado)	//Debe estar bloqueado
 	//
 	//STGestorEscenaFrameBuffer* datosFB	= &_frameBuffersGL[scn->iFramebufferEscena];
 	scn->renderAreaOcupadaDestino	= scn->areaOcupadaDestino;
@@ -4317,11 +4274,11 @@ void NBGestorEscena::privConsumirModelosYProducirBufferRenderDeEscena(const SI32
 	propsRenderizado.indicesGL3							= &NBGestorEscena::indicesGL3;
 #	endif
 	//
-	NBASSERT(scn->renderCapasConsumir[_indiceBufferDatosEscribir] != NULL)
-	NBASSERT(scn->renderCapasProducir[_indiceBufferDatosEscribir] != NULL)
-	NBASSERT(scn->renderCapas[_indiceBufferDatosEscribir] != NULL)
-	STGestorEscenaCapaRender** arrRenderCapa			= scn->renderCapasProducir[_indiceBufferDatosEscribir]->elemento;
-	UI16 iRenderCapa/*, iRenderCapa2*/, conteoRenderCapas	= scn->renderCapasProducir[_indiceBufferDatosEscribir]->conteo;
+	NBASSERT(scn->renderCapasConsumir != NULL)
+	NBASSERT(scn->renderCapasProducir != NULL)
+	NBASSERT(scn->renderCapas != NULL)
+	STGestorEscenaCapaRender** arrRenderCapa			= scn->renderCapasProducir->elemento;
+	UI16 iRenderCapa/*, iRenderCapa2*/, conteoRenderCapas	= scn->renderCapasProducir->conteo;
 	for(iRenderCapa=0; iRenderCapa<conteoRenderCapas; iRenderCapa++){
 		STGestorEscenaCapaRender* renderCapa			= arrRenderCapa[iRenderCapa];
 		propsRenderizado.puertoDeVision					= scn->puertoDeVision;
@@ -4347,18 +4304,18 @@ void NBGestorEscena::privConsumirModelosYProducirBufferRenderDeEscena(const SI32
 void NBGestorEscena::privProducirSombrasYLucesReflejadas(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::privProducirSombrasYLucesReflejadas")
 	NBASSERT(_gestorInicializado);
-	NBASSERT(_bufferDatosBloqueado[_indiceBufferDatosEscribir]);	//Debe estar bloqueado
-	NBASSERT(_bufferDatosEstado[_indiceBufferDatosEscribir] == ENGestorEscenaBufferEstado_Vacio);		//No debe estar lleno
+	NBASSERT(_bufferDatosBloqueado);	//Debe estar bloqueado
+	NBASSERT(_bufferDatosEstado == ENGestorEscenaBufferEstado_Vacio);		//No debe estar lleno
 	if(_lucesSombrasActivos){
 		SI32 iEscena;
 		for(iEscena = (NBGESTORESCENA_MAX_ESCENAS - 1); iEscena >= 0; iEscena--){
 			STGestorEscenaEscena* scn = &(_escenas[iEscena]);
 			if(scn->registroOcupado && scn->escenaHabilitada){
-				NBASSERT(scn->renderCapasConsumir[_indiceBufferDatosEscribir] != NULL)
-				NBASSERT(scn->renderCapasProducir[_indiceBufferDatosEscribir] != NULL)
-				NBASSERT(scn->renderCapas[_indiceBufferDatosEscribir] != NULL)
-				STGestorEscenaCapaRender** arrRenderCapa	= scn->renderCapasProducir[_indiceBufferDatosEscribir]->elemento;
-				UI16 iRenderCapa, conteoRenderCapas			= scn->renderCapasProducir[_indiceBufferDatosEscribir]->conteo;
+				NBASSERT(scn->renderCapasConsumir != NULL)
+				NBASSERT(scn->renderCapasProducir != NULL)
+				NBASSERT(scn->renderCapas != NULL)
+				STGestorEscenaCapaRender** arrRenderCapa	= scn->renderCapasProducir->elemento;
+				UI16 iRenderCapa, conteoRenderCapas			= scn->renderCapasProducir->conteo;
 				for(iRenderCapa=0; iRenderCapa<conteoRenderCapas; iRenderCapa++){
 					STGestorEscenaCapaRender* renderCapa	= arrRenderCapa[iRenderCapa];
 					//Generar sombras y luces reflejadas
@@ -4435,8 +4392,8 @@ bool NBGestorEscena::privDebugFiguraEsConvexaContrareloj(const NBPunto* vertices
 void NBGestorEscena::privProducirMascarasIluminacion(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::privProducirMascarasIluminacion")
 	NBASSERT(_gestorInicializado);
-	NBASSERT(_bufferDatosBloqueado[_indiceBufferDatosEscribir]);	//Debe estar bloqueado
-	NBASSERT(_bufferDatosEstado[_indiceBufferDatosEscribir] == ENGestorEscenaBufferEstado_Vacio);		//Debe estar no-lleno
+	NBASSERT(_bufferDatosBloqueado);	//Debe estar bloqueado
+	NBASSERT(_bufferDatosEstado == ENGestorEscenaBufferEstado_Vacio);		//Debe estar no-lleno
 	// -----------------------------------------
 	// Generar las mascaras de luces individuales
 	// -----------------------------------------
@@ -4444,11 +4401,11 @@ void NBGestorEscena::privProducirMascarasIluminacion(){
 	for(iEscena = (NBGESTORESCENA_MAX_ESCENAS - 1); iEscena >= 0; iEscena--){
 		STGestorEscenaEscena* scn = &(_escenas[iEscena]);
 		if(scn->registroOcupado && scn->escenaHabilitada){
-			NBASSERT(scn->renderCapas[_indiceBufferDatosEscribir] != NULL)
-			NBASSERT(scn->renderCapasConsumir[_indiceBufferDatosEscribir] != NULL)
-			NBASSERT(scn->renderCapasProducir[_indiceBufferDatosEscribir] != NULL)
-			STGestorEscenaCapaRender** arrRenderCapa	= scn->renderCapasProducir[_indiceBufferDatosEscribir]->elemento;
-			UI16 iRenderCapa, conteoRenderCapas			= scn->renderCapasProducir[_indiceBufferDatosEscribir]->conteo;
+			NBASSERT(scn->renderCapas != NULL)
+			NBASSERT(scn->renderCapasConsumir != NULL)
+			NBASSERT(scn->renderCapasProducir != NULL)
+			STGestorEscenaCapaRender** arrRenderCapa	= scn->renderCapasProducir->elemento;
+			UI16 iRenderCapa, conteoRenderCapas			= scn->renderCapasProducir->conteo;
 			for(iRenderCapa=0; iRenderCapa<conteoRenderCapas; iRenderCapa++){
 				STGestorEscenaCapaRender* renderCapa	= arrRenderCapa[iRenderCapa];
 				NBASSERT(renderCapa->renderConteoLucesAfectanMascara == 0)
@@ -4470,11 +4427,11 @@ void NBGestorEscena::privProducirMascarasIluminacion(){
 	for(iEscena = (NBGESTORESCENA_MAX_ESCENAS - 1); iEscena >= 0; iEscena--){
 		STGestorEscenaEscena* scn = &(_escenas[iEscena]);
 		if(scn->registroOcupado && scn->escenaHabilitada){
-			NBASSERT(scn->renderCapasConsumir[_indiceBufferDatosEscribir] != NULL)
-			NBASSERT(scn->renderCapasProducir[_indiceBufferDatosEscribir] != NULL)
-			NBASSERT(scn->renderCapas[_indiceBufferDatosEscribir] != NULL)
-			STGestorEscenaCapaRender** arrRenderCapa		= scn->renderCapasProducir[_indiceBufferDatosEscribir]->elemento;
-			UI16 iRenderCapa, conteoRenderCapas				= scn->renderCapasProducir[_indiceBufferDatosEscribir]->conteo;
+			NBASSERT(scn->renderCapasConsumir != NULL)
+			NBASSERT(scn->renderCapasProducir != NULL)
+			NBASSERT(scn->renderCapas != NULL)
+			STGestorEscenaCapaRender** arrRenderCapa		= scn->renderCapasProducir->elemento;
+			UI16 iRenderCapa, conteoRenderCapas				= scn->renderCapasProducir->conteo;
 			for(iRenderCapa=0; iRenderCapa<conteoRenderCapas; iRenderCapa++){
 				STGestorEscenaCapaRender* renderCapa		= arrRenderCapa[iRenderCapa];
 				NBASSERT(renderCapa->renderMascLucesCombinadas.indicesRenderMascLuz.primerElemento == 0 && renderCapa->renderMascLucesCombinadas.indicesRenderMascLuz.cantidadElementos == 0)
@@ -4484,7 +4441,7 @@ void NBGestorEscena::privProducirMascarasIluminacion(){
 					//NBColor colorAmbienteCapa;			NBCOLOR_ESTABLECER(colorAmbienteCapa, (float)colorAmbienteCapa8.r/255.0f, (float)colorAmbienteCapa8.g/255.0f, (float)colorAmbienteCapa8.b/255.0f, (float)colorAmbienteCapa8.a/255.0f)
 					NBTamanoI tamMascara; NBTAMANO_ESTABLECER(tamMascara, scn->areaOcupadaDestino.ancho * scn->escalaParaMascarasIlum, scn->areaOcupadaDestino.alto * scn->escalaParaMascarasIlum);
 					NBRectanguloI areaReservadaLuces;
-					const SI32 iTexturaLuces				= NBGestorEscena::privTexturaRenderReservarEspacioSinCrearDestino(iEscena, _indiceBufferDatosEscribir, COLOR_RGBA8, ENTexturaModoPintado_Patron_Suavizado, tamMascara.ancho, tamMascara.alto, &areaReservadaLuces); NBASSERT(iTexturaLuces != -1)
+					const SI32 iTexturaLuces				= NBGestorEscena::privTexturaRenderReservarEspacioSinCrearDestino(iEscena, COLOR_RGBA8, ENTexturaModoPintado_Patron_Suavizado, tamMascara.ancho, tamMascara.alto, &areaReservadaLuces); NBASSERT(iTexturaLuces != -1)
 					if(iTexturaLuces != -1){
 						NBASSERT(areaReservadaLuces.ancho>0 && areaReservadaLuces.alto>0)
 						renderCapa->renderMascLucesCombinadas.iTexRender	= iTexturaLuces;
@@ -4525,11 +4482,11 @@ void NBGestorEscena::privProducirMascaraIluminacionDeCapa(SI32 iEscena, STGestor
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::privProducirMascaraIluminacionDeCapa")
 	NBASSERT(_gestorInicializado);
 	bool soloProducirLucesConBrillo	= (renderCapa->renderColorLuzAmbiente.r == 1.0f && renderCapa->renderColorLuzAmbiente.g == 1.0f && renderCapa->renderColorLuzAmbiente.b == 1.0f);
-	NBASSERT(_bufferDatosBloqueado[_indiceBufferDatosEscribir]);	//Debe estar bloqueado
-	NBASSERT(_bufferDatosEstado[_indiceBufferDatosEscribir] == ENGestorEscenaBufferEstado_Vacio);		//Debe estar no-lleno
+	NBASSERT(_bufferDatosBloqueado);	//Debe estar bloqueado
+	NBASSERT(_bufferDatosEstado == ENGestorEscenaBufferEstado_Vacio);		//Debe estar no-lleno
 	//
 	NBASSERT(iEscena >= 0 && iEscena < NBGESTORESCENA_MAX_ESCENAS)
-	STGestorEscenaEscena* scn = &_escenas[iEscena];
+	//STGestorEscenaEscena* scn = &_escenas[iEscena];
 	NBASSERT(renderCapa != NULL)
 	NBASSERT(renderCapa->renderMascLuz->conteo == 0)
 	NBASSERT(renderCapa->renderMascLuzBloquesGL->conteo == 0)
@@ -5140,8 +5097,8 @@ void NBGestorEscena::privIlumAgregarFiguraLuzDecaeNormalizadaLimitada(STGestorEs
 void NBGestorEscena::privEnviarComandosDibujarMascarasIluminacion(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::privEnviarComandosDibujarMascarasIluminacion")
 	NBASSERT(_gestorInicializado);
-	NBASSERT(_bufferDatosBloqueado[_indiceBufferDatosLeer]);	//Debe estar bloqueado
-	NBASSERT(_bufferDatosEstado[_indiceBufferDatosLeer] != ENGestorEscenaBufferEstado_Vacio);		//Debe estar lleno
+	NBASSERT(_bufferDatosBloqueado);	//Debe estar bloqueado
+	NBASSERT(_bufferDatosEstado != ENGestorEscenaBufferEstado_Vacio);		//Debe estar lleno
 	// -----------------------------------------
 	// Generar las mascaras de luces combinadas
 	// y escena-en-textura
@@ -5151,11 +5108,11 @@ void NBGestorEscena::privEnviarComandosDibujarMascarasIluminacion(){
 		STGestorEscenaEscena* scn = &(_escenas[iEscena]);
 		if(scn->registroOcupado && scn->escenaHabilitada){
 			NBGestorEscena::privTexturaRenderAsegurarDestinosCreados(iEscena);
-			NBASSERT(scn->renderCapasConsumir[_indiceBufferDatosLeer] != NULL)
-			NBASSERT(scn->renderCapasProducir[_indiceBufferDatosLeer] != NULL)
-			NBASSERT(scn->renderCapas[_indiceBufferDatosLeer] != NULL)
-			STGestorEscenaCapaRender** arrRenderCapa	= scn->renderCapasConsumir[_indiceBufferDatosLeer]->elemento;
-			UI16 iRenderCapa, conteoRenderCapas			= scn->renderCapasConsumir[_indiceBufferDatosLeer]->conteo;
+			NBASSERT(scn->renderCapasConsumir != NULL)
+			NBASSERT(scn->renderCapasProducir != NULL)
+			NBASSERT(scn->renderCapas != NULL)
+			STGestorEscenaCapaRender** arrRenderCapa	= scn->renderCapasConsumir->elemento;
+			UI16 iRenderCapa, conteoRenderCapas			= scn->renderCapasConsumir->conteo;
 			for(iRenderCapa=0; iRenderCapa<conteoRenderCapas; iRenderCapa++){
 				STGestorEscenaCapaRender* renderCapa	= arrRenderCapa[iRenderCapa];
 				if(renderCapa->renderMascLuz->conteo != 0 && renderCapa->renderConteoLucesAfectanMascara != 0 && renderCapa->renderMascLuzSumaFigurasTotal != 0){
@@ -5676,8 +5633,8 @@ void NBGestorEscena::privConsumirLucesEnCapa(STGestorEscenaCapaRender* renderCap
 void NBGestorEscena::consumirBufferRenderYEnviarComandosDibujo(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::consumirBufferRenderYEnviarComandosDibujo")
 	NBASSERT(_gestorInicializado);
-	NBASSERT(_bufferDatosBloqueado[_indiceBufferDatosLeer]);	//Debe estar bloqueado
-	NBASSERT(_bufferDatosEstado[_indiceBufferDatosLeer] != ENGestorEscenaBufferEstado_Vacio);		//Debe estar lleno
+	NBASSERT(_bufferDatosBloqueado);	//Debe estar bloqueado
+	NBASSERT(_bufferDatosEstado != ENGestorEscenaBufferEstado_Vacio);		//Debe estar lleno
 	//NBGestorTexturas::bloquear();
 	//PRINTF_INFO("Inicio de ciclo de dibujar modelos\n");
 	_ticksAcumulados++;
@@ -5715,7 +5672,6 @@ void NBGestorEscena::consumirBufferRenderYEnviarComandosDibujo(){
 			// -- Renderizar esta escena
 			// ------------------
 			NBGestorEscena::privConsumirBufferRenderYEnviarComandosDibujoDeEscenaEnOrdenDirecto(iEscena, frameBufferLimpiado, colorFondoLimpiado);
-			//NBGestorEscena::privConsumirBufferRenderYEnviarComandosDibujoDeEscenaPriorizandoUnaCapaConLuz(_indiceBufferDatosLeer, iEscena, frameBufferLimpiado, colorFondoLimpiado);
 			datEscena->pendienteRenderizar	= false;
 			// ------------------
 			// -- Si la escena no renderizo nada.
@@ -5856,19 +5812,19 @@ void NBGestorEscena::privConsumirBufferRenderYEnviarComandosDibujoDeCapa(const S
 void NBGestorEscena::privConsumirBufferRenderYEnviarComandosDibujoDeEscenaEnOrdenDirecto(const SI32 iEscena, bool &frameBufferLimpiado, NBColor &colorFondoLimpiado){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::privConsumirBufferRenderYEnviarComandosDibujoDeEscenaEnOrdenDirecto")
 	NBASSERT(_gestorInicializado)
-	NBASSERT(_bufferDatosBloqueado[_indiceBufferDatosLeer])
+	NBASSERT(_bufferDatosBloqueado)
 	STGestorEscenaEscena* scn = &_escenas[iEscena];
 	NBASSERT(scn->registroOcupado)
 	NBASSERT(scn->escenaHabilitada)
 	NBASSERT(scn->pendienteRenderizar)
 	STGestorEscenaFrameBuffer* datosFB	= &_frameBuffersGL[scn->iFramebufferEscena];
 	bool escenaInicializada				= false;
-	NBASSERT(scn->renderCapasConsumir[_indiceBufferDatosLeer] != NULL)
-	NBASSERT(scn->renderCapasProducir[_indiceBufferDatosLeer] != NULL)
-	NBASSERT(scn->renderCapas[_indiceBufferDatosLeer] != NULL)
-	STGestorEscenaCapaRender** arrRenderCapa	= scn->renderCapasConsumir[_indiceBufferDatosLeer]->elemento;
+	NBASSERT(scn->renderCapasConsumir != NULL)
+	NBASSERT(scn->renderCapasProducir != NULL)
+	NBASSERT(scn->renderCapas != NULL)
+	STGestorEscenaCapaRender** arrRenderCapa	= scn->renderCapasConsumir->elemento;
 	NBColor colorAmbiente;
-	SI16 iRenderCapa, iRenderCapa2, conteoRenderCapas			= scn->renderCapasConsumir[_indiceBufferDatosLeer]->conteo;
+	SI16 iRenderCapa, iRenderCapa2, conteoRenderCapas			= scn->renderCapasConsumir->conteo;
 	for(iRenderCapa=0; iRenderCapa<conteoRenderCapas; iRenderCapa++){
 		STGestorEscenaCapaRender* renderCapa	= arrRenderCapa[iRenderCapa];
 		if(renderCapa->renderMascLucesCombinadas.areaReservada.ancho <= 0 || renderCapa->renderMascLucesCombinadas.areaReservada.alto <= 0){
@@ -5976,7 +5932,7 @@ void NBGestorEscena::privConsumirBufferRenderYEnviarComandosDibujoDeEscenaEnOrde
 void NBGestorEscena::privConsumirBufferRenderYEnviarComandosDibujoDeEscenaPriorizandoUnaCapaConLuz(const SI32 iEscena, bool &frameBufferLimpiado, NBColor &colorFondoLimpiado){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::privConsumirBufferRenderYEnviarComandosDibujoDeEscenaPriorizandoUnaCapaConLuz")
 	NBASSERT(_gestorInicializado)
-	NBASSERT(_bufferDatosBloqueado[_indiceBufferDatosLeer])
+	NBASSERT(_bufferDatosBloqueado)
 	NBASSERT(iEscena >= 0 && iEscena < NBGESTORESCENA_MAX_ESCENAS);
 	STGestorEscenaEscena* scn = &_escenas[iEscena];
 	NBASSERT(scn->registroOcupado)
@@ -5984,11 +5940,11 @@ void NBGestorEscena::privConsumirBufferRenderYEnviarComandosDibujoDeEscenaPriori
 	NBASSERT(scn->pendienteRenderizar)
 	STGestorEscenaFrameBuffer* datosFB	= &_frameBuffersGL[scn->iFramebufferEscena];
 	bool escenaInicializada				= false;
-	NBASSERT(scn->renderCapasConsumir[_indiceBufferDatosLeer] != NULL)
-	NBASSERT(scn->renderCapasProducir[_indiceBufferDatosLeer] != NULL)
-	NBASSERT(scn->renderCapas[_indiceBufferDatosLeer] != NULL)
-	STGestorEscenaCapaRender** arrRenderCapa	= scn->renderCapasConsumir[_indiceBufferDatosLeer]->elemento;
-	SI16 iRenderCapa, conteoRenderCapas			= scn->renderCapasConsumir[_indiceBufferDatosLeer]->conteo;
+	NBASSERT(scn->renderCapasConsumir != NULL)
+	NBASSERT(scn->renderCapasProducir != NULL)
+	NBASSERT(scn->renderCapas != NULL)
+	STGestorEscenaCapaRender** arrRenderCapa	= scn->renderCapasConsumir->elemento;
+	SI16 iRenderCapa, conteoRenderCapas			= scn->renderCapasConsumir->conteo;
 	//Identificar una/la capa con mascara-de-iluminacion
 	SI16 iCapaConIluminacion =  -1;
 	for(iRenderCapa=0; iRenderCapa<conteoRenderCapas; iRenderCapa++){
@@ -6090,7 +6046,7 @@ void NBGestorEscena::privConsumirBufferRenderYEnviarComandosDibujoDeEscenaPriori
 //------------------------------------------
 void NBGestorEscena::touchesProcesar(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::touchesProcesar")
-	//NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir]);
+	//NBASSERT(!_bufferDatosBloqueado);
 	NBASSERT(_gestorInicializado);
 	NBGestorTouches::mutexActivar();
 	//
@@ -6349,7 +6305,7 @@ AUEscenaObjeto* NBGestorEscena::touchObjetoQueConsume(const SI32 posXPuerto, con
 AUEscenaObjeto* NBGestorEscena::touchObjetoQueConsumeSegunArreglo(const SI32 posXPuerto, const SI32 posYPuerto, const UI8 touchFilterMask, const AUArreglo* arregloFiltroObjetosEscena){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::touchObjetoQueConsumeSegunArreglo")
 	NBASSERT(_gestorInicializado);
-	NBASSERT(!_bufferDatosBloqueado[_indiceBufferDatosEscribir]);
+	NBASSERT(!_bufferDatosBloqueado);
 	AUEscenaObjeto* r = NULL;
 	SI32 iEscena;
 	for(iEscena = (NBGESTORESCENA_MAX_ESCENAS - 1); iEscena >= 0 && r == NULL; iEscena--){

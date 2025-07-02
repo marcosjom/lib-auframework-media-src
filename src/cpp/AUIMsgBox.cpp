@@ -655,10 +655,6 @@ void AUIMsgBox::setContentAlignment(const ENNBTextLineAlignH align){
 	_contentAlignH = align;
 }
 
-void AUIMsgBox::setTitleColor(const NBColor8 color){
-	this->setTitleColor(color.r, color.g, color.b, color.a);
-}
-
 void AUIMsgBox::setTitleColor(const STNBColor8 color){
 	this->setTitleColor(color.r, color.g, color.b, color.a);
 }

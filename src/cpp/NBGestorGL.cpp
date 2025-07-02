@@ -1858,7 +1858,6 @@ void NBGestorGL::activarVerticesGL(const SI32 iVao){
 	NBASSERT(_gestorInicializado);
 	NBASSERT(iVao >= 0 && iVao < _vertsGlArrsTam);
 	NBASSERT(_vertsGlArrs[iVao].registroOcupado)
-	//NBASSERT(_vertsGlArrs[iVao].datosGL[_indiceBufferDatosLeer].usoArregloVertices > 0); //Si falla, se pretende activar un buffer vacio (el primer elemento es reservado)
 	//------------------
 	//VALIDACION-NOP (aunque el VAO sea el mismo, se debe validar que el comando "activarVerticesGL" anterior realizo acciones)
 	//------------------
@@ -1962,88 +1961,7 @@ void NBGestorGL::drawTex(GLfloat x, GLfloat y, GLfloat z, GLfloat w, GLfloat h){
 #		ifdef GL_TEXTURE_CROP_RECT_OES
 		glDrawTexfOES(x, y, z, w, h); GL_CMD_EJECUTADO("drawTex-x(%f)-y(%f)-z(%f)-w(%f)-h(%f)", x, y, z, w, h)
 #		endif
-		//
-#		ifdef CONFIG_NB_GESTOR_GL_IMPRIMIR_COMANDOS_GL
-		/*{
-		 GLint i;
-		 switch (_cacheGL.vaoTipoLigado) {
-		 case ENVerticeGlTipo_SinTextura:
-		 NBASSERT(false);
-		 break;
-		 case ENVerticeGlTipo_MonoTextura:
-		 {
-		 const NBVerticeGL* verticeAnt2 = NULL;
-		 const NBVerticeGL* verticeAnt = NULL;
-		 const NBVerticeGL* vertice = (NBVerticeGL*)&(_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloVertices[first * _vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].bytesPorRegistro]);
-		 for(i=0; i < count; i++){
-		 if(verticeAnt2 != NULL && verticeAnt != NULL){
-		 NBPunto vPosBase; NBPUNTO_ESTABLECER(vPosBase, verticeAnt->x - verticeAnt2->x, verticeAnt->y - verticeAnt2->y);
-		 NBPunto vPosNevo; NBPUNTO_ESTABLECER(vPosNevo, vertice->x - verticeAnt2->x, vertice->y - verticeAnt2->y);
-		 NBPunto vTexBase; NBPUNTO_ESTABLECER(vTexBase, verticeAnt->tex.x - verticeAnt2->tex.x, verticeAnt->tex.y - verticeAnt2->tex.y);
-		 NBPunto vTexNevo; NBPUNTO_ESTABLECER(vTexNevo, vertice->tex.x - verticeAnt2->tex.x, vertice->tex.y - verticeAnt2->tex.y);
-		 PRINTF_COMANDO_GL("   v%d pos(%f, %f)[%s] col(%d, %d, %d, %d) tex(%f, %f)[%s]", (i+1), (float)vertice->x, (float)vertice->y, NBPUNTO_ESTA_IZQUIERDA_VECTOR_V(vPosBase.x, vPosBase.y, vPosNevo.x, vPosNevo.y) ? "izq" : "der", (SI32)vertice->r, (SI32)vertice->g, (SI32)vertice->b, (SI32)vertice->a, (float)vertice->tex.x, (float)vertice->tex.y, NBPUNTO_ESTA_IZQUIERDA_VECTOR_V(vTexBase.x, vTexBase.y, vTexNevo.x, vTexNevo.y) ? "izq" : "der");
-		 } else {
-		 PRINTF_COMANDO_GL("   v%d pos(%f, %f) col(%d, %d, %d, %d) tex(%f, %f)", (i+1), (float)vertice->x, (float)vertice->y, (SI32)vertice->r, (SI32)vertice->g, (SI32)vertice->b, (SI32)vertice->a, (float)vertice->tex.x, (float)vertice->tex.y);
-		 }
-		 verticeAnt2 = verticeAnt; verticeAnt = vertice; vertice++;
-		 }
-		 }
-		 break;
-		 case ENVerticeGlTipo_BiTextura:
-		 {
-		 const NBVerticeGL2* verticeAnt2 = NULL;
-		 const NBVerticeGL2* verticeAnt = NULL;
-		 const NBVerticeGL2* vertice = (NBVerticeGL2*)&(_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloVertices[first * _vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].bytesPorRegistro]);
-		 for(i=0; i < count; i++){
-		 PRINTF_COMANDO_GL("   v%d pos(%f, %f) col(%d, %d, %d, %d) tex1(%f, %f) tex2(%f, %f)", (i+1), (float)vertice->x, (float)vertice->y, (SI32)vertice->r, (SI32)vertice->g, (SI32)vertice->b, (SI32)vertice->a, (float)vertice->tex.x, (float)vertice->tex.y, (float)vertice->tex2.x, (float)vertice->tex2.y);
-		 verticeAnt2 = verticeAnt;  verticeAnt = vertice; vertice++;
-		 }
-		 }
-		 break;
-		 case ENVerticeGlTipo_TriTextura:
-		 {
-		 const NBVerticeGL3* verticeAnt2 = NULL;
-		 const NBVerticeGL3* verticeAnt = NULL;
-		 const NBVerticeGL3* vertice = (NBVerticeGL3*)&(_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloVertices[first * _vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].bytesPorRegistro]);
-		 for(i=0; i < count; i++){
-		 PRINTF_COMANDO_GL("   v%d pos(%f, %f) col(%d, %d, %d, %d) tex1(%f, %f) tex2(%f, %f) tex3(%f, %f)", (i+1), (float)vertice->x, (float)vertice->y, (SI32)vertice->r, (SI32)vertice->g, (SI32)vertice->b, (SI32)vertice->a, (float)vertice->tex.x, (float)vertice->tex.y, (float)vertice->tex2.x, (float)vertice->tex2.y, (float)vertice->tex3.x, (float)vertice->tex3.y);
-		 verticeAnt2 = verticeAnt;  verticeAnt = vertice; vertice++;
-		 }
-		 }
-		 break;
-		 default:
-		 NBASSERT(false)
-		 break;
-		 }
-		 }*/
-#		endif
-#		ifdef CONFIG_NB_INCLUIR_VALIDACIONES_ASSERT_GL_NOP
-		//NBGestorGL::privDbgAcumularOperacionRealizada();
-		//Analizar si puede optimizar el comando (uniendo con su anterior)
-		/*if(_cacheGL.iVaoLigado < _vertsGlArrsTam){
-		 SI32 iBufV					= _cacheGL.vaoTipoLigado;
-		 bool esFiguraIndependiente	= false; if(mode == GL_TRIANGLE_STRIP && count > 2) esFiguraIndependiente = (_vertsGlArrs[iBufV].datosGL[_indiceBufferDatosLeer].arregloVertices[first] == _vertsGlArrs[iBufV].datosGL[_indiceBufferDatosLeer].arregloVertices[first+1] && _vertsGlArrs[iBufV].datosGL[_indiceBufferDatosLeer].arregloVertices[first+count-2] == _vertsGlArrs[iBufV].datosGL[_indiceBufferDatosLeer].arregloVertices[first+count-1]);
-		 bool esFiguraIndependizable	= NBGestorGL::dbgModoFormaGLEsIndependizable(mode);
-		 if(mode == _cacheGL.dbgVerticesUltimoUsadoModo[iBufV]){
-		 if((esFiguraIndependiente || esFiguraIndependizable) && (_cacheGL.dbgVerticesUltimaFormaEsIndependiente[iBufV] || _cacheGL.dbgVerticesUltimaFormaEsIndependizable[iBufV])){
-		 if(_cacheGL.dbgVerticesUltimaFormaEnIndices[iBufV]){
-		 PRINTF_INFO("El comando drawArrays(%s, %d, %d) puede anexarse a su anterior (USAR_INDICES_EN_ACTUAL). ANT(%s) ACT(%s) ANT[%s]\n", NBGestorGL::dbgModoFormaGLNombre(mode), (SI32)first, (SI32)count, _cacheGL.dbgVerticesUltimaFormaEsIndependiente[iBufV]?"INDEPENDIENTE":"INDEPENDIZABLE" , esFiguraIndependiente?"INDEPENDIENTE":"INDEPENDIZABLE", _cacheGL.dbgDrawElementsConvocador->str());
-		 } else if(first == (_cacheGL.dbgVerticesUltimoUsadoIndice[iBufV]+1)){
-		 PRINTF_INFO("El comando drawArrays(%s, %d, %d) puede anexarse a su anterior (VERTICES_EN_SECUENCIA_CONTIGUA). ANT(%s) ACT(%s) ANT[%s]\n", NBGestorGL::dbgModoFormaGLNombre(mode), (SI32)first, (SI32)count, _cacheGL.dbgVerticesUltimaFormaEsIndependiente[iBufV]?"INDEPENDIENTE":"INDEPENDIZABLE" , esFiguraIndependiente?"INDEPENDIENTE":"INDEPENDIZABLE", _cacheGL.dbgDrawArrayConvocador->str());
-		 } else {
-		 PRINTF_INFO("El comando drawArrays(%s, %d, %d) puede anexarse a su anterior (USAR_INDICES_EN_ANTERIOR_Y_ACTUAL). ANT(%s) ACT(%s) ANT[%s]\n", NBGestorGL::dbgModoFormaGLNombre(mode), (SI32)first, (SI32)count, _cacheGL.dbgVerticesUltimaFormaEsIndependiente[iBufV]?"INDEPENDIENTE":"INDEPENDIZABLE" , esFiguraIndependiente?"INDEPENDIENTE":"INDEPENDIZABLE", _cacheGL.dbgDrawArrayConvocador->str());
-		 }
-		 //NBASSERT(false)
-		 }
-		 }
-		 _cacheGL.dbgVerticesUltimaFormaEnIndices[iBufV]			= false;
-		 //
-		 _cacheGL.dbgVerticesUltimaFormaEsIndependiente[iBufV]	= esFiguraIndependiente;
-		 _cacheGL.dbgVerticesUltimaFormaEsIndependizable[iBufV]	= esFiguraIndependizable;
-		 _cacheGL.dbgVerticesUltimoUsadoModo[iBufV]				= mode;
-		 _cacheGL.dbgVerticesUltimoUsadoIndice[iBufV]			= (first + count - 1);
-		 }*/
-#		endif
+        //
 		NBGESTORGL_DBG_NOMBRAR_CONVOCADOR_DRAW_ARRAY("[SIN_NOMBRE]")
 	}
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
@@ -2056,96 +1974,12 @@ void NBGestorGL::drawArrays(GLenum mode, GLint first, GLsizei count){
 	NBASSERT(count > 0) //No se aceptan comandos vacios, optimizar codigo
 #	ifdef CONFIG_NB_INCLUIR_VALIDACIONES_ASSERT
 	NBASSERT(_cacheGL.iVaoLigado >= 0 && _cacheGL.iVaoLigado < _vertsGlArrsTam)
-	//if(_cacheGL.iVaoLigado >= 0 && _cacheGL.iVaoLigado < _vertsGlArrsTam){
-		//const UI32 iSigUlt	= (first + count);
-		//const UI32 tamArr	= _vertsGlArrs[_cacheGL.iVaoLigado].datosGL[_indiceBufferDatosLeer].usoArregloVertices;
-		//NBASSERT(((first * _vertsGlArrs[_cacheGL.iVaoLigado].datosGL[_indiceBufferDatosLeer].bytesPorRegistro) % 4) == 0) //La direccion debe ser multiplo de 4 bytes (direcciones de 32 bits)
-		//NBASSERT(iSigUlt <= tamArr);
-	//}
 #	endif
 	//
 	NBGESTORGL_LOTES_TODOS_PURGAR("NBGestorGL::drawArrays");
 	glDrawArrays(mode, first, count); GL_CMD_EJECUTADO("glDrawArrays(%s, first(%d), count(%d))", STR_GL_DRAW_MODE(mode), (SI32)first, (SI32)count)
-#	ifdef CONFIG_NB_GESTOR_GL_IMPRIMIR_COMANDOS_GL
-		/*{
-			GLint i;
-			switch (_cacheGL.vaoTipoLigado) {
-				case ENVerticeGlTipo_SinTextura:
-					NBASSERT(false);
-					break;
-				case ENVerticeGlTipo_MonoTextura:
-					{
-						const NBVerticeGL* verticeAnt2 = NULL;
-						const NBVerticeGL* verticeAnt = NULL;
-						const NBVerticeGL* vertice = (NBVerticeGL*)&(_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloVertices[first * _vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].bytesPorRegistro]);
-						for(i=0; i < count; i++){
-							if(verticeAnt2 != NULL && verticeAnt != NULL){
-								NBPunto vPosBase; NBPUNTO_ESTABLECER(vPosBase, verticeAnt->x - verticeAnt2->x, verticeAnt->y - verticeAnt2->y);
-								NBPunto vPosNevo; NBPUNTO_ESTABLECER(vPosNevo, vertice->x - verticeAnt2->x, vertice->y - verticeAnt2->y);
-								NBPunto vTexBase; NBPUNTO_ESTABLECER(vTexBase, verticeAnt->tex.x - verticeAnt2->tex.x, verticeAnt->tex.y - verticeAnt2->tex.y);
-								NBPunto vTexNevo; NBPUNTO_ESTABLECER(vTexNevo, vertice->tex.x - verticeAnt2->tex.x, vertice->tex.y - verticeAnt2->tex.y);
-								PRINTF_COMANDO_GL("   v%d pos(%f, %f)[%s] col(%d, %d, %d, %d) tex(%f, %f)[%s]", (i+1), (float)vertice->x, (float)vertice->y, NBPUNTO_ESTA_IZQUIERDA_VECTOR_V(vPosBase.x, vPosBase.y, vPosNevo.x, vPosNevo.y) ? "izq" : "der", (SI32)vertice->r, (SI32)vertice->g, (SI32)vertice->b, (SI32)vertice->a, (float)vertice->tex.x, (float)vertice->tex.y, NBPUNTO_ESTA_IZQUIERDA_VECTOR_V(vTexBase.x, vTexBase.y, vTexNevo.x, vTexNevo.y) ? "izq" : "der");
-							} else {
-								PRINTF_COMANDO_GL("   v%d pos(%f, %f) col(%d, %d, %d, %d) tex(%f, %f)", (i+1), (float)vertice->x, (float)vertice->y, (SI32)vertice->r, (SI32)vertice->g, (SI32)vertice->b, (SI32)vertice->a, (float)vertice->tex.x, (float)vertice->tex.y);
-							}
-							verticeAnt2 = verticeAnt; verticeAnt = vertice; vertice++;
-						}
-					}
-					break;
-				case ENVerticeGlTipo_BiTextura:
-					{
-						const NBVerticeGL2* verticeAnt2 = NULL;
-						const NBVerticeGL2* verticeAnt = NULL;
-						const NBVerticeGL2* vertice = (NBVerticeGL2*)&(_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloVertices[first * _vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].bytesPorRegistro]);
-						for(i=0; i < count; i++){
-							PRINTF_COMANDO_GL("   v%d pos(%f, %f) col(%d, %d, %d, %d) tex1(%f, %f) tex2(%f, %f)", (i+1), (float)vertice->x, (float)vertice->y, (SI32)vertice->r, (SI32)vertice->g, (SI32)vertice->b, (SI32)vertice->a, (float)vertice->tex.x, (float)vertice->tex.y, (float)vertice->tex2.x, (float)vertice->tex2.y);
-							verticeAnt2 = verticeAnt;  verticeAnt = vertice; vertice++;
-						}
-					}
-					break;
-				case ENVerticeGlTipo_TriTextura:
-					{
-						const NBVerticeGL3* verticeAnt2 = NULL;
-						const NBVerticeGL3* verticeAnt = NULL;
-						const NBVerticeGL3* vertice = (NBVerticeGL3*)&(_vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].arregloVertices[first * _vertsGlArrs[_cacheGL.vaoTipoLigado].datosGL[_indiceBufferDatosLeer].bytesPorRegistro]);
-						for(i=0; i < count; i++){
-							PRINTF_COMANDO_GL("   v%d pos(%f, %f) col(%d, %d, %d, %d) tex1(%f, %f) tex2(%f, %f) tex3(%f, %f)", (i+1), (float)vertice->x, (float)vertice->y, (SI32)vertice->r, (SI32)vertice->g, (SI32)vertice->b, (SI32)vertice->a, (float)vertice->tex.x, (float)vertice->tex.y, (float)vertice->tex2.x, (float)vertice->tex2.y, (float)vertice->tex3.x, (float)vertice->tex3.y);
-							verticeAnt2 = verticeAnt;  verticeAnt = vertice; vertice++;
-						}
-					}
-					break;
-				default:
-					NBASSERT(false)
-					break;
-			}
-		}*/
-#	endif
 #	ifdef CONFIG_NB_INCLUIR_VALIDACIONES_ASSERT_GL_NOP
 	NBGestorGL::privDbgAcumularOperacionRealizada();
-	//Analizar si puede optimizar el comando (uniendo con su anterior)
-	/*if(_cacheGL.iVaoLigado < _vertsGlArrsTam){
-		SI32 iBufV					= _cacheGL.vaoTipoLigado;
-		bool esFiguraIndependiente	= false; if(mode == GL_TRIANGLE_STRIP && count > 2) esFiguraIndependiente = (_vertsGlArrs[iBufV].datosGL[_indiceBufferDatosLeer].arregloVertices[first] == _vertsGlArrs[iBufV].datosGL[_indiceBufferDatosLeer].arregloVertices[first+1] && _vertsGlArrs[iBufV].datosGL[_indiceBufferDatosLeer].arregloVertices[first+count-2] == _vertsGlArrs[iBufV].datosGL[_indiceBufferDatosLeer].arregloVertices[first+count-1]);
-		bool esFiguraIndependizable	= NBGestorGL::dbgModoFormaGLEsIndependizable(mode);
-		if(mode == _cacheGL.dbgVerticesUltimoUsadoModo[iBufV]){
-			if((esFiguraIndependiente || esFiguraIndependizable) && (_cacheGL.dbgVerticesUltimaFormaEsIndependiente[iBufV] || _cacheGL.dbgVerticesUltimaFormaEsIndependizable[iBufV])){
-				if(_cacheGL.dbgVerticesUltimaFormaEnIndices[iBufV]){
-					PRINTF_INFO("El comando drawArrays(%s, %d, %d) puede anexarse a su anterior (USAR_INDICES_EN_ACTUAL). ANT(%s) ACT(%s) ANT[%s]\n", NBGestorGL::dbgModoFormaGLNombre(mode), (SI32)first, (SI32)count, _cacheGL.dbgVerticesUltimaFormaEsIndependiente[iBufV]?"INDEPENDIENTE":"INDEPENDIZABLE" , esFiguraIndependiente?"INDEPENDIENTE":"INDEPENDIZABLE", _cacheGL.dbgDrawElementsConvocador->str());
-				} else if(first == (_cacheGL.dbgVerticesUltimoUsadoIndice[iBufV]+1)){
-					PRINTF_INFO("El comando drawArrays(%s, %d, %d) puede anexarse a su anterior (VERTICES_EN_SECUENCIA_CONTIGUA). ANT(%s) ACT(%s) ANT[%s]\n", NBGestorGL::dbgModoFormaGLNombre(mode), (SI32)first, (SI32)count, _cacheGL.dbgVerticesUltimaFormaEsIndependiente[iBufV]?"INDEPENDIENTE":"INDEPENDIZABLE" , esFiguraIndependiente?"INDEPENDIENTE":"INDEPENDIZABLE", _cacheGL.dbgDrawArrayConvocador->str());
-				} else {
-					PRINTF_INFO("El comando drawArrays(%s, %d, %d) puede anexarse a su anterior (USAR_INDICES_EN_ANTERIOR_Y_ACTUAL). ANT(%s) ACT(%s) ANT[%s]\n", NBGestorGL::dbgModoFormaGLNombre(mode), (SI32)first, (SI32)count, _cacheGL.dbgVerticesUltimaFormaEsIndependiente[iBufV]?"INDEPENDIENTE":"INDEPENDIZABLE" , esFiguraIndependiente?"INDEPENDIENTE":"INDEPENDIZABLE", _cacheGL.dbgDrawArrayConvocador->str());
-				}
-				//NBASSERT(false)
-			}
-		}
-		_cacheGL.dbgVerticesUltimaFormaEnIndices[iBufV]			= false;
-		//
-		_cacheGL.dbgVerticesUltimaFormaEsIndependiente[iBufV]	= esFiguraIndependiente;
-		_cacheGL.dbgVerticesUltimaFormaEsIndependizable[iBufV]	= esFiguraIndependizable;
-		_cacheGL.dbgVerticesUltimoUsadoModo[iBufV]				= mode;
-		_cacheGL.dbgVerticesUltimoUsadoIndice[iBufV]			= (first + count - 1);
-	}*/
 #	endif
 	NBGESTORGL_DBG_NOMBRAR_CONVOCADOR_DRAW_ARRAY("[SIN_NOMBRE]")
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
@@ -2160,47 +1994,11 @@ void NBGestorGL::drawElements(GLenum mode, GLint first, GLsizei count){
 	NBASSERT(((first * sizeof(GLushort)) % 4) == 0) //La direccion debe ser multiplo de 4 bytes (direcciones de 32 bits)
 #	ifdef CONFIG_NB_INCLUIR_VALIDACIONES_ASSERT
 	NBASSERT(_cacheGL.iVaoLigado >= 0 && _cacheGL.iVaoLigado < _vertsGlArrsTam)
-	//if(_cacheGL.iVaoLigado >= 0 && _cacheGL.iVaoLigado < _vertsGlArrsTam){
-	//	const UI32 iSigUlt	= (first + count);
-	//	const UI32 usoInd	= _vertsGlArrs[_cacheGL.iVaoLigado].datosGL[_indiceBufferDatosLeer].usoArregloIndices;
-	//	NBASSERT(iSigUlt  <= usoInd);
-	//}
 #	endif
 	NBGESTORGL_LOTES_TODOS_PURGAR("NBGestorGL::drawElements")
 	glDrawElements(mode, count, GL_UNSIGNED_SHORT, (GLvoid*)(first * sizeof(GLushort))); GL_CMD_EJECUTADO("glDrawElements(%s, count(%d), GL_UNSIGNED_SHORT, first(%d))", STR_GL_DRAW_MODE(mode), (SI32)count, (SI32)first)
 #	ifdef CONFIG_NB_INCLUIR_VALIDACIONES_ASSERT_GL_NOP
 	NBGestorGL::privDbgAcumularOperacionRealizada();
-	//Analizar si puede optimizar el comando (uniendo con su anterior)
-	/*if(_cacheGL.vaoTipoLigado < _vertsGlArrsTam){
-		SI32 iBufV					= _cacheGL.vaoTipoLigado;
-		SI32 iUltVerticeUsaCmd		= _vertsGlArrs[iBufV].datosGL[_indiceBufferDatosLeer].arregloIndices[first + count - 1];
-		bool esFiguraIndependiente	= false; if(mode == GL_TRIANGLE_STRIP && count > 2) esFiguraIndependiente = (_vertsGlArrs[iBufV].datosGL[_indiceBufferDatosLeer].arregloIndices[first] == _vertsGlArrs[iBufV].datosGL[_indiceBufferDatosLeer].arregloIndices[first+1] && _vertsGlArrs[iBufV].datosGL[_indiceBufferDatosLeer].arregloIndices[first+count-2] == _vertsGlArrs[iBufV].datosGL[_indiceBufferDatosLeer].arregloIndices[first+count-1]);
-		bool esFiguraIndependizable	= NBGestorGL::dbgModoFormaGLEsIndependizable(mode);
-		if(GL_TRIANGLE_STRIP == _cacheGL.dbgIndicesUltimoUsadoModo[iBufV] && (esFiguraIndependiente || esFiguraIndependizable)){
-			if(_cacheGL.dbgVerticesUltimaFormaEnIndices[iBufV]){
-				if(first == (_cacheGL.dbgIndicesUltimoUsadoIndice[iBufV]+1) && (_cacheGL.dbgIndicesUltimaFormaEsIndependiente[iBufV] || _cacheGL.dbgIndicesUltimaFormaEsIndependizable[iBufV])){
-					PRINTF_INFO("El comando PurgarLoteTriangStrips(%d, %d) puede anexarse a su anterior (INDICES_EN_SECUENCIA_CONTIGUA). ANT(%s) ACT(%s) ANT[%s]\n", (SI32)first, (SI32)count, _cacheGL.dbgVerticesUltimaFormaEsIndependiente[iBufV]?"INDEPENDIENTE":"INDEPENDIZABLE", esFiguraIndependiente?"INDEPENDIENTE":"INDEPENDIZABLE", _cacheGL.dbgDrawElementsConvocador->str());
-					//NBASSERT(false)
-				}
-			} else {
-				if(_cacheGL.dbgVerticesUltimaFormaEsIndependiente[iBufV] || _cacheGL.dbgVerticesUltimaFormaEsIndependizable[iBufV]){
-					PRINTF_INFO("El comando PurgarLoteTriangStrips(%d, %d) puede anexarse a su anterior (USAR_INDICES_EN_ANTERIOR). ANT(%s) ACT(%s) ANT[%s]\n", (SI32)first, (SI32)count, _cacheGL.dbgVerticesUltimaFormaEsIndependiente[iBufV]?"INDEPENDIENTE":"INDEPENDIZABLE", esFiguraIndependiente?"INDEPENDIENTE":"INDEPENDIZABLE", _cacheGL.dbgDrawArrayConvocador->str());
-					//NBASSERT(false)
-				}
-			}
-		}
-		_cacheGL.dbgVerticesUltimaFormaEnIndices[iBufV]			= true;
-		//
-		_cacheGL.dbgVerticesUltimaFormaEsIndependiente[iBufV]	= esFiguraIndependiente;
-		_cacheGL.dbgVerticesUltimaFormaEsIndependizable[iBufV]	= esFiguraIndependizable;
-		_cacheGL.dbgVerticesUltimoUsadoModo[iBufV]				= mode;
-		_cacheGL.dbgVerticesUltimoUsadoIndice[iBufV]			= iUltVerticeUsaCmd;
-		//
-		_cacheGL.dbgIndicesUltimaFormaEsIndependiente[iBufV]	= esFiguraIndependiente;
-		_cacheGL.dbgIndicesUltimaFormaEsIndependizable[iBufV]	= esFiguraIndependizable;
-		_cacheGL.dbgIndicesUltimoUsadoModo[iBufV]				= mode;
-		_cacheGL.dbgIndicesUltimoUsadoIndice[iBufV]				= first + count - 1;
-	}*/
 #	endif
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_GL
 }
@@ -2212,19 +2010,6 @@ void NBGestorGL::acumularIndicesTriangStripIndependiente(GLint first, GLsizei co
 	NBASSERT(_gestorInicializado);
 	NBASSERT(first > 0)  //El primer elemento esta reservado
 	NBASSERT(count > 1) //No se aceptan comandos vacios, optimizar codigo
-#	ifdef CONFIG_NB_INCLUIR_VALIDACIONES_ASSERT
-	/*{
-		const UI32 iSigUlt	= (first + count);
-		const UI32 usoInd	= _vertsGlArrs[_cacheGL.iVaoLigado].datosGL[_indiceBufferDatosLeer].usoArregloIndices;
-		const UI32 ind0		= _vertsGlArrs[_cacheGL.iVaoLigado].datosGL[_indiceBufferDatosLeer].arregloIndices[first];
-		const UI32 ind1		= _vertsGlArrs[_cacheGL.iVaoLigado].datosGL[_indiceBufferDatosLeer].arregloIndices[first + 1];
-		const UI32 indPu	= _vertsGlArrs[_cacheGL.iVaoLigado].datosGL[_indiceBufferDatosLeer].arregloIndices[first + count - 2];
-		const UI32 indUl	= _vertsGlArrs[_cacheGL.iVaoLigado].datosGL[_indiceBufferDatosLeer].arregloIndices[first + count - 1];
-		NBASSERT(((sizeof(GLushort) * count) % 4) == 0) //Cantidad multiplo de 4 bytes
-		NBASSERT(iSigUlt  <= usoInd) //(first + count) sobrepasa el tamano del arreglo
-		NBASSERT(ind0 == ind1 && indPu == indUl) //Si falla, no es un triangStripIndependiente (no repite dos veces el primer y ultimo indice)
-	}*/
-#	endif
 	if(_loteDrawElemsAcumTriangStrips.cantAcumuladaElems != 0 && (_loteDrawElemsAcumTriangStrips.iPrimerElem+_loteDrawElemsAcumTriangStrips.cantAcumuladaElems) != first){
 		NBASSERT(((first * sizeof(GLushort)) % 4) == 0) //La direccion debe ser multiplo de 4 bytes (direcciones de 32 bits)
 		//El bloque de indices no puede encadenarse con el anterior (purgar el anterior)

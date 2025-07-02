@@ -460,11 +460,11 @@ AUEscenaObjeto* AUEscenaContenedor::consumidorTouchEnPosicion(const NBPunto &pos
 	{
 		SI32 i; for(i = _objetosEscena.conteo - 1; i >= 0 && consumidor == NULL; i--){
 			AUEscenaObjeto* hijo = (AUEscenaObjeto*)_objetosEscena.elemento[i];
-			if(!hijo->_dormido && hijo->_propiedades.visible){
+			if(!hijo->_dormido && hijo->_visible){
 				consumidor = hijo->consumidorTouchEnPosicion(posTouchEscena, touchFilterMask, outConsumidorEscuchadorObj, outConsumidorEscuchadorInterfaz);
 #				ifdef NB_CONFIG_INCLUDE_ASSERTS
 				if(consumidor != NULL){
-					NBASSERT(consumidor->_propiedades.visible)
+					NBASSERT(consumidor->_visible)
 					NBASSERT(!consumidor->_dormido)
 				}
 #				endif
@@ -476,7 +476,7 @@ AUEscenaObjeto* AUEscenaContenedor::consumidorTouchEnPosicion(const NBPunto &pos
 		consumidor = this->AUEscenaObjeto::consumidorTouchEnPosicion(posTouchEscena, touchFilterMask, outConsumidorEscuchadorObj, outConsumidorEscuchadorInterfaz);
 #		ifdef NB_CONFIG_INCLUDE_ASSERTS
 		if(consumidor != NULL){
-			NBASSERT(consumidor->_propiedades.visible)
+			NBASSERT(consumidor->_visible)
 			NBASSERT(!consumidor->_dormido)
 		}
 #		endif
@@ -511,11 +511,11 @@ AUEscenaObjeto* AUEscenaContenedor::consumidorTouchEnPosicionSegunArreglo(const 
 	{
 		SI32 i; for(i = _objetosEscena.conteo - 1; i >= 0 && consumidor == NULL; i--){
 			AUEscenaObjeto* hijo = (AUEscenaObjeto*)_objetosEscena.elemento[i];
-			if(!hijo->_dormido && hijo->_propiedades.visible){
+			if(!hijo->_dormido && hijo->_visible){
 				consumidor = hijo->consumidorTouchEnPosicionSegunArreglo(posTouchEscena, touchFilterMask, arregloFiltroObjetosEscena);
 #				ifdef NB_CONFIG_INCLUDE_ASSERTS
 				if(consumidor != NULL){
-					NBASSERT(consumidor->_propiedades.visible)
+					NBASSERT(consumidor->_visible)
 					NBASSERT(!consumidor->_dormido)
 				}
 #				endif
@@ -527,7 +527,7 @@ AUEscenaObjeto* AUEscenaContenedor::consumidorTouchEnPosicionSegunArreglo(const 
 		consumidor = AUEscenaObjeto::consumidorTouchEnPosicionSegunArreglo(posTouchEscena, touchFilterMask, arregloFiltroObjetosEscena);
 #		ifdef NB_CONFIG_INCLUDE_ASSERTS
 		if(consumidor != NULL){
-			NBASSERT(consumidor->_propiedades.visible)
+			NBASSERT(consumidor->_visible)
 			NBASSERT(!consumidor->_dormido)
 		}
 #		endif
@@ -568,7 +568,7 @@ NBCajaAABB AUEscenaContenedor::cajaAABBLocalCalculada(){
 	SI32 i; NBCajaAABB cajaLocal; NBCAJAAABB_INICIALIZAR(cajaLocal);
 	for(i = 0; i < _objetosEscena.conteo; i++){
 		AUEscenaObjeto* obj = (AUEscenaObjeto*) _objetosEscena.elemento[i];
-		if(obj->_propiedades.visible){
+		if(obj->_visible){
 			NBCajaAABB cajaHijo = obj->cajaAABBLocalCalculada(); //cajaAABBLocal
 			if(cajaHijo.xMin < cajaHijo.xMax && cajaHijo.yMin < cajaHijo.yMax){
 				NBMatriz matrizHijo; NBMATRIZ_ESTABLECER_SEGUN_TRANSFORMACIONES_ESCENA_OBJETO(matrizHijo, obj->_propiedades.transformaciones)
@@ -639,7 +639,7 @@ void AUEscenaContenedor::actualizarArbolMatricesEscena(STNBSceneModelsResult* ds
 					}
 				}
 				//Envolver cajas de hijos
-				if(hijo->_propiedades.visible){
+				if(hijo->_visible){
 					if(hijo->_cacheObjEscena.cajaEscena.xMin < hijo->_cacheObjEscena.cajaEscena.xMax && hijo->_cacheObjEscena.cajaEscena.yMin < hijo->_cacheObjEscena.cajaEscena.yMax){
 						NBCAJAAABB_ENVOLVER_CAJA(cajaEscena, hijo->_cacheObjEscena.cajaEscena);
 					}
@@ -711,7 +711,7 @@ void AUEscenaContenedor::actualizarArbolModelosGL(const NBPropRenderizado &props
 		//NBASSERT(hijo->contenedor()==this)
 		//NBASSERT(_objetosEscena.conteoAparicionesDe(hijo)==1)
 		NBCajaAABB cajaEscenaHijo = hijo->_cacheObjEscena.cajaEscena;
-		if(hijo->_propiedades.visible && NBCAJAAABB_AREA_INTERNA_INTERSECTA_CAJA(propsRenderizado.cajaProyeccion, cajaEscenaHijo)){
+		if(hijo->_visible && NBCAJAAABB_AREA_INTERNA_INTERSECTA_CAJA(propsRenderizado.cajaProyeccion, cajaEscenaHijo)){
 			if((hijo->_sceneMask & AUOBJETOESCENA_BIT_ESCONTENEDOR) != 0){
 				((AUEscenaContenedor*)hijo)->actualizarArbolModelosGL(propsRenderizado, propsIluminacion, propsHeredar);
 			} else {

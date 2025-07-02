@@ -50,10 +50,10 @@ struct STDialogoElem {
 	NBColor8			color8;			//Color explicito (si colorExplicito es true
 	//
 	bool operator==(const STDialogoElem &otro) const {
-		return (tipoElemento==otro.tipoElemento && iElem==otro.iElem && iStrID==otro.iStrID && colorExplicito==otro.colorExplicito && color8==otro.color8);
+		return (tipoElemento==otro.tipoElemento && iElem==otro.iElem && iStrID==otro.iStrID && colorExplicito==otro.colorExplicito && color8.v32==otro.color8.v32);
 	}
 	bool operator!=(const STDialogoElem &otro) const {
-		return !(tipoElemento==otro.tipoElemento && iElem==otro.iElem && iStrID==otro.iStrID && colorExplicito==otro.colorExplicito && color8==otro.color8);
+		return !(tipoElemento==otro.tipoElemento && iElem==otro.iElem && iStrID==otro.iStrID && colorExplicito==otro.colorExplicito && color8.v32==otro.color8.v32);
 	}
 };
 

@@ -34,11 +34,11 @@
 #include "NBFuenteIluminacion.h"
 #include "NBFuenteEspejo.h"
 #include "AUEscenaTopItf.h"
+//
+#include "nb/scene/NBScnRender.h"
 
 #define NBGESTORESCENA_MAX_TEXTURAS_RENDER		64 //16	//cantidad de texturas que pueden crearse (para uso temporal de luces individuales, luces combinadas o capas)
 #define NBGESTORESCENA_MAX_ESCENAS				64 //16	//cantidad de escenas que pueden crearse
-
-#define NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS	CONFIG_NB_GESTOR_ESCENAS_MODELO_PRODUCTOR_CONSUMIDOR_CANT_BUFFERS
 
 typedef enum ENGestorEscenaDestinoGl_ {
 	ENGestorEscenaDestinoGl_Ninguno			= -1,
@@ -114,7 +114,6 @@ typedef struct STGestorEscenaTextura_ {
 	bool			registroOcupado;
 	bool			texturaOcupada;
 	UI8				texturaModoPintado;		//ENTexturaModo
-	UI8				iBufferDatosPropietario;//Buffer de datos a la que pertenece la textura (permite que no se altere la textura en casos multihilos)
 	SI32			iEscenaPropietaria;		//Escena a la que pertenece la textura
 	GLuint			idFrameBufferGlPropio;
 	UI32			anchoFrameBufferGl;
@@ -123,10 +122,10 @@ typedef struct STGestorEscenaTextura_ {
 	AUTextura*		objTexturaAtlas;		//Textura que cubre todo el area del atlas
 	//
 	bool operator==(const struct STGestorEscenaTextura_ &otro) const {
-		return (idFrameBufferGlPropio == otro.idFrameBufferGlPropio && iEscenaPropietaria == otro.iEscenaPropietaria && iBufferDatosPropietario == otro.iBufferDatosPropietario);
+		return (idFrameBufferGlPropio == otro.idFrameBufferGlPropio && iEscenaPropietaria == otro.iEscenaPropietaria);
 	}
 	bool operator!=(const struct STGestorEscenaTextura_ &otro) const {
-		return !(idFrameBufferGlPropio == otro.idFrameBufferGlPropio && iEscenaPropietaria == otro.iEscenaPropietaria && iBufferDatosPropietario == otro.iBufferDatosPropietario);
+		return !(idFrameBufferGlPropio == otro.idFrameBufferGlPropio && iEscenaPropietaria == otro.iEscenaPropietaria);
 	}
 } STGestorEscenaTextura;
 
@@ -307,9 +306,9 @@ typedef struct STGestorEscenaEscena_ {
 	NBRectanguloI				renderAreaOcupadaDestino;
 	NBRectangulo				renderPuertoDeVision;
 	NBColor						renderColorFondo;
-	AUArregloNativoMutableP<STGestorEscenaCapaRender>* renderCapas[NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS];				//Biblioteca de capas render a producir. El arreglo retiene a los objetos para evitar que se eliminen durante el proce paralelo de "renderizado" y "animacion".
-	AUArregloNativoMutableP<STGestorEscenaCapaRender*>* renderCapasProducir[NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS];	//Punteros de capas render a producir (toda capa solo debe ser producida su escena padre)
-	AUArregloNativoMutableP<STGestorEscenaCapaRender*>* renderCapasConsumir[NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS];	//Punteros a otras capas render a consumir (las propias y las enlazadas)
+	AUArregloNativoMutableP<STGestorEscenaCapaRender>* renderCapas;				//Biblioteca de capas render a producir. El arreglo retiene a los objetos para evitar que se eliminen durante el proce paralelo de "renderizado" y "animacion".
+	AUArregloNativoMutableP<STGestorEscenaCapaRender*>* renderCapasProducir;	//Punteros de capas render a producir (toda capa solo debe ser producida su escena padre)
+	AUArregloNativoMutableP<STGestorEscenaCapaRender*>* renderCapasConsumir;	//Punteros a otras capas render a consumir (las propias y las enlazadas)
 	//
 	bool operator==(const struct STGestorEscenaEscena_ &otro) const {
 		return (registroOcupado == otro.registroOcupado && iFramebufferEscena == otro.iFramebufferEscena && areaOcupadaDestino == otro.areaOcupadaDestino);
@@ -588,11 +587,10 @@ class NBGestorEscena {
 		//
 		static AUArregloNativoMutableP<STRangoSombra>* _cacheSombrasFusionadas;
 		//Bufferes de datos
-		static SI32							_indiceBufferDatosLeer;
-		static SI32							_indiceBufferDatosEscribir;
-		static ENGestorEscenaBufferEstado	_bufferDatosEstado[NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS];
-		static bool							_bufferDatosBloqueado[NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS];
-		static STBufferVerticesGL			_buffersVertices[NBGESTORESCENA_CANTIDAD_BUFFERES_DATOS][ENVerticeGlTipo_Conteo];
+		static ENGestorEscenaBufferEstado	_bufferDatosEstado;
+		static bool							_bufferDatosBloqueado;
+		static STBufferVerticesGL			_buffersVertices[ENVerticeGlTipo_Conteo];
+        static STNBScnRenderRef             _sncRender;
 		//
 		static void							privIncializarConfigurarGL();
 		//
@@ -603,7 +601,7 @@ class NBGestorEscena {
 		static void							privInicializarCacheIluminacion(STGestorEscenaCapaRender* renderCapa, UI16 iIlum);
 		static void							privActualizarCajaEscenaLuz(NBFuenteIluminacionRender &datosRender);
 		//
-		static bool							privBufferDatosVaciar(const UI16 iBuffer);
+		static bool							privBufferDatosVaciar(void);
 		//Producir luces
 		static void							privProducirSombrasYLucesReflejadas();
 		static void							privProducirSombrasEnCapa(STGestorEscenaCapaRender* renderCapa, const UI16 iPrimeraLuz);
@@ -635,9 +633,9 @@ class NBGestorEscena {
 		static void							privAsegurarFrameBufferInicializadoParaEscena(const STGestorEscenaFrameBuffer* datosFB, const STGestorEscenaEscena* escena, bool &frameBufferLimpiado, NBColor &colorFondoLimpiado, bool &escenaInicializada);
 		static void							privEnviarComandosDibujarMascarasIluminacion();
 		//Texturas de mascaras de luz
-		static SI32							privTexturaRenderReservarEspacioSinCrearDestino(const SI32 iEscenaPropietaria, const UI8 iBufferDatosPropietario, const MapaBitsColor colorFB, const ENTexturaModoPintado modoPintadoTextura, const UI16 anchoNecesario, const UI16 altoNecesario, NBRectanguloI* guardarAreaReservadaEn);
+		static SI32							privTexturaRenderReservarEspacioSinCrearDestino(const SI32 iEscenaPropietaria, const MapaBitsColor colorFB, const ENTexturaModoPintado modoPintadoTextura, const UI16 anchoNecesario, const UI16 altoNecesario, NBRectanguloI* guardarAreaReservadaEn);
 		static void							privTexturaRenderAsegurarDestinosCreados(const SI32 iEscenaPropietaria);
-		static void							privTexturaRenderVaciarReservasDeBuffer(const UI8 iBufferDatosPropietario);
+		static void							privTexturaRenderVaciarReservasDeBuffer(void);
 		static void							privTexturaRenderLiberarReservasDeEscena(const SI32 iEscenaPropietaria);
 		static void							privTexturaRenderLiberarReservasTodas();
 		//Framebuffers

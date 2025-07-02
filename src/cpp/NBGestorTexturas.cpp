@@ -1213,40 +1213,6 @@ void NBGestorTexturas::privRegenerarAtlasesTexturasEscritura(const bool elimText
 							//
 							NBASSERT(atlasTex->propsTexturaGL.idTexturaGL == idTextura)
 						}
-						/*const GLenum formatoGlLocal		= NBGestorTexturas::formatoGlLocal(atlasTex->colorFormato); NBASSERT(formatoGlLocal != 0)
-						const GLenum formatoGlDriver	= NBGestorTexturas::formatoGlDriver(atlasTex->colorFormato); NBASSERT(formatoGlDriver != 0)
-						const GLenum tpoDatoGlDriver	= NBGestorTexturas::tipoDatoGlDriver(atlasTex->colorFormato); NBASSERT(tpoDatoGlDriver != 0)
-						if(formatoGlLocal == 0 || formatoGlDriver == 0 || tpoDatoGlDriver == 0){
-							PRINTF_ERROR("no se pudo establecer el formatoGLLocal(%d) formatoGLDriver(%d) o tipoDatoGLDriver(%d) del nuevo atlas\n", formatoGlLocal, formatoGlDriver, tpoDatoGlDriver);
-						} else {
-							GLuint idTextura;
-#							ifdef CONFIG_NB_GESTOR_GL_IMPRIMIR_COMANDOS_GL
-							PRINTF_WARNING("REgenerando textura de atlas ambito(%d) tam(%d x %d) color(%d).\n", (SI32)iAmb, (SI32)atlasTex->propsTexturaGL.anchoGL, (SI32)atlasTex->propsTexturaGL.altoGL, (SI32)atlasTex->colorFormato);
-#							endif
-							NBGestorGL::genTextures(1, &idTextura, &atlasTex->propsTexturaGL);
-							NBGestorGL::bindTexture(0, idTextura);
-							NBGestorGL::configurarTextura(atlasTex->modoPintado, false, &atlasTex->propsTexturaGL);
-							NBASSERT((atlasTex->tipoAlmacenamientoGL == ENTexturaTipoAlmacenamientoGL_AtlasCompartido && (atlasTex->modoPintado == ENTexturaModoPintado_Imagen_Suavizada || atlasTex->modoPintado == ENTexturaModoPintado_Imagen_Precisa)) ||
-									 (atlasTex->tipoAlmacenamientoGL == ENTexturaTipoAlmacenamientoGL_AtlasUnico && (atlasTex->modoPintado == ENTexturaModoPintado_Patron_Suavizado || atlasTex->modoPintado == ENTexturaModoPintado_Patron_Preciso)))
-							/ *Formatos: GL_ALPHA, GL_RGB, GL_RGBA, GL_LUMINANCE (gris), GL_LUMINANCE_ALPHA (gris+alpha)* /
-							/ *Tipos: GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT_5_6_5, GL_UNSIGNED_SHORT_4_4_4_4, GL_UNSIGNED_SHORT_5_5_5_1* /
-							NBGestorGL::texImage2D(GL_TEXTURE_2D, 0, formatoGlLocal, atlasTexOrig.propsTexturaGL.anchoGL, atlasTexOrig.propsTexturaGL.altoGL, 0, formatoGlDriver, tpoDatoGlDriver, NULL, &atlasTex->propsTexturaGL);
-							_texsChangesCount++;
-							NBASSERT(NBGestorGL::isTexture(idTextura))
-							//Verificar valores
-#							ifdef CONFIG_NB_INCLUIR_VALIDACIONES_ASSERT
-							if(atlasTex->mapaAtlas != NULL){
-								const NBTamanoP<UI16> tamAtlas = atlasTex->mapaAtlas->tamano();
-								if(tamAtlas.ancho != atlasTex->propsTexturaGL.anchoGL || tamAtlas.alto != atlasTex->propsTexturaGL.altoGL){
-									PRINTF_ERROR("Atlas tamanos difieren: atlasOrg(%d, %d) atlasGl(%d, %d).\n", (SI32)tamAtlas.ancho, (SI32)tamAtlas.alto, (SI32)atlasTex->propsTexturaGL.anchoGL, (SI32)atlasTex->propsTexturaGL.altoGL);
-								}
-								NBASSERT(tamAtlas.ancho == atlasTex->propsTexturaGL.anchoGL)
-								NBASSERT(tamAtlas.alto == atlasTex->propsTexturaGL.altoGL)
-							}
-#							endif
-							//
-							NBASSERT(atlasTex->propsTexturaGL.idTexturaGL == idTextura)
-						}*/
 					}
 					PRINTF_INFO("Senal-6.\n");
 					//Actualizar referencia en texturas
@@ -2492,50 +2458,6 @@ AUFuenteTextura* NBGestorTexturas::privFuenteTextura(const char* nombreFuente, c
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 	return rFuente;
 }
-
-/*BOOL NBGestorTexturas::updateFontTextureToSize(AUFuenteTextura* font, const float newSize, const float newScaleSubtexs){
-	BOOL r = FALSE;
-	const float tamanoFuente = (float)((SI32)(newSize / newScaleSubtexs)); //PRINTF_INFO("Consultando fuenteTEXTURA tamanoEscena(%f) tamanoPx(%f) escalaEscenaParaHD(%f).\n", tamanoFuenteEnEscena, tamanoFuente, escalaEscenaParaHD);
-	{
-		UI32 iAtlas, iAtlasConteo = _fuentesTexturas->conteo;
-		for(iAtlas = 0; iAtlas < iAtlasConteo; iAtlas++){
-			STGestorTexFuente* record = _fuentesTexturas->elemPtr(iAtlas);
-			AUFuenteTextura* fuenteTex 	= (AUFuenteTextura*)record->texturaFuente;
-			if(fuenteTex == font){
-				//Update bitmap-font
-				AUFuenteMapaBits* fuenteMapaBits = NBGestorFuentes::fuenteBitmaps(fuenteTex->familia(), tamanoFuente, fuenteTex->esNegrilla(), fuenteTex->esCursiva());
-				if(fuenteMapaBits == NULL){
-					PRINTF_ERROR("no se pudo crear textura para fuente '%s%s%s'\n", fuenteTex->familia(), fuenteTex->esNegrilla() ? "_negrilla" : "_normal", fuenteTex->esCursiva() ? "_cursiva" : "_normal");
-					NBASSERT(FALSE)
-				} else {
-					STNBFontBitmaps* fontDef = fuenteMapaBits->fuenteDef();
-					NBASSERT(NBFontBitmaps_getSize(fontDef) == tamanoFuente)
-					PRINTF_INFO("Resizing fontTexture (%s/%s%s%s/%.1fx%.1f).\n", fuenteTex->familia(), fuenteTex->subfamilia(), fuenteTex->esNegrilla() ? "_negrilla" : "_normal", fuenteTex->esCursiva() ? "_cursiva" : "_normal", tamanoFuente, newScaleSubtexs);
-					//Reset font
-					record->version		= NBFontBitmaps_getVersion(fontDef);
-					record->fontBitmaps	= fontDef;
-					{
-						SI32 iTex; const SI32 conteoTex = record->texturas->conteo;
-						for(iTex = 0; iTex < conteoTex; iTex++){
-							STGestorTexFuenteTex* datTex = record->texturas->elemPtr(iTex);
-							GLuint idTextura = datTex->propsTexturaGL.idTexturaGL;
-							NBGestorGL::deleteTextures(1, &idTextura);
-						}
-						record->texturas->vaciar();
-					}
-					//Update font
-					fuenteTex->updateFontDef(fontDef, ENTexturaModoPintado_Imagen_Precisa, newScaleSubtexs);
-					//Create atlases
-					NBGestorTexturas::privCreateFontTextureAtlases(record, fontDef);
-					//
-					r = TRUE;
-				}
-				break;
-			}
-		}
-	}
-	return r;
-}*/
 
 UI32 NBGestorTexturas::privCreateFontTextureAtlases(STGestorTexFuente* record, STNBFontBitmaps* fontDef){
 	UI32 i = 0;

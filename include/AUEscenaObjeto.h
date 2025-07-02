@@ -117,7 +117,7 @@ class AUEscenaObjeto : public AUObjeto {
 		SI16						idCapa;								//optimizacion, usar varPublica en lugar de funcion "idCapa()"
 		AUEscenaObjeto*				contenedor();
 		AUEscenaObjeto*				agrupadorSombras();
-		NBPropiedadesEnEscena		propiedades();
+		//NBPropiedadesEnEscena		propiedades();
 		bool						dormido();
 		bool						visible();
 		bool						iluminoDependiente();
@@ -132,6 +132,7 @@ class AUEscenaObjeto : public AUObjeto {
 		BOOL						getTouchMagnifyEnabled() const;
 		void						setTouchMagnifyEnabled(const BOOL enabled);
 		//
+        BOOL                        _visible;
 		NBPropiedadesEnEscena		_propiedades;				//visible, transformaciones(traslacion, escalacion y rotacion) y color //Optimizacion, usar esta variable publica en lugar de metodos de acceso
 		//NBColor8					multiplicadorColor8;		//Optimizacion, usar esta variable publica "multiplicadorColor" en lugar del metodo "multiplicadorColor()" (alta demanda de este valor en ejecucion)
 		NBColor8					multiplicadorColor8Func();	//Optimizacion, usar la variable publica "multiplicadorColor" en lugar del metodo "multiplicadorColor()" (alta demanda de este valor en ejecucion)
@@ -139,7 +140,7 @@ class AUEscenaObjeto : public AUObjeto {
 		NBColorF					ultimoColorInfluenciaIluminacion(); //el prefijo "ultimo" se refiere a ultimo valor utilizado (no calculado en tiempo real)
 		NBPunto						coordenadaLocalAEscena(float xLocal, float yLocal);
 		NBPunto						coordenadaEscenaALocal(float xEnEscena, float yEnEscena);
-		void						establecerPropiedades(const NBPropiedadesEnEscena &nuevasPropiedades);
+		void						establecerPropiedades(const bool pVisible, const NBPropiedadesEnEscena &nuevasPropiedades);
 		void						setVisibleAndAwake(const BOOL visibleAndAwake);
 		virtual void				establecerDormido(bool congelado);
 		void						establecerVisible(bool visible);

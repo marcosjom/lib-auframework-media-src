@@ -103,10 +103,10 @@ struct NBPropHeredadasRender {		//datos que describen las propiedades heredadas 
 	bool				iluminoDependenciaPadre;
 	NBColor				colorPadre;
 	bool operator==(const NBPropHeredadasRender &otro) const {
-		return (colorPadre==otro.colorPadre && iluminoDependenciaPadre==otro.iluminoDependenciaPadre);
+		return (NBColor_areEqual(colorPadre, otro.colorPadre) && iluminoDependenciaPadre==otro.iluminoDependenciaPadre);
 	}
 	bool operator!=(const NBPropHeredadasRender &otro) const {
-		return !(colorPadre==otro.colorPadre && iluminoDependenciaPadre==otro.iluminoDependenciaPadre);
+		return !(NBColor_areEqual(colorPadre, otro.colorPadre) && iluminoDependenciaPadre==otro.iluminoDependenciaPadre);
 	}
 };
 

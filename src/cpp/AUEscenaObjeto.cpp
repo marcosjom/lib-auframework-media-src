@@ -71,7 +71,7 @@ void AUEscenaObjeto::privInlineInicializarVariables(){
 
 void AUEscenaObjeto::privInlineInicializarPropiedades(float traslacionX, float traslacionY, float escalacionAncho, float escalacionAlto, float rotacion, float multR, float multG, float multB, float multA){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_2("AUEscenaObjeto::privInlineInicializarPropiedades")
-	_propiedades.visible					= true;
+	_visible					            = true;
 	_propiedades.transformaciones.escalaX	= escalacionAncho;
 	_propiedades.transformaciones.escalaY	= escalacionAlto;
 	_propiedades.transformaciones.rotacion	= rotacion;
@@ -170,7 +170,7 @@ void AUEscenaObjeto::copiarPropiedadesDe(AUEscenaObjeto* otroObjeto){
 	if(idEscena >= 0){
 		UI16 myBitsChange = 0, parentBitsChange = 0;
 		if(*((UI32*)&_propiedades.color8) != *((UI32*)&otroObjeto->_propiedades.color8)
-		   || _propiedades.visible != otroObjeto->_propiedades.visible
+		   || _visible != otroObjeto->_visible
 		   || _iluminoDependiente != false /*otroObjeto->_iluminoDependiente*/){
 			myBitsChange		|= AUOBJETOESCENA_BIT_MODEL_LOCAL_CHANGED;
 			parentBitsChange	|= AUOBJETOESCENA_BIT_MODEL_CHILD_CHANGED;
@@ -256,29 +256,6 @@ NBMatriz AUEscenaObjeto::matrizEscenaCalculada(){
 	AU_OBJETO_ASSERT_IS_ALIVE_THIS
 	NBMatriz matrizInversa = matrizEscenaInversaCalculada();
 	NBMatriz matrizEscena; NBMATRIZ_INVERSA(matrizEscena, matrizInversa)
-	/*NBMatriz _matrizEscena; NBMATRIZ_ESTABLECER_IDENTIDAD(_matrizEscena);
-	NBASSERT(idEscena!=-1)
-	AUArregloNativoMutableP<NBTransformaciones>* arrTransformaciones = new (ENMemoriaTipo_Temporal) AUArregloNativoMutableP<NBTransformaciones>(); NB_DEFINE_NOMBRE_PUNTERO(arrTransformaciones, "AUEscenaObjeto::arrTransformaciones");
-	//recolectar las transformaciones
-	AUEscenaObjeto* padre				= this;
-	arrTransformaciones->agregarElemento(_propiedades.transformaciones);
-	do {
-		padre = padre->_contenedor;
-		if(padre != NULL){
-			arrTransformaciones->agregarElemento(padre->_propiedades.transformaciones);
-		}
-	} while(padre != NULL);
-	//aplicar las transformaciones
-	int iTrans;
-	for(iTrans=arrTransformaciones->conteo-1; iTrans>=0; iTrans--){
-		NBTransformaciones* transformaciones = &(arrTransformaciones->elemento[iTrans]);
-		NBMATRIZ_TRASLADAR(_matrizEscena, transformaciones->trasladoX, transformaciones->trasladoY);
-		if(transformaciones->rotacion != 0.0f){
-			NBMATRIZ_ROTAR_GRADOS(_matrizEscena, transformaciones->rotacion);
-		}
-		NBMATRIZ_ESCALAR(_matrizEscena, transformaciones->escalaX, transformaciones->escalaY);
-	}
-	arrTransformaciones->liberar(NB_RETENEDOR_THIS);*/
 	AU_GESTOR_PILA_LLAMADAS_POP_2
 	return matrizEscena;
 }
@@ -290,7 +267,7 @@ NBMatriz AUEscenaObjeto::matrizEscenaInversaCalculada(){
 	NBMatriz _matrizEscenaInversa;
 	NBMATRIZ_ESTABLECER_IDENTIDAD(_matrizEscenaInversa);
 	AUEscenaObjeto* padre					= this;
-	NBTransformaciones* transformaciones	= &_propiedades.transformaciones;
+	NBTransformacionesF* transformaciones	= &_propiedades.transformaciones;
 	NBTamano escalaInversa; float radianesInversa; NBPunto trasladoInversa;
 	do {
 		NBASSERT(transformaciones->escalaX != 0.0f)
@@ -330,12 +307,13 @@ NBCajaAABB AUEscenaObjeto::cajaAABBLocal(){
 	return r;
 }
 
+/*
 NBPropiedadesEnEscena AUEscenaObjeto::propiedades(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_2("AUEscenaObjeto::propiedades")
 	AU_OBJETO_ASSERT_IS_ALIVE_THIS
 	AU_GESTOR_PILA_LLAMADAS_POP_2
 	return _propiedades;
-}
+}*/
 
 bool AUEscenaObjeto::dormido(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_2("AUEscenaObjeto::dormido")
@@ -348,7 +326,7 @@ bool AUEscenaObjeto::visible(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_2("AUEscenaObjeto::visible")
 	AU_OBJETO_ASSERT_IS_ALIVE_THIS
 	AU_GESTOR_PILA_LLAMADAS_POP_2
-	return _propiedades.visible;
+	return _visible;
 }
 
 bool AUEscenaObjeto::iluminoDependiente(){
@@ -446,13 +424,13 @@ UI8 AUEscenaObjeto::multiplicadorAlpha8() {
 	return _propiedades.color8.a;
 }
 
-void AUEscenaObjeto::establecerPropiedades(const NBPropiedadesEnEscena &nuevasPropiedades){
+void AUEscenaObjeto::establecerPropiedades(const bool pVisible, const NBPropiedadesEnEscena &nuevasPropiedades){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_2("AUEscenaObjeto::establecerPropiedades")
 	AU_OBJETO_ASSERT_IS_ALIVE_THIS
 	//Analyze and notify changes, only if already at scene
 	if(idEscena >= 0){
 		UI16 myBitsChange = 0, parentBitsChange = 0;
-		if(*((UI32*)&_propiedades.color8) != *((UI32*)&nuevasPropiedades.color8) || _propiedades.visible != nuevasPropiedades.visible){
+		if(*((UI32*)&_propiedades.color8) != *((UI32*)&nuevasPropiedades.color8) || _visible != pVisible){
 			myBitsChange		|= AUOBJETOESCENA_BIT_MODEL_LOCAL_CHANGED;
 			parentBitsChange	|= AUOBJETOESCENA_BIT_MODEL_CHILD_CHANGED;
 		}
@@ -469,6 +447,7 @@ void AUEscenaObjeto::establecerPropiedades(const NBPropiedadesEnEscena &nuevasPr
 		}
 	}
 	//Set props
+    _visible = pVisible;
 	_propiedades = nuevasPropiedades;
 	//
 	NBASSERT(_propiedades.transformaciones.escalaX != 0.0f && _propiedades.transformaciones.escalaY != 0.0f)
@@ -490,7 +469,7 @@ void AUEscenaObjeto::setVisibleAndAwake(const BOOL visibleAndAwake){
 	//Analyze and notify changes, only if already at scene
 	if(idEscena >= 0){
 		UI16 myBitsChange = 0, parentBitsChange = 0;
-		if(_propiedades.visible != visibleAndAwake){
+		if(_visible != visibleAndAwake){
 			myBitsChange		|= AUOBJETOESCENA_BIT_MODEL_LOCAL_CHANGED;
 			parentBitsChange	|= AUOBJETOESCENA_BIT_MODEL_CHILD_CHANGED;
 		}
@@ -504,8 +483,8 @@ void AUEscenaObjeto::setVisibleAndAwake(const BOOL visibleAndAwake){
 		}
 	}
 	//Set props
-	_propiedades.visible	= visibleAndAwake;
-	_dormido				= !visibleAndAwake;
+	_visible	= visibleAndAwake;
+	_dormido	= !visibleAndAwake;
 	AU_GESTOR_PILA_LLAMADAS_POP_2
 }
 
@@ -529,12 +508,12 @@ void AUEscenaObjeto::establecerVisible(bool visible){
 	AU_OBJETO_ASSERT_IS_ALIVE_THIS
 	//Analyze and notify changes, only if already at scene
 	if(idEscena >= 0){
-		if(_propiedades.visible != visible){
+		if(_visible != visible){
 			AUOBJETOESCENA_SET_FLAGS_AND_PARENTS_UNTIL_ALREADY_ENABLED(this, AUOBJETOESCENA_BIT_MODEL_LOCAL_CHANGED, AUOBJETOESCENA_BIT_MODEL_CHILD_CHANGED)
 		}
 	}
 	//Set props
-	_propiedades.visible = visible;
+	_visible = visible;
 	AU_GESTOR_PILA_LLAMADAS_POP_2
 }
 
@@ -1111,7 +1090,7 @@ AUEscenaObjeto* AUEscenaObjeto::consumidorTouchEnPosicion(const NBPunto &posTouc
 		if((touchFilterMask & _touchFilterMask) != 0){
 			if(_cacheObjEscena.cajaEscena.xMin < _cacheObjEscena.cajaEscena.xMax && _cacheObjEscena.cajaEscena.yMin < _cacheObjEscena.cajaEscena.yMax){
 				if(NBCAJAAABB_INTERSECTA_PUNTO(_cacheObjEscena.cajaEscena, posTouchEscena.x, posTouchEscena.y)){
-					NBASSERT(this->_propiedades.visible)
+					NBASSERT(this->_visible)
 					NBASSERT(!this->_dormido)
 					r = this;
 					if(outConsumidorEscuchadorObj != NULL){
@@ -1138,7 +1117,7 @@ AUEscenaObjeto* AUEscenaObjeto::consumidorTouchEnPosicionSegunArreglo(const NBPu
 		if(_cacheObjEscena.cajaEscena.xMin < _cacheObjEscena.cajaEscena.xMax && _cacheObjEscena.cajaEscena.yMin < _cacheObjEscena.cajaEscena.yMax){
 			if(NBCAJAAABB_INTERSECTA_PUNTO(_cacheObjEscena.cajaEscena, posTouchEscena.x, posTouchEscena.y)){
 				if((arregloFiltroObjetosEscena->indiceDe(this) != -1)){
-					NBASSERT(this->_propiedades.visible)
+					NBASSERT(this->_visible)
 					NBASSERT(!this->_dormido)
 					r = this;
 				}
@@ -1181,7 +1160,7 @@ bool AUEscenaObjeto::agregarXmlInternoEn(AUEscenaObjeto* objEscena, AUCadenaLarg
 	//Formato viejo (ineficiente en tamano)
 	//------------------------------------
 	/*guardarEn->agregarConFormato("%s<pp>\r\n", espaciosBaseIzq);
-	guardarEn->agregarConFormato("%s\t<vis>%d</vis>\r\n", espaciosBaseIzq, objEscena->_propiedades.visible?1:0);
+	guardarEn->agregarConFormato("%s\t<vis>%d</vis>\r\n", espaciosBaseIzq, objEscena->_visible?1:0);
 	guardarEn->agregarConFormato("%s\t<posX>%f</posX><posY>%f</posY>\r\n", espaciosBaseIzq, objEscena->_propiedades.transformaciones.trasladoX, objEscena->_propiedades.transformaciones.trasladoY);
 	guardarEn->agregarConFormato("%s\t<escX>%f</escX><escY>%f</escY>\r\n", espaciosBaseIzq, objEscena->_propiedades.transformaciones.escalaX, objEscena->_propiedades.transformaciones.escalaY);
 	guardarEn->agregarConFormato("%s\t<rot>%f</rot>\r\n", espaciosBaseIzq, objEscena->_propiedades.transformaciones.rotacion);
@@ -1192,7 +1171,7 @@ bool AUEscenaObjeto::agregarXmlInternoEn(AUEscenaObjeto* objEscena, AUCadenaLarg
 	//Formato nuevo (mas compacto)
 	//------------------------------------
 	guardarEn->agregarConFormato("%s<pp>"	, espaciosBaseIzq);
-	guardarEn->agregarConFormato("%d|"			, objEscena->_propiedades.visible?1:0);
+	guardarEn->agregarConFormato("%d|"			, objEscena->_visible?1:0);
 	guardarEn->agregarConFormato("%f|%f|"		, objEscena->_propiedades.transformaciones.trasladoX, objEscena->_propiedades.transformaciones.trasladoY);
 	guardarEn->agregarConFormato("%f|%f|"		, objEscena->_propiedades.transformaciones.escalaX, objEscena->_propiedades.transformaciones.escalaY);
 	guardarEn->agregarConFormato("%f|"			, objEscena->_propiedades.transformaciones.rotacion);
@@ -1213,6 +1192,7 @@ bool AUEscenaObjeto::interpretarXmlInterno(AUEscenaObjeto* cargarEn, const AUDat
 		const sNodoXML* nodoProps;	XML_NODO_HIJO(datosXml, nodoProps, "pp", "props", nodoXml, NULL) //NBASSERT(nodoProps != NULL)
 		if(nodoProps != NULL){
 			bool iluminoDependiente = false;
+            BOOL visible = FALSE;
 			NBPropiedadesEnEscena props;
 			NBMemory_setZeroSt(props, NBPropiedadesEnEscena);
 			exito = true;
@@ -1221,7 +1201,7 @@ bool AUEscenaObjeto::interpretarXmlInterno(AUEscenaObjeto* cargarEn, const AUDat
 				const char* cadenaCSV				= datosXml->cadenaValorDeNodo(nodoProps);
 				SI32 posEnCadenaCSV					= 0;
 				SI32 tamCadenaCSV					= AUCadena8::tamano(cadenaCSV);
-				props.visible						= AUDatosCSV::valorHastaSeparador(cadenaCSV, '|', tamCadenaCSV, &posEnCadenaCSV, true);
+				visible						        = AUDatosCSV::valorHastaSeparador(cadenaCSV, '|', tamCadenaCSV, &posEnCadenaCSV, true);
 				props.transformaciones.trasladoX	= AUDatosCSV::valorHastaSeparador(cadenaCSV, '|', tamCadenaCSV, &posEnCadenaCSV, 0.0f); NBASSERT(props.transformaciones.trasladoX > -100000.0f && props.transformaciones.trasladoX < 100000.0f) //Valor corrupto???
 				props.transformaciones.trasladoY	= AUDatosCSV::valorHastaSeparador(cadenaCSV, '|', tamCadenaCSV, &posEnCadenaCSV, 0.0f); NBASSERT(props.transformaciones.trasladoY > -100000.0f && props.transformaciones.trasladoY < 100000.0f) //Valor corrupto???
 				props.transformaciones.escalaX		= AUDatosCSV::valorHastaSeparador(cadenaCSV, '|', tamCadenaCSV, &posEnCadenaCSV, 1.0f);	NBASSERT(props.transformaciones.escalaX != 0.0f && props.transformaciones.escalaX != 0.0f) //Valor corrupto???
@@ -1234,7 +1214,7 @@ bool AUEscenaObjeto::interpretarXmlInterno(AUEscenaObjeto* cargarEn, const AUDat
 				iluminoDependiente					= false; //AUDatosCSV::valorHastaSeparador(cadenaCSV, '|', tamCadenaCSV, &posEnCadenaCSV, true);
 			} else {
 				//Formato viejo (XML que ocupa mucho espacio)
-				props.visible						= datosXml->nodoHijo("vis", true, nodoProps);
+				visible						        = datosXml->nodoHijo("vis", true, nodoProps);
 				props.transformaciones.trasladoX	= datosXml->nodoHijo("posX", 0.0f, nodoProps); NBASSERT(props.transformaciones.trasladoX > -1000000.0f && props.transformaciones.trasladoX < 1000000.0f) //Valor corrupto???
 				props.transformaciones.trasladoY	= datosXml->nodoHijo("posY", 0.0f, nodoProps); NBASSERT(props.transformaciones.trasladoY > -1000000.0f && props.transformaciones.trasladoY < 1000000.0f) //Valor corrupto???
 				props.transformaciones.escalaX		= datosXml->nodoHijo("escX", 0.0f, nodoProps);	NBASSERT(props.transformaciones.escalaX != 0.0f && props.transformaciones.escalaX != 0.0f) //Valor corrupto???
@@ -1259,7 +1239,7 @@ bool AUEscenaObjeto::interpretarXmlInterno(AUEscenaObjeto* cargarEn, const AUDat
 				iluminoDependiente					= false; //datosXml->nodoHijo("ilumDepend", true, nodoProps);
 			}
 			//Set
-			cargarEn->establecerPropiedades(props);
+			cargarEn->establecerPropiedades(visible, props);
 			cargarEn->establecerIluminoDependencia(iluminoDependiente);
 			//
 			NBASSERT(cargarEn->_propiedades.transformaciones.escalaX != 0.0f && cargarEn->_propiedades.transformaciones.escalaY != 0.0f)
@@ -1282,6 +1262,7 @@ bool AUEscenaObjeto::agregarBitsInternosEn(AUEscenaObjeto* objEscena, AUArchivo*
 	SI32 valorVerificacion = AUOBJETOESCENA_VALOR_VERIFICACION_BIN;
 	NBASSERT(objEscena->_propiedades.transformaciones.escalaX != 0.0f && objEscena->_propiedades.transformaciones.escalaY != 0.0f)
 	guardarEn->escribir(&valorVerificacion, sizeof(valorVerificacion), 1, guardarEn);
+    guardarEn->escribir(&(objEscena->_visible), sizeof(objEscena->_visible), 1, guardarEn);
 	guardarEn->escribir(&(objEscena->_propiedades), sizeof(objEscena->_propiedades), 1, guardarEn);
 	guardarEn->escribir(&(objEscena->_iluminoDependiente), sizeof(objEscena->_iluminoDependiente), 1, guardarEn);
 	guardarEn->escribir(&valorVerificacion, sizeof(valorVerificacion), 1, guardarEn);
@@ -1299,15 +1280,17 @@ bool AUEscenaObjeto::interpretarBitsInternos(AUEscenaObjeto* cargarEn, AUArchivo
 	cargarDe->leer(&valorVerificacion, sizeof(valorVerificacion), 1, cargarDe); NBASSERT(valorVerificacion == AUOBJETOESCENA_VALOR_VERIFICACION_BIN)
 	if(valorVerificacion == AUOBJETOESCENA_VALOR_VERIFICACION_BIN){
 		bool iluminoDependiente = false;
+        bool visible = false;
 		NBPropiedadesEnEscena props;
 		NBMemory_setZeroSt(props, NBPropiedadesEnEscena);
 		//
+        cargarDe->leer(&visible, sizeof(visible), 1, cargarDe);
 		cargarDe->leer(&props, sizeof(props), 1, cargarDe);
 		cargarDe->leer(&iluminoDependiente, sizeof(iluminoDependiente), 1, cargarDe);
 		cargarDe->leer(&valorVerificacion, sizeof(valorVerificacion), 1, cargarDe); NBASSERT(valorVerificacion == AUOBJETOESCENA_VALOR_VERIFICACION_BIN)
 		//Set
 		if(valorVerificacion == AUOBJETOESCENA_VALOR_VERIFICACION_BIN){
-			cargarEn->establecerPropiedades(props);
+			cargarEn->establecerPropiedades(visible, props);
 			cargarEn->establecerIluminoDependencia(iluminoDependiente);
 			exito = true;
 		}

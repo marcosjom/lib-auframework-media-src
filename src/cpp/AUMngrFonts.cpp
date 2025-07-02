@@ -263,30 +263,6 @@ void AUMngrFonts::setFontFamilyForType(const ENMngrFontType type, const char* fo
 
 //
 
-/*void AUMngrFonts::updateFonts(){
-	AUMngrFonts_MUTEX_ACTIVATE
-	{
-		SI32 i; for(i = 0; i < _fonts.use; i++){
-			STMngrFontsFont* f = NBArray_itmPtrAtIndex(&_fonts, STMngrFontsFont, i);
-			//if(f->ppi.width != _ppi.width || f->ppi.height != _ppi.height){
-				const SI32 pxSize = (((float)f->pointsSz2 / 2.0f) * _ppi.height) / 72.0f;
-				if(f->fontTextures != NULL){
-					const float rr = NBGestorTexturas::updateFontTextureToSize(f->fontTextures, pxSize, 1.0f); NBASSERT(rr)
-					PRINTF_INFO("FontTexture updated from ppi(%.2f, %.2f) to ppi(%.2f, %.2f).\n", f->ppiCur.width, f->ppiCur.height, _ppi.width, _ppi.height);
-				}
-				if(f->fontRaster != NULL){
-					const float rr = NBGestorTexturas::updateFontRasterToSize(f->fontRaster, pxSize); NBASSERT(rr)
-					PRINTF_INFO("FontRaster updated from ppi(%.2f, %.2f) to ppi(%.2f, %.2f).\n", f->ppiCur.width, f->ppiCur.height, _ppi.width, _ppi.height);
-				}
-				f->ppiCur = _ppi;
-			//}
-		}
-	}
-	AUMngrFonts_MUTEX_DEACTIVATE
-}*/
-
-//
-
 AUFuenteTextura* AUMngrFonts::fontTextures(const ENMngrFontType type){
 	AUFuenteTextura* r = NULL;
 	NBASSERT(_sizeMode >= 0 && _sizeMode < ENMngrFontSizeMode_Count)

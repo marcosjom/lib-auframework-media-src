@@ -330,14 +330,15 @@ void AUEscenaAnimacionI::privInlineEstablecerPropiedadesEntreFrames(UI32 indiceF
 		} else {
 			hijo								= (AUEscenaObjeto*)_objetosEscena.elemento[iElem];
 		}
+        bool visibleAntes = false, visibleDespues = false;
 		NBPropiedadesEnEscena propiedadesAntes;
 		NBPropiedadesEnEscena propiedadesDespues;
 		STAnimacionIndicesPropiedades indicesPropiedadesAntes = ((AUArregloNativoMutableP<STAnimacionIndicesPropiedades>*)_plantillaAnimacion->iPropiedadesPorFrame.elemento[indiceFrameIni])->elemento[iElem];
 		STAnimacionIndicesPropiedades indicesPropiedadesDespues = ((AUArregloNativoMutableP<STAnimacionIndicesPropiedades>*)_plantillaAnimacion->iPropiedadesPorFrame.elemento[indiceFrameFin])->elemento[iElem];
 		if(indicesPropiedadesAntes.iTraslacion==-1 || indicesPropiedadesAntes.iColor==-1){
-			propiedadesAntes.visible					= false;
+			visibleAntes					= false;
 		} else {
-			propiedadesAntes.visible					= true;
+			visibleAntes					= true;
 			propiedadesAntes.transformaciones.trasladoX	= _plantillaBiblioteca->traslaciones.elemento[indicesPropiedadesAntes.iTraslacion].x;
 			propiedadesAntes.transformaciones.trasladoY	= _plantillaBiblioteca->traslaciones.elemento[indicesPropiedadesAntes.iTraslacion].y;
 			propiedadesAntes.transformaciones.escalaX	= _plantillaBiblioteca->escalaciones.elemento[indicesPropiedadesAntes.iEscalacion].ancho;
@@ -346,9 +347,9 @@ void AUEscenaAnimacionI::privInlineEstablecerPropiedadesEntreFrames(UI32 indiceF
 			propiedadesAntes.color8						= _plantillaBiblioteca->colores.elemento[indicesPropiedadesAntes.iColor];
 		}
 		if(indicesPropiedadesDespues.iTraslacion==-1 || indicesPropiedadesDespues.iColor==-1){
-			propiedadesDespues.visible						= false;
+			visibleDespues						= false;
 		} else {
-			propiedadesDespues.visible						= true;
+			visibleDespues						= true;
 			propiedadesDespues.transformaciones.trasladoX	= _plantillaBiblioteca->traslaciones.elemento[indicesPropiedadesDespues.iTraslacion].x;
 			propiedadesDespues.transformaciones.trasladoY	= _plantillaBiblioteca->traslaciones.elemento[indicesPropiedadesDespues.iTraslacion].y;
 			propiedadesDespues.transformaciones.escalaX		= _plantillaBiblioteca->escalaciones.elemento[indicesPropiedadesDespues.iEscalacion].ancho;
@@ -356,13 +357,14 @@ void AUEscenaAnimacionI::privInlineEstablecerPropiedadesEntreFrames(UI32 indiceF
 			propiedadesDespues.transformaciones.rotacion	= _plantillaBiblioteca->rotaciones.elemento[indicesPropiedadesDespues.iRotacion];
 			propiedadesDespues.color8			= _plantillaBiblioteca->colores.elemento[indicesPropiedadesDespues.iColor];
 		}
-		if(propiedadesAntes.visible || propiedadesDespues.visible){
+		if(visibleAntes || visibleDespues){
+            bool visibleIntermedio = false;
 			NBPropiedadesEnEscena propiedadesIntermedias;
-			if(!propiedadesAntes.visible){
+			if(!visibleAntes){
 				propiedadesAntes.transformaciones	= propiedadesDespues.transformaciones;
 				propiedadesAntes.color8				= propiedadesDespues.color8;
 				propiedadesAntes.color8.a			= 0;
-			} else if(!propiedadesDespues.visible){
+			} else if(!visibleDespues){
 				propiedadesDespues.transformaciones	= propiedadesAntes.transformaciones;
 				propiedadesDespues.color8			= propiedadesAntes.color8;
 				propiedadesDespues.color8.a			= 0;
@@ -384,7 +386,7 @@ void AUEscenaAnimacionI::privInlineEstablecerPropiedadesEntreFrames(UI32 indiceF
 			if(difRotacion<-180.0f) difRotacion					+= 360.0f;
 			else if(difRotacion>180.0f) difRotacion				-= 360.0f;
 			NBASSERT(difRotacion>=-180.0f && difRotacion<=180.0f);
-			propiedadesIntermedias.visible						= true;
+            visibleIntermedio						            = true;
 			propiedadesIntermedias.transformaciones.trasladoX	= propiedadesAntes.transformaciones.trasladoX+((propiedadesDespues.transformaciones.trasladoX-propiedadesAntes.transformaciones.trasladoX)*factorAvance);
 			propiedadesIntermedias.transformaciones.trasladoY	= propiedadesAntes.transformaciones.trasladoY+((propiedadesDespues.transformaciones.trasladoY-propiedadesAntes.transformaciones.trasladoY)*factorAvance);
 			propiedadesIntermedias.transformaciones.rotacion	= propiedadesAntes.transformaciones.rotacion+(difRotacion*factorAvance);
@@ -395,7 +397,7 @@ void AUEscenaAnimacionI::privInlineEstablecerPropiedadesEntreFrames(UI32 indiceF
 			propiedadesIntermedias.color8.b						= (SI16)propiedadesAntes.color8.b+(((SI16)propiedadesDespues.color8.b-(SI16)propiedadesAntes.color8.b)*factorAvance);
 			propiedadesIntermedias.color8.a						= (SI16)propiedadesAntes.color8.a+(((SI16)propiedadesDespues.color8.a-(SI16)propiedadesAntes.color8.a)*factorAvance);
 			//PRINTF_INFO("Escala antes %d (%f, %f) escala despues %d (%f, %f): en factor (%f) (%f, %f) ROTACION ANTES(%f) DESPUES(%f)\n", indiceFrameIni, propiedadesAntes.transformaciones.escalaX, propiedadesAntes.transformaciones.escalaY, indiceFrameFin, propiedadesDespues.transformaciones.escalaX, propiedadesDespues.transformaciones.escalaY, factorAvance, propiedadesIntermedias.transformaciones.escalaX, propiedadesIntermedias.transformaciones.escalaY, propiedadesAntes.transformaciones.rotacion, propiedadesDespues.transformaciones.rotacion);
-			hijo->establecerPropiedades(propiedadesIntermedias);
+			hijo->establecerPropiedades(visibleIntermedio, propiedadesIntermedias);
 		} else {
 			hijo->establecerVisible(false);
 		}

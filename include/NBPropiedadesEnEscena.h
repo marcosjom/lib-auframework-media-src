@@ -9,6 +9,12 @@
 #ifndef NBPROPIEDADESENESCENA_H_INCLUIDO
 #define NBPROPIEDADESENESCENA_H_INCLUIDO
 
+#include "nb/scene/NBScnObjProps.h"
+
+/*
+//
+//Moved to: "nb/scene/NBScnObjProps.h"
+//
 #include "NBColor.h"
 #include "NBTransformaciones.h"
 
@@ -22,6 +28,6 @@ struct NBPropiedadesEnEscena {
 	bool operator!=(const NBPropiedadesEnEscena &otro) const {
 		return !(visible==otro.visible && transformaciones==otro.transformaciones && color8==otro.color8);
 	}
-};
+};*/
 
 #endif

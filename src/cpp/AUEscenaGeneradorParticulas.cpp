@@ -197,7 +197,7 @@ AUArregloNativoP<STParticulaGen>* AUEscenaGeneradorParticulas::datosParticulas()
 
 void AUEscenaGeneradorParticulas::tickAnimacion(float segsTranscurridos){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_2("AUEscenaGeneradorParticulas::tickAnimacion")	
-	if(this->idEscena!=-1 && !this->_dormido && this->_propiedades.visible){
+	if(this->idEscena!=-1 && !this->_dormido && this->_visible){
 		float proporcionAlpha	= (float)this->_propiedades.color8.a / 255.0f;
 		if(proporcionAlpha>0.0f){
 			AUEscenaGrupoParticulas* agrupadorParticulas = _grupoParticulas;

@@ -27,12 +27,6 @@
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-//Si defined entonces, se reservan bufferes para implementar un modelo de productor
-//y consumidor de escenas. Util para entornos de alto rendimiento para
-//que se produzcan y consuman escenas en paralelo.
-//Pendiente: analizando si en dispositivos de bajo rendimiento (DijemaMendezAndroid).
-#define CONFIG_NB_GESTOR_ESCENAS_MODELO_PRODUCTOR_CONSUMIDOR_CANT_BUFFERS	1
-
 //Si defined, entonces los modelos de renderizado se definen mediante los indices
 //de los vertices.
 #define CONFIG_NB_GESTOR_ESCENAS_MODELOS_MEDIANTE_INDICES
