@@ -349,6 +349,8 @@ class NBGestorEscena {
 		static ENGestorEscenaCambioDef		cambioDefinicionEstado();
 		static void							cambioDefinicionMoverHaciaEstadoSiguiente();
 		static float						cambioDefinicionEscalaHaciaHD();
+        //Render
+        static STNBScnRenderRef             getScnRender(void);
 		//Bufferes
 		static bool							bufferDatosEnLecturaMoverHaciaSiguienteNoBloqueado();
 		static void							bufferDatosEnEscrituraMoverHaciaSiguiente();
@@ -590,7 +592,7 @@ class NBGestorEscena {
 		static ENGestorEscenaBufferEstado	_bufferDatosEstado;
 		static bool							_bufferDatosBloqueado;
 		static STBufferVerticesGL			_buffersVertices[ENVerticeGlTipo_Conteo];
-        static STNBScnRenderRef             _sncRender;
+        static STNBScnRenderRef             _scnRender;
 		//
 		static void							privIncializarConfigurarGL();
 		//

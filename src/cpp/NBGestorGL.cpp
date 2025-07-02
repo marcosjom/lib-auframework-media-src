@@ -2104,3 +2104,203 @@ bool NBGestorGL::dbgModoFormaGLEsIndependizable(GLenum modo){
 	return false;
 }
 #endif
+
+
+//
+
+BOOL NBGestorGL::getApiItf(STNBScnRenderApiItf* dst){
+    BOOL r = FALSE;
+    if(dst != NULL){
+        NBMemory_setZeroSt(*dst, STNBScnRenderApiItf);
+        //STNBGpuBufferApiItf
+        dst->buff.create    = NBGestorGL::STNBGpuBufferApiItf_create;
+        dst->buff.destroy   = NBGestorGL::STNBGpuBufferApiItf_destroy;
+        dst->buff.sync      = NBGestorGL::STNBGpuBufferApiItf_sync;
+        //STNBGpuVertexBufferApiItf
+        dst->vertexBuff.create = NBGestorGL::STNBGpuVertexBufferApiItf_create;
+        dst->vertexBuff.destroy = NBGestorGL::STNBGpuVertexBufferApiItf_destroy;
+        dst->vertexBuff.activate = NBGestorGL::STNBGpuVertexBufferApiItf_activate;
+        dst->vertexBuff.deactivate = NBGestorGL::STNBGpuVertexBufferApiItf_deactivate;
+        //
+        r = TRUE;
+    }
+    return r;
+}
+
+GLenum NBGestorGL_glDataTypeToApiDataType(const ENNBGpuDataType type){
+    switch(type){
+        case ENNBGpuDataType_SI8: return GL_BYTE;
+        case ENNBGpuDataType_UI8: return GL_UNSIGNED_BYTE;
+        case ENNBGpuDataType_SI16: return GL_SHORT;
+        case ENNBGpuDataType_UI16: return GL_UNSIGNED_SHORT;
+        case ENNBGpuDataType_SI32: return GL_INT;
+        case ENNBGpuDataType_UI32: return GL_UNSIGNED_INT;
+        case ENNBGpuDataType_FLOAT32: return GL_FLOAT;
+        case ENNBGpuDataType_DOUBLE64: return GL_DOUBLE;
+        default:
+            NBASSERT(FALSE) //missing implementation
+            break;
+    }
+    NBASSERT(FALSE) //missing implementation
+    return 0;
+}
+
+GLenum NBGestorGL_glTextureIdxToApiTextureSlot(const SI32 iTex){
+    const GLenum r = GL_TEXTURE0 + iTex; NBASSERT(GL_TEXTURE31 == (GL_TEXTURE0 + 31))
+    return r;
+}
+
+//STNBGpuBufferApiItf
+
+typedef struct STSTNBGpuBufferApiObj_ {
+    GLuint  glBuff;
+    UI32    glSzAllocated;  //bytes allocated
+} STSTNBGpuBufferApiObj;
+
+void* NBGestorGL::STNBGpuBufferApiItf_create(const STNBGpuBufferCfg* cfg, void* usrData){
+    STSTNBGpuBufferApiObj* r = (STSTNBGpuBufferApiObj*)NBMemory_alloc(sizeof(STSTNBGpuBufferApiObj));
+    if(r != NULL){
+        NBMemory_setZeroSt(*r, STSTNBGpuBufferApiObj);
+        glGenBuffers(1, &r->glBuff); GL_CMD_EJECUTADO("glGenBuffers(1)")
+    }
+    return r;
+}
+
+void NBGestorGL::STNBGpuBufferApiItf_destroy(void* data, void* usrData){
+    if(data != NULL){
+        STSTNBGpuBufferApiObj* b = (STSTNBGpuBufferApiObj*)data;
+        glDeleteBuffers(1, &b->glBuff); GL_CMD_EJECUTADO("glDeleteBuffers(1)")
+        b->glBuff = 0;
+        NBMemory_free(b);
+    }
+}
+
+BOOL NBGestorGL::STNBGpuBufferApiItf_sync(void* data, const STNBGpuBufferCfg* cfg, STNBMemoryBlocksRef mem, const STNBGpuBufferChanges* changes, void* usrData){
+    //ToDo: implement
+    return FALSE;
+}
+
+//STNBGpuVertexBufferApiItf
+
+typedef struct STNBGpuVertexBufferApiItfObj_ {
+    GLuint  glVAO;
+    STNBGpuBufferRef vertexBuff;
+    STNBGpuBufferRef idxsBuff;
+} STNBGpuVertexBufferApiItfObj;
+
+void NBGestorGL::STNBGpuVertexBufferApiItf_setClientState(const STNBGpuVertexBufferCfg* cfg, STNBGpuBufferRef vertexBuff, STNBGpuBufferRef idxsBuff){
+    //coodinates
+    if(cfg->coord.amm > 0){
+        glEnableClientState(GL_VERTEX_ARRAY); GL_CMD_EJECUTADO("glEnableClientState(GL_VERTEX_ARRAY)")
+        glVertexPointer(cfg->coord.amm, NBGestorGL_glDataTypeToApiDataType((const ENNBGpuDataType)cfg->coord.type), cfg->szPerRecord, (GLvoid*)cfg->coord.offset); GL_CMD_EJECUTADO("glVertexPointer(...)")
+    } else {
+        glDisableClientState(GL_VERTEX_ARRAY); GL_CMD_EJECUTADO("glDisableClientState(GL_VERTEX_ARRAY)")
+    }
+    //color
+    if(cfg->color.amm > 0){
+        glEnableClientState(GL_COLOR_ARRAY); GL_CMD_EJECUTADO("glEnableClientState(GL_COLOR_ARRAY)")
+        glColorPointer(cfg->color.amm, NBGestorGL_glDataTypeToApiDataType((const ENNBGpuDataType)cfg->color.type), cfg->szPerRecord, (GLvoid*)cfg->color.offset); GL_CMD_EJECUTADO("glColorPointer(...)")
+    } else {
+        glDisableClientState(GL_COLOR_ARRAY); GL_CMD_EJECUTADO("glDisableClientState(GL_COLOR_ARRAY)")
+    }
+    //textures
+    {
+        SI32 i; for(i = (sizeof(cfg->texCoords) / sizeof(cfg->texCoords[0])) - 1; i >= 0; --i){
+            const STNBGpuVertexPartDef* d = &cfg->texCoords[i];
+            GLenum texId = NBGestorGL_glTextureIdxToApiTextureSlot(i);
+            glClientActiveTexture(texId); GL_CMD_EJECUTADO("glClientActiveTexture(%u)", texId)
+            if(d->amm > 0){
+                glEnableClientState(GL_TEXTURE_COORD_ARRAY); GL_CMD_EJECUTADO("glEnableClientState(GL_TEXTURE_COORD_ARRAY)")
+                glTexCoordPointer(d->amm, NBGestorGL_glDataTypeToApiDataType((const ENNBGpuDataType)d->type), cfg->szPerRecord, (GLvoid*)d->offset); GL_CMD_EJECUTADO("glColorPointer(...)")
+            } else {
+                glDisableClientState(GL_TEXTURE_COORD_ARRAY); GL_CMD_EJECUTADO("glDisableClientState(GL_TEXTURE_COORD_ARRAY)")
+            }
+        }
+    }
+}
+
+void* NBGestorGL::STNBGpuVertexBufferApiItf_create(const STNBGpuVertexBufferCfg* cfg, STNBGpuBufferRef vertexBuff, STNBGpuBufferRef idxsBuff, void* usrData){
+    STNBGpuVertexBufferApiItfObj* r = (STNBGpuVertexBufferApiItfObj*)NBMemory_alloc(sizeof(STNBGpuVertexBufferApiItfObj));
+    if(r != NULL){
+        NBMemory_setZeroSt(*r, STNBGpuVertexBufferApiItfObj);
+        NBGpuBuffer_set(&r->vertexBuff, &vertexBuff);
+        NBGpuBuffer_set(&r->idxsBuff, &idxsBuff);
+        if(_soportaVAOs){
+#           ifdef NB_LIB_GRAFICA_ES_EMBEDDED
+            glGenVertexArraysOES(1, &r->glVAO); GL_CMD_EJECUTADO("glGenVertexArraysOES(1)")
+            glBindVertexArrayOES(r->glVAO); GL_CMD_EJECUTADO("glBindVertexArrayOES(%u)", b->glVAO)
+#           elif defined(WIN32) || defined(_WIN32)
+            glGenVertexArrays(1, &r->glVAO); GL_CMD_EJECUTADO("glGenVertexArrays(1)")
+            glBindVertexArray(r->glVAO); GL_CMD_EJECUTADO("glBindVertexArray(%u)", b->glVAO)
+#           else
+            glGenVertexArraysAPPLE(1, &r->glVAO); GL_CMD_EJECUTADO("glGenVertexArraysAPPLE(1)")
+            glBindVertexArrayAPPLE(r->glVAO); GL_CMD_EJECUTADO("glBindVertexArrayAPPLE(%u)", b->glVAO)
+#           endif
+            //configure
+            NBGestorGL::STNBGpuVertexBufferApiItf_setClientState(cfg, vertexBuff, idxsBuff);
+        }
+    }
+    return r;
+}
+
+void NBGestorGL::STNBGpuVertexBufferApiItf_destroy(void* data, void* usrData){
+    if(data != NULL){
+        STNBGpuVertexBufferApiItfObj* b = (STNBGpuVertexBufferApiItfObj*)data;
+        if(_soportaVAOs){
+#           ifdef NB_LIB_GRAFICA_ES_EMBEDDED
+            glDeleteVertexArraysOES(1, &b->glVAO); GL_CMD_EJECUTADO("glDeleteVertexArraysOES(1)")
+#           elif defined(WIN32) || defined(_WIN32)
+            glDeleteVertexArrays(1, &b->glVAO); GL_CMD_EJECUTADO("glDeleteVertexArrays(1)")
+#           else
+            glDeleteVertexArraysAPPLE(1, &b->glVAO); GL_CMD_EJECUTADO("glDeleteVertexArraysAPPLE(1)")
+#           endif
+        }
+        b->glVAO = 0;
+        if(NBGpuBuffer_isSet(b->vertexBuff)){
+            NBGpuBuffer_release(&b->vertexBuff);
+            NBGpuBuffer_null(&b->vertexBuff);
+        }
+        if(NBGpuBuffer_isSet(b->idxsBuff)){
+            NBGpuBuffer_release(&b->idxsBuff);
+            NBGpuBuffer_null(&b->idxsBuff);
+        }
+        NBMemory_free(b);
+    }
+}
+
+BOOL NBGestorGL::STNBGpuVertexBufferApiItf_activate(void* data, const STNBGpuVertexBufferCfg* cfg, void* usrData){
+    BOOL r = FALSE;
+    if(data != NULL){
+        STNBGpuVertexBufferApiItfObj* b = (STNBGpuVertexBufferApiItfObj*)data;
+        if(_soportaVAOs){
+#           ifdef NB_LIB_GRAFICA_ES_EMBEDDED
+            glBindVertexArrayOES(b->glVAO); GL_CMD_EJECUTADO("glBindVertexArrayOES(%u)", b->glVAO)
+#           elif defined(WIN32) || defined(_WIN32)
+            glBindVertexArray(b->glVAO); GL_CMD_EJECUTADO("glBindVertexArray(%u)", b->glVAO)
+#           else
+            glBindVertexArrayAPPLE(b->glVAO); GL_CMD_EJECUTADO("glBindVertexArrayAPPLE(%u)", b->glVAO)
+#           endif
+        } else {
+            //configure
+            NBGestorGL::STNBGpuVertexBufferApiItf_setClientState(cfg, b->vertexBuff, b->idxsBuff);
+        }
+    }
+    return r;
+}
+
+BOOL NBGestorGL::STNBGpuVertexBufferApiItf_deactivate(void* data, void* usrData){
+    BOOL r = FALSE;
+    if(data != NULL){
+        STNBGpuVertexBufferApiItfObj* b = (STNBGpuVertexBufferApiItfObj*)data;
+        if(_soportaVAOs){
+#           ifdef NB_LIB_GRAFICA_ES_EMBEDDED
+            glBindVertexArrayOES(0); GL_CMD_EJECUTADO("glBindVertexArrayOES(0)")
+#           elif defined(WIN32) || defined(_WIN32)
+            glBindVertexArray(0); GL_CMD_EJECUTADO("glBindVertexArray(0)")
+#           else
+            glBindVertexArrayAPPLE(0); GL_CMD_EJECUTADO("glBindVertexArrayAPPLE(0)")
+#           endif
+        }
+    }
+    return r;
+}

@@ -9,11 +9,11 @@
 #ifndef NBPROPIEDADESENESCENA_H_INCLUIDO
 #define NBPROPIEDADESENESCENA_H_INCLUIDO
 
-#include "nb/scene/NBScnObjProps.h"
+#include "nb/scene/NBScnNodeProps.h"
 
 /*
 //
-//Moved to: "nb/scene/NBScnObjProps.h"
+//Moved to: "nb/scene/NBScnNodeProps.h"
 //
 #include "NBColor.h"
 #include "NBTransformaciones.h"

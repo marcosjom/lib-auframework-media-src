@@ -23,6 +23,7 @@
 #include "AUPilaNativaMutable.h"
 #include "NBGestorGLDef.h"
 #include "nb/2d/NBRect.h"
+#include "nb/scene/NBScnRender.h"
 
 #ifdef CONFIG_NB_GESTOR_ESCENAS_MODELOS_MEDIANTE_INDICES
 #	define NB_GESTOR_GL_DAME_ELEMS_PARA_TRIANGSTRIP_4_ESCNA(TIPOVERTICE, BLOQUEVERTICESGL)											NBGestorEscena::reservarIndicesParaTriangStrip4Independizado(TIPOVERTICE, BLOQUEVERTICESGL.primerElemento)
@@ -436,6 +437,8 @@ class NBGestorGL {
 		static void					dbgNombrarActivadorVerticesGL(const char* strNombre);
 		#endif
 		static SI32					maximaDimensionTextura();
+        //
+        static BOOL                 getApiItf(STNBScnRenderApiItf* dst);
 	private:
 		static bool					_gestorInicializado;
 		static bool					_soportaVAOs;						//Vertex Array Objects
@@ -484,6 +487,16 @@ class NBGestorGL {
 		static void					privDbgCacheAssertActiveTexture();
 		static void					privDbgCacheAssertTextureActiveState();
 		#endif
+        //STNBGpuBufferApiItf
+        static void*                STNBGpuBufferApiItf_create(const STNBGpuBufferCfg* cfg, void* usrData);
+        static void                 STNBGpuBufferApiItf_destroy(void* data, void* usrData);
+        static BOOL                 STNBGpuBufferApiItf_sync(void* data, const STNBGpuBufferCfg* cfg, STNBMemoryBlocksRef mem, const STNBGpuBufferChanges* changes, void* usrData);
+        //STNBGpuVertexBufferApiItf
+        static void*                STNBGpuVertexBufferApiItf_create(const STNBGpuVertexBufferCfg* cfg, STNBGpuBufferRef vertexBuff, STNBGpuBufferRef idxsBuff, void* usrData);
+        static void                 STNBGpuVertexBufferApiItf_destroy(void* data, void* usrData);
+        static BOOL                 STNBGpuVertexBufferApiItf_activate(void* data, const STNBGpuVertexBufferCfg* cfg, void* usrData);
+        static BOOL                 STNBGpuVertexBufferApiItf_deactivate(void* data, void* usrData);
+        static void                 STNBGpuVertexBufferApiItf_setClientState(const STNBGpuVertexBufferCfg* cfg, STNBGpuBufferRef vertexBuff, STNBGpuBufferRef idxsBuff);
 };
 
 #endif

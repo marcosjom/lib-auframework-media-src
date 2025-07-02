@@ -33,7 +33,7 @@ AUArregloNativoMutableP<STRangoSombra>* NBGestorEscena::_cacheSombrasFusionadas 
 ENGestorEscenaBufferEstado	NBGestorEscena::_bufferDatosEstado;
 bool						NBGestorEscena::_bufferDatosBloqueado;
 STBufferVerticesGL			NBGestorEscena::_buffersVertices[ENVerticeGlTipo_Conteo];
-STNBScnRenderRef            NBGestorEscena::_sncRender = NB_OBJREF_NULL;
+STNBScnRenderRef            NBGestorEscena::_scnRender = NB_OBJREF_NULL;
 /*
  Para asegurar la integridad del proceso del modelo productor/consumidor
  estas variables se mantienen con valor NULL
@@ -129,7 +129,18 @@ bool NBGestorEscena::inicializar(const float pantallaFrecuencia){
 #           endif
 		}
 	}
-    _sncRender = NBScnRender_alloc(NULL);
+    {
+        STNBScnRenderApiItf itf;
+        NBMemory_setZeroSt(itf, STNBScnRenderApiItf);
+        if(!NBGestorGL::getApiItf(&itf)){
+            NBASSERT(FALSE)
+        } else {
+            _scnRender = NBScnRender_alloc(NULL);
+            if(!NBScnRender_prepare(_scnRender, &itf, NULL)){
+                NBASSERT(FALSE)
+            }
+        }
+    }
 	NBSegmentadorFiguras::inicializar();
 	//
 	_gestorInicializado			= true;
@@ -249,9 +260,9 @@ void NBGestorEscena::finalizar(){
 	//
 	if(_cacheSombrasFusionadas != NULL) _cacheSombrasFusionadas->liberar(NB_RETENEDOR_NULL); _cacheSombrasFusionadas = NULL;
     //
-    if(NBScnRender_isSet(_sncRender)){
-        NBScnRender_release(&_sncRender);
-        NBScnRender_null(&_sncRender);
+    if(NBScnRender_isSet(_scnRender)){
+        NBScnRender_release(&_scnRender);
+        NBScnRender_null(&_scnRender);
     }
 	_gestorInicializado = false;
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
@@ -424,6 +435,12 @@ float NBGestorEscena::cambioDefinicionEscalaHaciaHD(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_ESCENAS("NBGestorEscena::cambioDefinicionEscalaHaciaHD")
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_ESCENAS
 	return _cambioDefinicionEscalaHaciaHD;
+}
+
+//Render
+
+STNBScnRenderRef NBGestorEscena::getScnRender(void){
+    return _scnRender;
 }
 
 //
