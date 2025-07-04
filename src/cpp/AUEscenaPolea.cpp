@@ -157,13 +157,13 @@ void AUEscenaPolea::privOrganizarObjetosSegunUnion(){
 void AUEscenaPolea::agregadoEnEscena(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_3("AUEscenaPolea::agregadoEnEscena")
 	NBGestorAnimadores::agregarAnimador(this, this);
-	//AUEscenaContenedor::agregadoEnEscena(); //COMENTARIADO, por ahora AUEscenaContenedor::agregadoEnEscena no hace nada.
+	AUEscenaContenedor::agregadoEnEscena();
 	AU_GESTOR_PILA_LLAMADAS_POP_3
 }
 
 void AUEscenaPolea::quitandoDeEscena(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_3("AUEscenaPolea::quitandoDeEscena")
-	//AUEscenaContenedor::quitandoDeEscena(); //COMENTARIADO, por ahora AUEscenaContenedor::quitandoDeEscena no hace nada.
+	AUEscenaContenedor::quitandoDeEscena();
 	NBGestorAnimadores::quitarAnimador(this);
 	AU_GESTOR_PILA_LLAMADAS_POP_3
 }

@@ -2153,7 +2153,7 @@ GLenum NBGestorGL_glTextureIdxToApiTextureSlot(const SI32 iTex){
 //STNBGpuBufferApiItf
 
 typedef struct STSTNBGpuBufferApiObj_ {
-    GLuint  glBuff;
+    GLuint  glBuff; //leave this as first element of the struct
     UI32    glSzAllocated;  //bytes allocated
 } STSTNBGpuBufferApiObj;
 
@@ -2183,7 +2183,7 @@ BOOL NBGestorGL::STNBGpuBufferApiItf_sync(void* data, const STNBGpuBufferCfg* cf
 //STNBGpuVertexBufferApiItf
 
 typedef struct STNBGpuVertexBufferApiItfObj_ {
-    GLuint  glVAO;
+    GLuint  glVAO;  //leave this as first element of the struct
     STNBGpuBufferRef vertexBuff;
     STNBGpuBufferRef idxsBuff;
 } STNBGpuVertexBufferApiItfObj;

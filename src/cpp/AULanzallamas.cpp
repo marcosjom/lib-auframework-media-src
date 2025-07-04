@@ -132,13 +132,13 @@ void AULanzallamas::agregadoEnEscena(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_3("AULanzallamas::agregadoEnEscena")
 	NBGestorAnimadores::agregarAnimador(this, this);
 	NBGestorPersonajes::agregarVictimario(this, 0);
-	//AUEscenaContenedor::agregadoEnEscena(); //COMENTARIADO, por ahora AUEscenaContenedor::agregadoEnEscena no hace nada.
+	AUEscenaContenedor::agregadoEnEscena();
 	AU_GESTOR_PILA_LLAMADAS_POP_3
 }
 
 void AULanzallamas::quitandoDeEscena(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_3("AULanzallamas::quitandoDeEscena")
-	//AUEscenaContenedor::quitandoDeEscena(); //COMENTARIADO, por ahora AUEscenaContenedor::quitandoDeEscena no hace nada.
+	AUEscenaContenedor::quitandoDeEscena();
 	NBGestorPersonajes::quitarVictimario(this);
 	NBGestorAnimadores::quitarAnimador(this);
 	AU_GESTOR_PILA_LLAMADAS_POP_3

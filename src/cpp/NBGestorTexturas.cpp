@@ -2751,19 +2751,20 @@ STGestorTexTextura*	NBGestorTexturas::privTexturaDesdeArchivoJPEG(UI8 iAmbitoTex
 		if(archivo == NULL){
 			PRINTF_ERROR("TEX, no se pudo cargar el JPEG (1): '%s'\n", filepath); //NBASSERT(false)
 		} else {
-			archivo->lock();
-			NBASSERT(archivo->posicionActual() >= 0)
+			//NBASSERT(archivo->posicionActual() >= 0) //2025-07-04: removed, subfile allways starts at zero
 			bool releaseLoadingState = true;
 			STGestoTexLoadingJPEG* state = (STGestoTexLoadingJPEG*)NBGestorMemoria::reservarMemoria(sizeof(STGestoTexLoadingJPEG), ENMemoriaTipo_General);
-			NBGestorTexturas::privLoadingStateInitJPEG(state, archivo, origenTextura, escalaBase2, escalaParaHD, filepath, NBString_strLenBytes(filepath), tipoAlmacenamiento, tipoUso, modoPintado, habilitarMipMap, ENTexturaOrdenV_HaciaArriba);
+            {
+                NBGestorTexturas::privLoadingStateInitJPEG(state, archivo, origenTextura, escalaBase2, escalaParaHD, filepath, NBString_strLenBytes(filepath), tipoAlmacenamiento, tipoUso, modoPintado, habilitarMipMap, ENTexturaOrdenV_HaciaArriba);
+            }
 			if(state->estado == NULL){
 				PRINTF_ERROR("could not create the jpegRead state for: '%s'\n", filepath); //NBASSERT(false)
 			} else {
 				//Read headers (no buffers)
-				ENJpegReadResult readResult;
-				while(ENJpegReadResult_partial == (readResult = AUMapaBitsMutable::jpegReadStateRead(state->estado, NULL, 0, NULL))){
-					//read more
-				}
+                ENJpegReadResult readResult = ENJpegReadResult_error;
+                while(ENJpegReadResult_partial == (readResult = AUMapaBitsMutable::jpegReadStateRead(state->estado, NULL, 0, NULL))){
+                    //read more
+                }
 				//Process result
 				if(readResult != ENJpegReadResult_end){
 					PRINTF_ERROR("no se pudo cargar el encabezado del JPEG: '%s'\n", filepath); //NBASSERT(false)
@@ -2801,7 +2802,6 @@ STGestorTexTextura*	NBGestorTexturas::privTexturaDesdeArchivoJPEG(UI8 iAmbitoTex
 				NBGestorMemoria::liberarMemoria(state);
 				state = NULL;
 			}
-			archivo->unlock();
 		}
 	}
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2

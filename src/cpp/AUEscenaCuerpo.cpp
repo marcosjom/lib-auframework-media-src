@@ -540,7 +540,7 @@ void AUEscenaCuerpo::agregadoEnEscena(){
 		this->crearCuerpo();
 		NBASSERT(_cuerpo != NULL)
 	}
-	//AUEscenaContenedor::agregadoEnEscena(); //COMENTARIADO, por ahora AUEscenaContenedor::agregadoEnEscena no hace nada.
+	AUEscenaContenedor::agregadoEnEscena();
 	AU_GESTOR_PILA_LLAMADAS_POP_3
 }
 
@@ -555,7 +555,7 @@ void AUEscenaCuerpo::agregadoEnEscenaConHijosNotificados(){
 
 void AUEscenaCuerpo::quitandoDeEscena(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_3("AUEscenaCuerpo::quitandoDeEscena")
-	//AUEscenaContenedor::quitandoDeEscena(); //COMENTARIADO, por ahora AUEscenaContenedor::quitandoDeEscena no hace nada.
+	AUEscenaContenedor::quitandoDeEscena();
 	if(_idMundoFisica!=-1 && _cuerpo != NULL){
 		this->destruirCuerpo();
 	}

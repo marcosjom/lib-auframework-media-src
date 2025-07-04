@@ -32,10 +32,10 @@
 #define CONFIG_NB_GESTOR_ESCENAS_MODELOS_MEDIANTE_INDICES
 
 //Si defined, entonces se omite el codigo y referencias a librerias Box2d.
-#define CONFIG_NB_UNSUPPORT_BOX2D
+//#define CONFIG_NB_UNSUPPORT_BOX2D
 
 //Si defined, entonces se omite el codigo y referencias a librerias de audio.
-#define CONFIG_NB_UNSUPPORT_AUDIO_IO
+//#define CONFIG_NB_UNSUPPORT_AUDIO_IO
 
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++

@@ -835,8 +835,7 @@ void AUEscenaCuerda::cuerdaLiberarDeAnalisisCorte(){
 
 void AUEscenaCuerda::tickAnimacion(float segsTranscurridos){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_3("AUEscenaCuerda::tickAnimacion")
-	NBASSERT(this->idEscena!=-1)
-	NBASSERT(idEscena!=-1) //Solo si esta en escena
+	NBASSERT(this->idEscena!=-1) //Solo si esta en escena
 	if(!this->_dormido){
 		if(_unionCuerdaOpcional != NULL){
 #			ifndef CONFIG_NB_UNSUPPORT_BOX2D

@@ -398,13 +398,13 @@ void AUEscenaTextoSprites::establecerTexto(const char* texto, const ENEscenaText
 void AUEscenaTextoSprites::agregadoEnEscena(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_3("AUEscenaTextoSprites::agregadoEnEscena")
 	NBGestorAnimadores::agregarAnimador(this, this);
-	//AUEscenaContenedor::agregadoEnEscena(); //COMENTARIADO, por ahora AUEscenaContenedor::agregadoEnEscena no hace nada.
+	AUEscenaContenedor::agregadoEnEscena();
 	AU_GESTOR_PILA_LLAMADAS_POP_3
 }
 
 void AUEscenaTextoSprites::quitandoDeEscena(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_3("AUEscenaTextoSprites::quitandoDeEscena")
-	//AUEscenaContenedor::quitandoDeEscena(); //COMENTARIADO, por ahora AUEscenaContenedor::quitandoDeEscena no hace nada.
+	AUEscenaContenedor::quitandoDeEscena();
 	NBGestorAnimadores::quitarAnimador(this);
 	AU_GESTOR_PILA_LLAMADAS_POP_3
 }

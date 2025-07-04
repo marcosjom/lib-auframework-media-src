@@ -624,20 +624,20 @@ void AUEscenaAnimacionI::privInlineQuitarSonidoEscenaPorIndice(AUEscenaSnd* soni
 void AUEscenaAnimacionI::agregadoEnEscena(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_3("AUEscenaAnimacionI::agregadoEnEscena")
 	NBGestorAnimadores::agregarAnimador(this, this);
-	//AUEscenaContenedor::agregadoEnEscena(); //COMENTARIADO, por ahora AUEscenaContenedor::agregadoEnEscena no hace nada.
+	AUEscenaContenedor::agregadoEnEscena();
 	AU_GESTOR_PILA_LLAMADAS_POP_3
 }
 
 void AUEscenaAnimacionI::quitandoDeEscena(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_3("AUEscenaAnimacionI::quitandoDeEscena")
-	//AUEscenaContenedor::quitandoDeEscena(); //COMENTARIADO, por ahora AUEscenaContenedor::quitandoDeEscena no hace nada.
+	AUEscenaContenedor::quitandoDeEscena();
 	NBGestorAnimadores::quitarAnimador(this);
 	AU_GESTOR_PILA_LLAMADAS_POP_3
 }
 
 void AUEscenaAnimacionI::tickAnimacion(float segsTranscurridos){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_3("AUEscenaAnimacionI::tickAnimacion")
-	NBASSERT(this->idEscena!=-1)
+	NBASSERT(this->idEscena!=-1) //2025-07-04: temporarily commented
 	NBASSERT(this->_animacionEnEjecucion)
 	if(!this->_dormido){
 		if(_plantillaAnimacion->frames != 0 && _plantillaBiblioteca->fps != 0.0f){

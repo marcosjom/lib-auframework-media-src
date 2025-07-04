@@ -30,6 +30,7 @@ AUEscenaObjeto::AUEscenaObjeto(AUEscenaObjeto* otro) : AUObjeto() {
 	AU_GESTOR_PILA_LLAMADAS_PUSH_2("AUEscenaObjeto::AUEscenaObjeto")
 	NB_DEFINE_NOMBRE_PUNTERO(this, "AUEscenaObjeto")
 	privInlineInicializarVariables();
+    _visible                    = otro->_visible;
 	_propiedades				= otro->_propiedades;
 	_iluminoDependiente			= false; //otro->_iluminoDependiente;
 	AU_GESTOR_PILA_LLAMADAS_POP_2
@@ -188,6 +189,7 @@ void AUEscenaObjeto::copiarPropiedadesDe(AUEscenaObjeto* otroObjeto){
 		}
 	}
 	//Set props
+    _visible                    = otroObjeto->_visible;
 	_propiedades				= otroObjeto->_propiedades;
 	_iluminoDependiente			= false; //otroObjeto->_iluminoDependiente;
 	//

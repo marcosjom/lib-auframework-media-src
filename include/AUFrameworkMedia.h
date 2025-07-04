@@ -83,7 +83,7 @@
 #include "AUEscenaTexto.h"
 #include "AUEscenaTextoEditable.h"
 #include "AUEscenaTextoEditableOffscreen.h"
-//#include "AUEscenaTextoFade.h" //ToDo: implement as filter, not object
+#include "AUEscenaTextoFade.h" //ToDo: implement as filter, not object
 //#include "AUEscenaTextoSprites.h" //ToDo: implement and enable
 #include "AUEscenaLuzRadial.h"
 #include "AUEscenaLuzSensor.h"

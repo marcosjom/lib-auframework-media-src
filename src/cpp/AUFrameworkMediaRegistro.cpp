@@ -109,7 +109,7 @@ UI16 AUEscenaSpritePorcion::idTipoClase;
 UI16 AUEscenaTexto::idTipoClase;
 UI16 AUEscenaTextoEditable::idTipoClase;
 UI16 AUEscenaTextoEditableOffscreen::idTipoClase;
-//UI16 AUEscenaTextoFade::idTipoClase; //ToDo: implement as filter, not object
+UI16 AUEscenaTextoFade::idTipoClase; //ToDo: implement as filter, not object
 //UI16 AUEscenaTextoSprites::idTipoClase; //ToDo: implement and enable
 //Controles
 UI16 AUITextBox::idTipoClase;
@@ -196,7 +196,7 @@ NB_METODO_INICIALIZADOR_CUERPO(AUFrameworkMediaRegistrar) {
 	NBGestorAUObjetos::registrarClase("AUEscenaTexto", &AUEscenaTexto::idTipoClase);
 	NBGestorAUObjetos::registrarClase("AUEscenaTextoEditable", &AUEscenaTextoEditable::idTipoClase);
 	NBGestorAUObjetos::registrarClase("AUEscenaTextoEditableOffscreen", &AUEscenaTextoEditableOffscreen::idTipoClase);
-	//NBGestorAUObjetos::registrarClase("AUEscenaTextoFade", &AUEscenaTextoFade::idTipoClase); //ToDo: implement as filter, not object
+	NBGestorAUObjetos::registrarClase("AUEscenaTextoFade", &AUEscenaTextoFade::idTipoClase); //ToDo: implement as filter, not object
 	//NBGestorAUObjetos::registrarClase("AUEscenaTextoSprites", &AUEscenaTextoSprites::idTipoClase); //ToDo: implement and enable
 	//
 	NBGestorAUObjetos::registrarClase("AUTextoFiltro", &AUTextoFiltro::idTipoClase);
