@@ -113,8 +113,6 @@
 		2C6B97FA1B016E6F002635D0 /* AUEscenaContenedorLimitado.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C6B97F81B016E6F002635D0 /* AUEscenaContenedorLimitado.cpp */; };
 		2C702EA32E16B4E6009BFCAB /* AUEscenaTextoFade.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C702EA22E16B4E6009BFCAB /* AUEscenaTextoFade.cpp */; };
 		2C702EA42E16B4E6009BFCAB /* AUEscenaTextoFade.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C702EA22E16B4E6009BFCAB /* AUEscenaTextoFade.cpp */; };
-		2C705B3D2E1AD64E0088D1B7 /* nixtla-audio.m in Sources */ = {isa = PBXBuildFile; fileRef = 2C705B3C2E1AD5CF0088D1B7 /* nixtla-audio.m */; };
-		2C705B3E2E1AD64E0088D1B7 /* nixtla-audio.m in Sources */ = {isa = PBXBuildFile; fileRef = 2C705B3C2E1AD5CF0088D1B7 /* nixtla-audio.m */; };
 		2C725A1215FA602D00A5FC62 /* AUAnimadorSonido.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C725A1015FA602C00A5FC62 /* AUAnimadorSonido.cpp */; };
 		2C725A1315FA602D00A5FC62 /* AUAnimadorSonido.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C725A1015FA602C00A5FC62 /* AUAnimadorSonido.cpp */; };
 		2C7305F0167F8CC100E50226 /* AUEscenaLuzSensor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C7305EE167F8CC100E50226 /* AUEscenaLuzSensor.cpp */; };
@@ -181,8 +179,8 @@
 		2CE4AC3916EE63D7000568AB /* AUEscenaPuasLineaAnimIndiv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CE4AC3616EE63D6000568AB /* AUEscenaPuasLineaAnimIndiv.cpp */; };
 		2CEA8B1A1683BA8E006B378E /* AULaser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CEA8B181683BA83006B378E /* AULaser.cpp */; };
 		2CEA8B1B1683BA8E006B378E /* AULaser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CEA8B181683BA83006B378E /* AULaser.cpp */; };
-		2CEC3B342E1E656C007D6644 /* NBGestorSonidos.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CEC3B332E1E656C007D6644 /* NBGestorSonidos.cpp */; };
-		2CEC3B352E1E656C007D6644 /* NBGestorSonidos.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CEC3B332E1E656C007D6644 /* NBGestorSonidos.cpp */; };
+		2CEC3B372E1F0911007D6644 /* NBGestorSonidos.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2CEC3B362E1F0911007D6644 /* NBGestorSonidos.mm */; };
+		2CEC3B382E1F0911007D6644 /* NBGestorSonidos.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2CEC3B362E1F0911007D6644 /* NBGestorSonidos.mm */; };
 		2CF3529615F7BA2500593A19 /* AUAnimadorContenedor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CF3529415F7BA2500593A19 /* AUAnimadorContenedor.cpp */; };
 		2CF3529715F7BA2500593A19 /* AUAnimadorContenedor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CF3529415F7BA2500593A19 /* AUAnimadorContenedor.cpp */; };
 		2CF3529D15F7C15700593A19 /* AUAnimadorAnimacion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2CF3529B15F7C15700593A19 /* AUAnimadorAnimacion.cpp */; };
@@ -432,7 +430,7 @@
 		2CE4AC3716EE63D6000568AB /* AUEscenaPuasLineaAnimIndiv.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaPuasLineaAnimIndiv.h; path = ../../../include/AUEscenaPuasLineaAnimIndiv.h; sourceTree = SOURCE_ROOT; };
 		2CEA8B181683BA83006B378E /* AULaser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AULaser.cpp; path = ../../../src/cpp/AULaser.cpp; sourceTree = SOURCE_ROOT; };
 		2CEA8B191683BA87006B378E /* AULaser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AULaser.h; path = ../../../include/AULaser.h; sourceTree = SOURCE_ROOT; };
-		2CEC3B332E1E656C007D6644 /* NBGestorSonidos.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = NBGestorSonidos.cpp; sourceTree = SOURCE_ROOT; };
+		2CEC3B362E1F0911007D6644 /* NBGestorSonidos.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = NBGestorSonidos.mm; path = "/Users/mortegam/Desktop/NIBSA_proyectos/CltMarcosOrtega/sys-auframework/lib-auframework-media-src/src/cpp/NBGestorSonidos.mm"; sourceTree = "<absolute>"; };
 		2CF3529415F7BA2500593A19 /* AUAnimadorContenedor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUAnimadorContenedor.cpp; path = ../../../src/cpp/AUAnimadorContenedor.cpp; sourceTree = SOURCE_ROOT; };
 		2CF3529515F7BA2500593A19 /* AUAnimadorContenedor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUAnimadorContenedor.h; path = ../../../include/AUAnimadorContenedor.h; sourceTree = SOURCE_ROOT; };
 		2CF3529B15F7C15700593A19 /* AUAnimadorAnimacion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUAnimadorAnimacion.cpp; path = ../../../src/cpp/AUAnimadorAnimacion.cpp; sourceTree = SOURCE_ROOT; };
@@ -523,7 +521,7 @@
 				2C705B3B2E1AD3C50088D1B7 /* nixtla-audio.c */,
 				2C217AC914F41BDA00B3696B /* NBGestorSonidos.h */,
 				2C217ACC14F41BE300B3696B /* NBGestorSonidos.cpp */,
-				2CEC3B332E1E656C007D6644 /* NBGestorSonidos.cpp */,
+				2CEC3B362E1F0911007D6644 /* NBGestorSonidos.mm */,
 			);
 			name = audio;
 			sourceTree = "<group>";
@@ -1004,7 +1002,6 @@
 				B32D837B1442B37A003CC40B /* AUEscenaSprite.cpp in Sources */,
 				2C60A82E1C287557005C7C3E /* AUIButton.cpp in Sources */,
 				2CB23DE91A55CA3D00D08A16 /* AUFuenteRaster.cpp in Sources */,
-				2C705B3E2E1AD64E0088D1B7 /* nixtla-audio.m in Sources */,
 				B32D837C1442B37A003CC40B /* AUTextura.cpp in Sources */,
 				2CDFC22A145397B4007697E7 /* NBGestorEscena.cpp in Sources */,
 				B301F7291465A958006A414B /* AUEscenaFigura.cpp in Sources */,
@@ -1012,6 +1009,7 @@
 				2CB4C1FC2156DCBF007BF314 /* AUFuenteVisualModel.cpp in Sources */,
 				2CD0132621D6AB1000212030 /* AUEscenaCols.cpp in Sources */,
 				2CDE24F7221BB1A000AA2D5A /* AUIMsgBox.cpp in Sources */,
+				2CEC3B382E1F0911007D6644 /* NBGestorSonidos.mm in Sources */,
 				B308DF2B146C4DBA00002D00 /* AUEscenaTexto.cpp in Sources */,
 				2C702EA32E16B4E6009BFCAB /* AUEscenaTextoFade.cpp in Sources */,
 				2C8F1F231484376400959542 /* AUEscenaLuzRadial.cpp in Sources */,
@@ -1084,7 +1082,6 @@
 				2C149855171CA917009B1AAB /* AUDialogoMutable.cpp in Sources */,
 				2C14985E171CA975009B1AAB /* NBGestorIdioma.cpp in Sources */,
 				2C149864171CA9AA009B1AAB /* AUDiccionarioTextoMulti.cpp in Sources */,
-				2CEC3B352E1E656C007D6644 /* NBGestorSonidos.cpp in Sources */,
 				2CA438621DBD9DE4008426D1 /* AUEscenaSpriteWithLoader.cpp in Sources */,
 				2C0123B6220F42A8004600BB /* AUEscenaContenedorRaiz.cpp in Sources */,
 				2C149875171CAD72009B1AAB /* AUFrameworkMediaStdAfx.cpp in Sources */,
@@ -1120,7 +1117,6 @@
 				2CFCB7CF1485BC10001FF423 /* AUEscenaFiguraTransformable.cpp in Sources */,
 				2CFF503A1942234600D44E24 /* actualizarTodos.cpp in Sources */,
 				B30CDA8D14958962005165B7 /* AUEscenaAnimacion.cpp in Sources */,
-				2CEC3B342E1E656C007D6644 /* NBGestorSonidos.cpp in Sources */,
 				2C217AC214F405D300B3696B /* AUEscenaSonido.cpp in Sources */,
 				2C217ACD14F41BE300B3696B /* NBGestorSonidos.cpp in Sources */,
 				2C585C8C14FC1055007D7863 /* AUAnimadorSonidoVolumen.cpp in Sources */,
@@ -1137,6 +1133,7 @@
 				2C36A39B15AB25D50031166D /* AUEscenaCuerpo.cpp in Sources */,
 				2C36A39D15AB25D50031166D /* AUEscenaMalla.cpp in Sources */,
 				2C36A39F15AB25D50031166D /* AUEscenaMalla3.cpp in Sources */,
+				2CEC3B372E1F0911007D6644 /* NBGestorSonidos.mm in Sources */,
 				2C3A86F62203618B000625D5 /* AUMngrFonts.cpp in Sources */,
 				2C36A3A115AB25D50031166D /* AUEscenaMalla9.cpp in Sources */,
 				2C36A3A315AB25D50031166D /* AUEscenaMalla9Patron.cpp in Sources */,
@@ -1165,7 +1162,6 @@
 				2C02EDC615DA9B4D00CCBBFA /* AUEscenaGeneradorParticulas.cpp in Sources */,
 				2C3B292B15EED4C6008941FD /* AUEscenaSensor.cpp in Sources */,
 				2CF3529615F7BA2500593A19 /* AUAnimadorContenedor.cpp in Sources */,
-				2C705B3D2E1AD64E0088D1B7 /* nixtla-audio.m in Sources */,
 				2C60A82D1C287557005C7C3E /* AUIButton.cpp in Sources */,
 				2CF3529D15F7C15700593A19 /* AUAnimadorAnimacion.cpp in Sources */,
 				2CB23DEE1A56FBD200D08A16 /* AUFuenteRender.cpp in Sources */,
