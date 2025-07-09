@@ -2133,10 +2133,16 @@ GLenum NBGestorGL_glDataTypeToApiDataType(const ENNBGpuDataType type){
         case ENNBGpuDataType_UI8: return GL_UNSIGNED_BYTE;
         case ENNBGpuDataType_SI16: return GL_SHORT;
         case ENNBGpuDataType_UI16: return GL_UNSIGNED_SHORT;
+#       ifdef GL_INT //undefined in iOS 18.5
         case ENNBGpuDataType_SI32: return GL_INT;
+#       endif
+#       ifdef GL_UNSIGNED_INT //undefined in iOS 18.5
         case ENNBGpuDataType_UI32: return GL_UNSIGNED_INT;
+#       endif
         case ENNBGpuDataType_FLOAT32: return GL_FLOAT;
+#       ifdef GL_DOUBLE //undefined in iOS 18.5
         case ENNBGpuDataType_DOUBLE64: return GL_DOUBLE;
+#       endif
         default:
             NBASSERT(FALSE) //missing implementation
             break;
