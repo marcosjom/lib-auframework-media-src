@@ -1250,7 +1250,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 11.5;
 				ONLY_ACTIVE_ARCH = YES;
 				SKIP_INSTALL = NO;
-				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../../include $(SRCROOT)/../../../../../sys-nbframework/sys-nbframework-src/include $(SRCROOT)/../../../../lib-auframework-src/include $(SRCROOT)/../../../../lib-nixtla-audio-src/include $(SRCROOT)/../../../../lib-nixtla-audio-src/src/c $(SRCROOT)/../../../../lib-box2d-src/include";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../../include $(SRCROOT)/../../../../../sys-nbframework/sys-nbframework-src/include $(SRCROOT)/../../../../lib-auframework-src/include $(SRCROOT)/../../../../lib-box2d-src/include";
 				USE_HEADERMAP = NO;
 			};
 			name = Debug;
@@ -1265,7 +1265,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				MACOSX_DEPLOYMENT_TARGET = 11.5;
 				SKIP_INSTALL = NO;
-				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../../include $(SRCROOT)/../../../../../sys-nbframework/sys-nbframework-src/include $(SRCROOT)/../../../../lib-auframework-src/include $(SRCROOT)/../../../../lib-nixtla-audio-src/include $(SRCROOT)/../../../../lib-nixtla-audio-src/src/c $(SRCROOT)/../../../../lib-box2d-src/include";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../../include $(SRCROOT)/../../../../../sys-nbframework/sys-nbframework-src/include $(SRCROOT)/../../../../lib-auframework-src/include $(SRCROOT)/../../../../lib-box2d-src/include";
 				USE_HEADERMAP = NO;
 			};
 			name = Release;
