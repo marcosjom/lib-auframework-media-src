@@ -340,7 +340,6 @@
 		2C60A82B1C287557005C7C3E /* AUIButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUIButton.h; path = ../../../include/AUIButton.h; sourceTree = "<group>"; };
 		2C60A82C1C287557005C7C3E /* AUIButton.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUIButton.cpp; path = ../../../src/cpp/AUIButton.cpp; sourceTree = "<group>"; };
 		2C60A8321C28760C005C7C3E /* AUEscenaListaItemI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaListaItemI.h; path = ../../../include/AUEscenaListaItemI.h; sourceTree = "<group>"; };
-		2C623F7F2E1BC4A500EC427D /* nixtla-audio-private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "nixtla-audio-private.h"; path = "/Users/mortegam/Desktop/NIBSA_proyectos/CltMarcosOrtega/sys-auframework/lib-nixtla-audio-src/src/c/nixtla-audio-private.h"; sourceTree = "<absolute>"; };
 		2C62D2D11BCEC2420007F3B4 /* NBGestorFisicaDefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NBGestorFisicaDefs.h; path = ../../../include/NBGestorFisicaDefs.h; sourceTree = "<group>"; };
 		2C6AFC1615643E4C00AF5E0B /* AUEscenaSpriteMascara.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaSpriteMascara.cpp; path = ../../../src/cpp/AUEscenaSpriteMascara.cpp; sourceTree = SOURCE_ROOT; };
 		2C6AFC1715643E4C00AF5E0B /* AUEscenaSpriteMascara.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaSpriteMascara.h; path = ../../../include/AUEscenaSpriteMascara.h; sourceTree = SOURCE_ROOT; };
@@ -348,9 +347,6 @@
 		2C6B97F81B016E6F002635D0 /* AUEscenaContenedorLimitado.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaContenedorLimitado.cpp; path = ../../../src/cpp/AUEscenaContenedorLimitado.cpp; sourceTree = "<group>"; };
 		2C702EA12E16B4E6009BFCAB /* AUEscenaTextoFade.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AUEscenaTextoFade.h; path = ../../../include/AUEscenaTextoFade.h; sourceTree = SOURCE_ROOT; };
 		2C702EA22E16B4E6009BFCAB /* AUEscenaTextoFade.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaTextoFade.cpp; path = ../../../src/cpp/AUEscenaTextoFade.cpp; sourceTree = SOURCE_ROOT; };
-		2C705B3A2E1AD3C50088D1B7 /* nixtla-audio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "nixtla-audio.h"; path = "../../../../lib-nixtla-audio-src/include/nixtla-audio.h"; sourceTree = SOURCE_ROOT; };
-		2C705B3B2E1AD3C50088D1B7 /* nixtla-audio.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = "nixtla-audio.c"; path = "../../../../lib-nixtla-audio-src/src/c/nixtla-audio.c"; sourceTree = SOURCE_ROOT; };
-		2C705B3C2E1AD5CF0088D1B7 /* nixtla-audio.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = "nixtla-audio.m"; path = "../../../../lib-nixtla-audio-src/src/c/nixtla-audio.m"; sourceTree = SOURCE_ROOT; };
 		2C725A0C15FA541500A5FC62 /* AUAnimadorPropsDef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUAnimadorPropsDef.h; path = ../../../include/AUAnimadorPropsDef.h; sourceTree = SOURCE_ROOT; };
 		2C725A1015FA602C00A5FC62 /* AUAnimadorSonido.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUAnimadorSonido.cpp; path = ../../../src/cpp/AUAnimadorSonido.cpp; sourceTree = SOURCE_ROOT; };
 		2C725A1115FA602C00A5FC62 /* AUAnimadorSonido.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUAnimadorSonido.h; path = ../../../include/AUAnimadorSonido.h; sourceTree = SOURCE_ROOT; };
@@ -383,6 +379,10 @@
 		2CB4C1FA2156DCBE007BF314 /* AUFuenteVisualModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUFuenteVisualModel.h; path = ../../../include/AUFuenteVisualModel.h; sourceTree = SOURCE_ROOT; };
 		2CB7D5DC158D8F180061CE87 /* AUEscenaTextoSprites.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaTextoSprites.cpp; path = ../../../src/cpp/AUEscenaTextoSprites.cpp; sourceTree = SOURCE_ROOT; };
 		2CB7D5DD158D8F180061CE87 /* AUEscenaTextoSprites.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaTextoSprites.h; path = ../../../include/AUEscenaTextoSprites.h; sourceTree = SOURCE_ROOT; };
+		2CB90A172E283F98009E9850 /* nixtla-aaudio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "nixtla-aaudio.h"; path = "../../../src/ext/nixtla-audio/src/nixtla-aaudio.h"; sourceTree = SOURCE_ROOT; };
+		2CB90A182E283F98009E9850 /* nixtla-avfaudio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "nixtla-avfaudio.h"; path = "../../../src/ext/nixtla-audio/src/nixtla-avfaudio.h"; sourceTree = SOURCE_ROOT; };
+		2CB90A192E283F98009E9850 /* nixtla-openal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "nixtla-openal.h"; path = "../../../src/ext/nixtla-audio/src/nixtla-openal.h"; sourceTree = SOURCE_ROOT; };
+		2CB90A1A2E283F98009E9850 /* nixtla-openal.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = "nixtla-openal.c"; path = "../../../src/ext/nixtla-audio/src/nixtla-openal.c"; sourceTree = SOURCE_ROOT; };
 		2CBA889F16779860000C2831 /* AUEscenaLuzSombra.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaLuzSombra.cpp; path = ../../../src/cpp/AUEscenaLuzSombra.cpp; sourceTree = SOURCE_ROOT; };
 		2CBA88A016779860000C2831 /* AUEscenaLuzSombra.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaLuzSombra.h; path = ../../../include/AUEscenaLuzSombra.h; sourceTree = SOURCE_ROOT; };
 		2CBE082021A37BB1002B86EF /* AUEscenaTextoEditable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaTextoEditable.h; path = ../../../include/AUEscenaTextoEditable.h; sourceTree = "<group>"; };
@@ -430,7 +430,7 @@
 		2CE4AC3716EE63D6000568AB /* AUEscenaPuasLineaAnimIndiv.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaPuasLineaAnimIndiv.h; path = ../../../include/AUEscenaPuasLineaAnimIndiv.h; sourceTree = SOURCE_ROOT; };
 		2CEA8B181683BA83006B378E /* AULaser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AULaser.cpp; path = ../../../src/cpp/AULaser.cpp; sourceTree = SOURCE_ROOT; };
 		2CEA8B191683BA87006B378E /* AULaser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AULaser.h; path = ../../../include/AULaser.h; sourceTree = SOURCE_ROOT; };
-		2CEC3B362E1F0911007D6644 /* NBGestorSonidos.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = NBGestorSonidos.mm; path = "/Users/mortegam/Desktop/NIBSA_proyectos/CltMarcosOrtega/sys-auframework/lib-auframework-media-src/src/cpp/NBGestorSonidos.mm"; sourceTree = "<absolute>"; };
+		2CEC3B362E1F0911007D6644 /* NBGestorSonidos.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = NBGestorSonidos.mm; path = ../../../src/cpp/NBGestorSonidos.mm; sourceTree = SOURCE_ROOT; };
 		2CF3529415F7BA2500593A19 /* AUAnimadorContenedor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUAnimadorContenedor.cpp; path = ../../../src/cpp/AUAnimadorContenedor.cpp; sourceTree = SOURCE_ROOT; };
 		2CF3529515F7BA2500593A19 /* AUAnimadorContenedor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUAnimadorContenedor.h; path = ../../../include/AUAnimadorContenedor.h; sourceTree = SOURCE_ROOT; };
 		2CF3529B15F7C15700593A19 /* AUAnimadorAnimacion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUAnimadorAnimacion.cpp; path = ../../../src/cpp/AUAnimadorAnimacion.cpp; sourceTree = SOURCE_ROOT; };
@@ -448,6 +448,11 @@
 		2CF51296168256780030963A /* AUNodoElectroCarga.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUNodoElectroCarga.h; path = ../../../include/AUNodoElectroCarga.h; sourceTree = SOURCE_ROOT; };
 		2CF51297168256780030963A /* AUPanelSolar.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUPanelSolar.cpp; path = ../../../src/cpp/AUPanelSolar.cpp; sourceTree = SOURCE_ROOT; };
 		2CF51298168256780030963A /* AUPanelSolar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUPanelSolar.h; path = ../../../include/AUPanelSolar.h; sourceTree = SOURCE_ROOT; };
+		2CF65E132E22584800743A55 /* nixtla-audio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "nixtla-audio.h"; path = "../../../src/ext/nixtla-audio/include/nixtla-audio.h"; sourceTree = SOURCE_ROOT; };
+		2CF65E142E22585A00743A55 /* nixtla-audio.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = "nixtla-audio.c"; path = "../../../src/ext/nixtla-audio/src/nixtla-audio.c"; sourceTree = SOURCE_ROOT; };
+		2CF65E152E22585A00743A55 /* nixtla-audio-private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "nixtla-audio-private.h"; path = "../../../src/ext/nixtla-audio/src/nixtla-audio-private.h"; sourceTree = SOURCE_ROOT; };
+		2CF65E162E22585A00743A55 /* nixtla-avfaudio.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = "nixtla-avfaudio.m"; path = "../../../src/ext/nixtla-audio/src/nixtla-avfaudio.m"; sourceTree = SOURCE_ROOT; };
+		2CF65E172E22585A00743A55 /* nixtla-aaudio.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = "nixtla-aaudio.c"; path = "../../../src/ext/nixtla-audio/src/nixtla-aaudio.c"; sourceTree = SOURCE_ROOT; };
 		2CFCB7CD1485BC0E001FF423 /* AUEscenaFiguraTransformable.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AUEscenaFiguraTransformable.cpp; path = ../../../src/cpp/AUEscenaFiguraTransformable.cpp; sourceTree = SOURCE_ROOT; };
 		2CFCB7CE1485BC0F001FF423 /* AUEscenaFiguraTransformable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AUEscenaFiguraTransformable.h; path = ../../../include/AUEscenaFiguraTransformable.h; sourceTree = SOURCE_ROOT; };
 		2CFF50391942234600D44E24 /* actualizarTodos.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = actualizarTodos.cpp; path = ../../../../../../actualizarTodos.cpp; sourceTree = "<group>"; };
@@ -515,10 +520,7 @@
 		2C217A9E14F3E64F00B3696B /* audio */ = {
 			isa = PBXGroup;
 			children = (
-				2C705B3A2E1AD3C50088D1B7 /* nixtla-audio.h */,
-				2C623F7F2E1BC4A500EC427D /* nixtla-audio-private.h */,
-				2C705B3C2E1AD5CF0088D1B7 /* nixtla-audio.m */,
-				2C705B3B2E1AD3C50088D1B7 /* nixtla-audio.c */,
+				2CF65E102E2257DC00743A55 /* nixtla-audio */,
 				2C217AC914F41BDA00B3696B /* NBGestorSonidos.h */,
 				2C217ACC14F41BE300B3696B /* NBGestorSonidos.cpp */,
 				2CEC3B362E1F0911007D6644 /* NBGestorSonidos.mm */,
@@ -794,6 +796,40 @@
 			);
 			name = avanzados;
 			sourceTree = "<group>";
+		};
+		2CF65E102E2257DC00743A55 /* nixtla-audio */ = {
+			isa = PBXGroup;
+			children = (
+				2CF65E112E2257EA00743A55 /* include */,
+				2CF65E122E2257F100743A55 /* src */,
+			);
+			path = "nixtla-audio";
+			sourceTree = SOURCE_ROOT;
+		};
+		2CF65E112E2257EA00743A55 /* include */ = {
+			isa = PBXGroup;
+			children = (
+				2CF65E132E22584800743A55 /* nixtla-audio.h */,
+			);
+			name = include;
+			path = "../../../src/ext/nixtla-audio/include";
+			sourceTree = SOURCE_ROOT;
+		};
+		2CF65E122E2257F100743A55 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				2CB90A192E283F98009E9850 /* nixtla-openal.h */,
+				2CB90A1A2E283F98009E9850 /* nixtla-openal.c */,
+				2CF65E152E22585A00743A55 /* nixtla-audio-private.h */,
+				2CF65E142E22585A00743A55 /* nixtla-audio.c */,
+				2CB90A182E283F98009E9850 /* nixtla-avfaudio.h */,
+				2CF65E162E22585A00743A55 /* nixtla-avfaudio.m */,
+				2CB90A172E283F98009E9850 /* nixtla-aaudio.h */,
+				2CF65E172E22585A00743A55 /* nixtla-aaudio.c */,
+			);
+			name = src;
+			path = "../../../src/ext/nixtla-audio/src";
+			sourceTree = SOURCE_ROOT;
 		};
 		B3A10C65142C13940070BFCA = {
 			isa = PBXGroup;
@@ -1250,7 +1286,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 11.5;
 				ONLY_ACTIVE_ARCH = YES;
 				SKIP_INSTALL = NO;
-				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../../include $(SRCROOT)/../../../../../sys-nbframework/sys-nbframework-src/include $(SRCROOT)/../../../../lib-auframework-src/include $(SRCROOT)/../../../../lib-box2d-src/include";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../../include $(SRCROOT)/../../../../../sys-nbframework/sys-nbframework-src/include $(SRCROOT)/../../../../lib-auframework-src/include $(SRCROOT)/../../../../lib-box2d-src/include $(SRCROOT)/../../../../lib-nixtla-audio-src/include";
 				USE_HEADERMAP = NO;
 			};
 			name = Debug;
@@ -1265,7 +1301,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				MACOSX_DEPLOYMENT_TARGET = 11.5;
 				SKIP_INSTALL = NO;
-				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../../include $(SRCROOT)/../../../../../sys-nbframework/sys-nbframework-src/include $(SRCROOT)/../../../../lib-auframework-src/include $(SRCROOT)/../../../../lib-box2d-src/include";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../../include $(SRCROOT)/../../../../../sys-nbframework/sys-nbframework-src/include $(SRCROOT)/../../../../lib-auframework-src/include $(SRCROOT)/../../../../lib-box2d-src/include $(SRCROOT)/../../../../lib-nixtla-audio-src/include";
 				USE_HEADERMAP = NO;
 			};
 			name = Release;
