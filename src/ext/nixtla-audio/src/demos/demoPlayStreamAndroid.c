@@ -41,9 +41,9 @@ typedef struct STDemoStreamState_ {
     } stats;
 } STDemoStreamState;
 
-STDemoStreamState state;
-NixUI32 secsAccum = 0;
-NixUI32 msAccum = 0;
+static STDemoStreamState state;
+static NixUI32 secsAccum = 0;
+static NixUI32 msAccum = 0;
 
 //callback
 
