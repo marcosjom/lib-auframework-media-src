@@ -36,20 +36,6 @@
 #   define NIX_ASSERT(EVAL)     ((void)0);
 #endif
 
-// Memory allocations
-// You can custom memory management by defining these MACROS and CONSTANTS before this file get included or compiled.
-// These are the default memory management MACROS and CONSTANTS:
-
-#if !defined(NIX_MALLOC) || !defined(NIX_FREE)
-    #include <stdlib.h>        //malloc, free
-    #ifndef NIX_MALLOC
-#        define NIX_MALLOC(POINTER_DEST, POINTER_TYPE, SIZE_BYTES, STR_HINT) POINTER_DEST = (POINTER_TYPE*)malloc(SIZE_BYTES)
-    #endif
-    #ifndef NIX_FREE
-#        define NIX_FREE(POINTER) free(POINTER)
-    #endif
-#endif
-
 #ifndef NIX_MSWAIT_BEFORE_DELETING_BUFFERS
     #ifdef NIX_OPENAL
 #        define NIX_MSWAIT_BEFORE_DELETING_BUFFERS    250 //OpenAL fails when stopping, unqueuing and deleting buffers in the same tick
@@ -74,28 +60,6 @@
 
 #ifndef NIX_AUDIO_GROUPS_SIZE
     #define NIX_AUDIO_GROUPS_SIZE 8
-#endif
-
-// Mutexes
-// You can custom mutexes by defining these MACROS and CONSTANTS before this file get included or compiled.
-// These are the default MACROS and CONSTANTS:
-#if !defined(NIX_MUTEX_T) || !defined(NIX_MUTEX_INIT) || !defined(NIX_MUTEX_DESTROY) || !defined(NIX_MUTEX_LOCK) || !defined(NIX_MUTEX_UNLOCK)
-#   ifdef _WIN32
-//#     define WIN32_LEAN_AND_MEAN
-#       include <windows.h>             //for CRITICAL_SECTION
-#       define NIX_MUTEX_T              CRITICAL_SECTION
-#       define NIX_MUTEX_INIT(PTR)      InitializeCriticalSection(PTR)
-#       define NIX_MUTEX_DESTROY(PTR)   DeleteCriticalSection(PTR)
-#       define NIX_MUTEX_LOCK(PTR)      EnterCriticalSection(PTR)
-#       define NIX_MUTEX_UNLOCK(PTR)    LeaveCriticalSection(PTR)
-#   else
-#       include <pthread.h>             //for pthread_mutex_t
-#       define NIX_MUTEX_T              pthread_mutex_t
-#       define NIX_MUTEX_INIT(PTR)      pthread_mutex_init(PTR, NULL)
-#       define NIX_MUTEX_DESTROY(PTR)   pthread_mutex_destroy(PTR)
-#       define NIX_MUTEX_LOCK(PTR)      pthread_mutex_lock(PTR)
-#       define NIX_MUTEX_UNLOCK(PTR)    pthread_mutex_unlock(PTR)
-#   endif
 #endif
 
 // PRINTING/LOG

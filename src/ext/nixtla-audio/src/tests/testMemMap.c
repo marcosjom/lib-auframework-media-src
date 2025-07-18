@@ -22,24 +22,12 @@ extern "C" {
 //---------------------------------------------
 
 void nbMemmapInit(STNB_MemMap* map){
-	map->currCountAllocationsActive	= 0;
-	map->currBytesAllocationsActive	= 0;
-	map->totalCountAllocations		= 0;
-	map->totalBytesAllocations		= 0;
-	map->maxCountAllocationsActive	= 0;
-	map->maxBytesAllocationsActive	= 0;
+    memset(map, 0, sizeof(*map));
 	//Strings (Hints)
 	map->strArr				= (char*)malloc(sizeof(char) * 2048);
 	map->strArr[0]			= '\0'; //The first string is always <empty string>
 	map->strArrUse			= 1;
 	map->strArrSize			= 2048;
-	map->strIndexsArr		= NULL;
-	map->strIndexsArrUse	= 0;
-	map->strIndexsArrSize	= 0;
-	//Allocated memory blocks
-	map->blocksArr			= NULL;
-	map->blocksArrUse		= 0;
-	map->blocksArrSize		= 0;
 }
 
 void nbMemmapFinalize(STNB_MemMap* map){

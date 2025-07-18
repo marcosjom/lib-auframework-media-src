@@ -23,6 +23,7 @@
 //
 #include <stdio.h>  //NULL
 #include <string.h> //memcpy, memset
+#include <stdlib.h> //malloc
 
 //-------------------------------
 //-- IDENTIFY OS
@@ -79,7 +80,7 @@ NixBOOL STNixAudioDesc_IsEqual(const STNixAudioDesc* obj, const STNixAudioDesc* 
 
 typedef struct STNixSharedPtr_ {
     void*           opq;    //opaque object, must be first member to allow toll-free casting
-    NIX_MUTEX_T     mutex;
+    STNixMutex      mutex;
     NixSI32         retainCount;
     STNixContextItf ctx;
 } STNixSharedPtr;
@@ -88,7 +89,7 @@ struct STNixSharedPtr_* NixSharedPtr_alloc(STNixContextItf* ctx, void* opq){
     struct STNixSharedPtr_* obj = NULL;
     obj = (struct STNixSharedPtr_*)(*ctx->mem.malloc)(sizeof(struct STNixSharedPtr_), "NixSharedPtr_alloc");
     if(obj != NULL){
-        NIX_MUTEX_INIT(&obj->mutex);
+        obj->mutex = (ctx->mutex.alloc)(ctx);
         obj->retainCount = 1; //retained by creator
         //
         obj->opq = opq;
@@ -98,7 +99,7 @@ struct STNixSharedPtr_* NixSharedPtr_alloc(STNixContextItf* ctx, void* opq){
 }
 
 void NixSharedPtr_destroy(struct STNixSharedPtr_* obj){
-    NIX_MUTEX_DESTROY(&obj->mutex);
+    (obj->ctx.mutex.free)(&obj->mutex);
     (*obj->ctx.mem.free)(obj);
 }
 
@@ -108,20 +109,20 @@ void* NixSharedPtr_getOpq(struct STNixSharedPtr_* obj){
 }
 
 void NixSharedPtr_retain(struct STNixSharedPtr_* obj){
-    NIX_MUTEX_LOCK(&obj->mutex);
+    (obj->ctx.mutex.lock)(&obj->mutex);
     {
         ++obj->retainCount;
     }
-    NIX_MUTEX_UNLOCK(&obj->mutex);
+    (obj->ctx.mutex.unlock)(&obj->mutex);
 }
 
 NixSI32 NixSharedPtr_release(struct STNixSharedPtr_* obj){
     NixSI32 r = 0;
-    NIX_MUTEX_LOCK(&obj->mutex);
+    (obj->ctx.mutex.lock)(&obj->mutex);
     {
         r = --obj->retainCount;
     }
-    NIX_MUTEX_UNLOCK(&obj->mutex);
+    (obj->ctx.mutex.unlock)(&obj->mutex);
     return r;
 }
 
@@ -268,36 +269,44 @@ void NixMemoryItf_fillMissingMembers(STNixMemoryItf* itf){
 #   endif
 #endif
 
-typedef struct STNixMutex_ {
+typedef struct STNixMutexOpq_ {
     NIX_MUTEX_T             mutex;
     struct STNixContextItf_ ctx;
-} STNixMutex;
+} STNixMutexOpq;
 
-void* NixMutexItf_default_alloc(struct STNixContextItf_* ctx){
-    STNixMutex* obj = (STNixMutex*)(*ctx->mem.malloc)(sizeof(STNixMutex), "NixMutexItf_default_alloc");
+STNixMutex NixMutexItf_default_alloc(struct STNixContextItf_* ctx){
+    STNixMutex r = STNixMutex_Zero;
+    STNixMutexOpq* obj = (STNixMutexOpq*)(*ctx->mem.malloc)(sizeof(STNixMutexOpq), "NixMutexItf_default_alloc");
     if(obj != NULL){
         NIX_MUTEX_INIT(&obj->mutex);
         obj->ctx = *ctx;
+        r.opq = obj;
     }
-    return obj;
+    return r;
 }
 
-void NixMutexItf_default_free(void* pObj){
-    STNixMutex* obj = (STNixMutex*)pObj;
-    if(obj != NULL){
-        NIX_MUTEX_DESTROY(&obj->mutex);
-        (*obj->ctx.mem.free)(obj);
+void NixMutexItf_default_free(STNixMutex* pObj){
+    if(pObj != NULL){
+        STNixMutexOpq* obj = (STNixMutexOpq*)pObj->opq;
+        if(obj != NULL){
+            NIX_MUTEX_DESTROY(&obj->mutex);
+            (*obj->ctx.mem.free)(obj);
+        }
     }
 }
 
-void NixMutexItf_default_lock(void* pObj){
-    STNixMutex* obj = (STNixMutex*)pObj;
-    NIX_MUTEX_LOCK(&obj->mutex);
+void NixMutexItf_default_lock(STNixMutex* pObj){
+    if(pObj != NULL){
+        STNixMutexOpq* obj = (STNixMutexOpq*)pObj->opq;
+        NIX_MUTEX_LOCK(&obj->mutex);
+    }
 }
 
-void NixMutexItf_default_unlock(void* pObj){
-    STNixMutex* obj = (STNixMutex*)pObj;
-    NIX_MUTEX_UNLOCK(&obj->mutex);
+void NixMutexItf_default_unlock(STNixMutex* pObj){
+    if(pObj != NULL){
+        STNixMutexOpq* obj = (STNixMutexOpq*)pObj->opq;
+        NIX_MUTEX_UNLOCK(&obj->mutex);
+    }
 }
 
 //Links NULL methods to a DEFAULT implementation,

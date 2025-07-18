@@ -135,7 +135,7 @@ typedef struct STNixOpenALEngine_ {
     NixUI32         captureMainBufferBytesCount;    //OpenAL specific
     //srcs
     struct {
-        NIX_MUTEX_T                 mutex;
+        STNixMutex                  mutex;
         struct STNixOpenALSource_** arr;
         NixUI32                     use;
         NixUI32                     sz;
@@ -228,7 +228,7 @@ typedef struct STNixOpenALSource_ {
     ALuint                  idSourceAL;
     //queues
     struct {
-        NIX_MUTEX_T         mutex;
+        STNixMutex          mutex;
         //conv
         struct {
             void*           obj;   //nixFmtConverter
@@ -261,7 +261,7 @@ NixBOOL NixOpenALSource_pendMoveAllBuffsToNotifyWithoutPoppingLocked_(STNixOpenA
 #define NIX_OpenALSource_BIT_isPlaying  (0x1 << 3)
 #define NIX_OpenALSource_BIT_isPaused   (0x1 << 4)
 #define NIX_OpenALSource_BIT_isClosing  (0x1 << 5)
-#define NIX_OpenALSource_BIT_isOrphan   (0x1 << 6)  //source is waiting for close(), wait for the change of state and NixOpenALSource_release + NIX_FREE.
+#define NIX_OpenALSource_BIT_isOrphan   (0x1 << 6)  //source is waiting for close(), wait for the change of state and NixOpenALSource_release + free.
 //
 #define NixOpenALSource_isStatic(OBJ)          (((OBJ)->stateBits & NIX_OpenALSource_BIT_isStatic) != 0)
 #define NixOpenALSource_isChanging(OBJ)        (((OBJ)->stateBits & NIX_OpenALSource_BIT_isChanging) != 0)
@@ -303,10 +303,10 @@ typedef struct STNixOpenALRecorder_ {
     } cfg;
     //queues
     struct {
-        NIX_MUTEX_T         mutex;
+        STNixMutex          mutex;
         void*               conv;   //nixFmtConverter
-        STNixOpenALQueue   notify;
-        STNixOpenALQueue   reuse;
+        STNixOpenALQueue    notify;
+        STNixOpenALQueue    reuse;
         //filling
         struct {
             NixUI8*         tmp;
@@ -341,7 +341,7 @@ void NixOpenALEngine_init(STNixContextItf* ctx, STNixOpenALEngine* obj){
     obj->contextAL = NIX_OPENAL_NULL;
     //srcs
     {
-        NIX_MUTEX_INIT(&obj->srcs.mutex);
+        obj->srcs.mutex = (ctx->mutex.alloc)(ctx);
     }
 }
   
@@ -358,7 +358,7 @@ void NixOpenALEngine_destroy(STNixOpenALEngine* obj){
             (*ctx->mem.free)(obj->srcs.arr);
             obj->srcs.arr = NULL;
         }
-        NIX_MUTEX_DESTROY(&obj->srcs.mutex);
+        (*obj->ctx.mutex.free)(&obj->srcs.mutex);
     }
     //api
     if(alcMakeContextCurrent(NULL) == AL_FALSE){
@@ -382,7 +382,7 @@ NixBOOL NixOpenALEngine_srcsAdd(STNixOpenALEngine* obj, struct STNixOpenALSource
     NixBOOL r = NIX_FALSE;
     if(obj != NULL){
         STNixContextItf* ctx = &obj->ctx;
-        NIX_MUTEX_LOCK(&obj->srcs.mutex);
+        (*ctx->mutex.lock)(&obj->srcs.mutex);
         {
             //resize array (if necesary)
             if(obj->srcs.use >= obj->srcs.sz){
@@ -409,7 +409,7 @@ NixBOOL NixOpenALEngine_srcsAdd(STNixOpenALEngine* obj, struct STNixOpenALSource
                 r = NIX_TRUE;
             }
         }
-        NIX_MUTEX_UNLOCK(&obj->srcs.mutex);
+        (*ctx->mutex.unlock)(&obj->srcs.mutex);
     }
     return r;
 }
@@ -455,7 +455,7 @@ void NixOpenALEngine_tick(STNixOpenALEngine* obj, const NixBOOL isFinalCleanup){
         {
             STNixOpenALNotifQueue notifs;
             NixOpenALNotifQueue_init(ctx, &notifs);
-            NIX_MUTEX_LOCK(&obj->srcs.mutex);
+            (*ctx->mutex.lock)(&obj->srcs.mutex);
             if(obj->srcs.arr != NULL && obj->srcs.use > 0){
                 //NIX_PRINTF_INFO("NixOpenALEngine_tick::%d sources.\n", obj->srcs.use);
                 NixSI32 i; for(i = 0; i < (NixSI32)obj->srcs.use; ++i){
@@ -472,7 +472,7 @@ void NixOpenALEngine_tick(STNixOpenALEngine* obj, const NixBOOL isFinalCleanup){
                             ALint csmdAmm = 0;
                             alGetSourceiv(src->idSourceAL, AL_BUFFERS_PROCESSED, &csmdAmm); NIX_OPENAL_ERR_VERIFY("alGetSourceiv(AL_BUFFERS_PROCESSED)");
                             if(csmdAmm > 0){
-                                NIX_MUTEX_LOCK(&src->queues.mutex);
+                                (*ctx->mutex.lock)(&src->queues.mutex);
                                 {
                                     NIX_ASSERT(csmdAmm <= src->queues.pend.use) //Just checking, this should be always be true
                                     while(csmdAmm > 0){
@@ -483,24 +483,24 @@ void NixOpenALEngine_tick(STNixOpenALEngine* obj, const NixBOOL isFinalCleanup){
                                         --csmdAmm;
                                     }
                                 }
-                                NIX_MUTEX_UNLOCK(&src->queues.mutex);
+                                (*ctx->mutex.unlock)(&src->queues.mutex);
                             }
                         }
                         //post-process
                         if(src != NULL){
                             //add to notify queue
                             {
-                                NIX_MUTEX_LOCK(&src->queues.mutex);
+                                (*ctx->mutex.lock)(&src->queues.mutex);
                                 {
                                     NixOpenALEngine_tick_addQueueNotifSrcLocked_(&notifs, src);
                                 }
-                                NIX_MUTEX_UNLOCK(&src->queues.mutex);
+                                (*ctx->mutex.unlock)(&src->queues.mutex);
                             }
                         }
                     }
                 }
             }
-            NIX_MUTEX_UNLOCK(&obj->srcs.mutex);
+            (*ctx->mutex.unlock)(&obj->srcs.mutex);
             //notify (unloked)
             if(notifs.use > 0){
                 //NIX_PRINTF_INFO("NixOpenALEngine_tick::notify %d.\n", notifs.use);
@@ -756,7 +756,7 @@ void NixOpenALSource_init(STNixContextItf* ctx, STNixOpenALSource* obj){
     obj->idSourceAL = NIX_OPENAL_NULL;
     //queues
     {
-        NIX_MUTEX_INIT(&obj->queues.mutex);
+        obj->queues.mutex = (ctx->mutex.alloc)(ctx);
         NixOpenALQueue_init(ctx, &obj->queues.notify);
         NixOpenALQueue_init(ctx, &obj->queues.pend);
         NixOpenALQueue_init(ctx, &obj->queues.reuse);
@@ -786,7 +786,7 @@ void NixOpenALSource_destroy(STNixOpenALSource* obj){
         NixOpenALQueue_destroy(&obj->queues.pend);
         NixOpenALQueue_destroy(&obj->queues.reuse);
         NixOpenALQueue_destroy(&obj->queues.notify);
-        NIX_MUTEX_DESTROY(&obj->queues.mutex);
+        (*obj->ctx->mutex.free)(&obj->queues.mutex);
     }
 }
 
@@ -919,7 +919,7 @@ NixBOOL NixOpenALSource_queueBufferForOutput(STNixOpenALSource* obj, STNixApiBuf
                     if(r){
                         pair.org = pBuff;
                         NixApiBufferRef_retain(&pair.org);
-                        NIX_MUTEX_LOCK(&obj->queues.mutex);
+                        (*obj->ctx->mutex.lock)(&obj->queues.mutex);
                         {
                             if(!NixOpenALQueue_pushOwning(&obj->queues.pend, &pair)){
                                 NIX_PRINTF_ERROR("NixOpenALSource_queueBufferForOutput::NixOpenALQueue_pushOwning failed.\n");
@@ -937,7 +937,7 @@ NixBOOL NixOpenALSource_queueBufferForOutput(STNixOpenALSource* obj, STNixApiBuf
                                 r = NIX_TRUE;
                             }
                         }
-                        NIX_MUTEX_UNLOCK(&obj->queues.mutex);
+                        (*obj->ctx->mutex.unlock)(&obj->queues.mutex);
                     }
                 }
                 if(!r){
@@ -1033,7 +1033,7 @@ void NixOpenALRecorder_init(STNixContextItf* ctx, STNixOpenALRecorder* obj){
     }
     //queues
     {
-        NIX_MUTEX_INIT(&obj->queues.mutex);
+        obj->queues.mutex = (ctx->mutex.alloc)(ctx);
         NixOpenALQueue_init(ctx, &obj->queues.notify);
         NixOpenALQueue_init(ctx, &obj->queues.reuse);
     }
@@ -1042,7 +1042,7 @@ void NixOpenALRecorder_init(STNixContextItf* ctx, STNixOpenALRecorder* obj){
 void NixOpenALRecorder_destroy(STNixOpenALRecorder* obj){
     //queues
     {
-        NIX_MUTEX_LOCK(&obj->queues.mutex);
+        (*obj->ctx->mutex.lock)(&obj->queues.mutex);
         {
             NixOpenALQueue_destroy(&obj->queues.notify);
             NixOpenALQueue_destroy(&obj->queues.reuse);
@@ -1059,8 +1059,8 @@ void NixOpenALRecorder_destroy(STNixOpenALRecorder* obj){
                 obj->queues.filling.tmpSz = 0;
             }
         }
-        NIX_MUTEX_UNLOCK(&obj->queues.mutex);
-        NIX_MUTEX_DESTROY(&obj->queues.mutex);
+        (*obj->ctx->mutex.unlock)(&obj->queues.mutex);
+        (*obj->ctx->mutex.free)(&obj->queues.mutex);
     }
     //
     if(obj->idCaptureAL != NIX_OPENAL_NULL){
@@ -1086,7 +1086,7 @@ void NixOpenALRecorder_destroy(STNixOpenALRecorder* obj){
 NixBOOL NixOpenALRecorder_prepare(STNixOpenALRecorder* obj, STNixOpenALEngine* eng, const STNixAudioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer){
     NixBOOL r = NIX_FALSE;
     STNixContextItf* ctx = obj->ctx;
-    NIX_MUTEX_LOCK(&obj->queues.mutex);
+    (*obj->ctx->mutex.lock)(&obj->queues.mutex);
     if(obj->queues.conv == NULL && audioDesc->blockAlign > 0){
         STNixAudioDesc inDesc = STNixAudioDesc_Zero;
         ALenum apiFmt = AL_UNDETERMINED;
@@ -1208,7 +1208,7 @@ NixBOOL NixOpenALRecorder_prepare(STNixOpenALRecorder* obj, STNixOpenALEngine* e
             }
         }
     }
-    NIX_MUTEX_UNLOCK(&obj->queues.mutex);
+    (*obj->ctx->mutex.unlock)(&obj->queues.mutex);
     return r;
 }
 
@@ -1256,7 +1256,7 @@ NixBOOL NixOpenALRecorder_stop(STNixOpenALRecorder* obj){
 NixBOOL NixOpenALRecorder_flush(STNixOpenALRecorder* obj){
     NixBOOL r = NIX_TRUE;
     //move filling buffer to notify (if data is available)
-    NIX_MUTEX_LOCK(&obj->queues.mutex);
+    (*obj->ctx->mutex.lock)(&obj->queues.mutex);
     if(obj->queues.reuse.use > 0){
         STNixOpenALQueuePair* pair = &obj->queues.reuse.arr[0];
         if(pair->org.ptr != NULL && ((STNixPCMBuffer*)NixSharedPtr_getOpq(pair->org.ptr))->use > 0){
@@ -1267,7 +1267,7 @@ NixBOOL NixOpenALRecorder_flush(STNixOpenALRecorder* obj){
             }
         }
     }
-    NIX_MUTEX_UNLOCK(&obj->queues.mutex);
+    (*obj->ctx->mutex.unlock)(&obj->queues.mutex);
     return r;
 }
 
@@ -1299,7 +1299,7 @@ void NixOpenALRecorder_consumeInputBuffer(STNixOpenALRecorder* obj){
                 }
             }
         }
-        NIX_MUTEX_LOCK(&obj->queues.mutex);
+        (*obj->ctx->mutex.lock)(&obj->queues.mutex);
         {
             //process
             while(inIdx < inSz){
@@ -1358,12 +1358,12 @@ void NixOpenALRecorder_consumeInputBuffer(STNixOpenALRecorder* obj){
                 }
             }
         }
-        NIX_MUTEX_UNLOCK(&obj->queues.mutex);
+        (*obj->ctx->mutex.unlock)(&obj->queues.mutex);
     }
 }
 
 void NixOpenALRecorder_notifyBuffers(STNixOpenALRecorder* obj){
-    NIX_MUTEX_LOCK(&obj->queues.mutex);
+    (*obj->ctx->mutex.lock)(&obj->queues.mutex);
     {
         const NixUI32 maxProcess = obj->queues.notify.use;
         NixUI32 ammProcessed = 0;
@@ -1377,11 +1377,11 @@ void NixOpenALRecorder_notifyBuffers(STNixOpenALRecorder* obj){
                 //notify (unlocked)
                 if(pair.org.ptr != NULL && ((STNixPCMBuffer*)NixSharedPtr_getOpq(pair.org.ptr))->desc.blockAlign > 0 && obj->callback.func != NULL){
                     STNixPCMBuffer* org = (STNixPCMBuffer*)NixSharedPtr_getOpq(pair.org.ptr);
-                    NIX_MUTEX_UNLOCK(&obj->queues.mutex);
+                    (*obj->ctx->mutex.unlock)(&obj->queues.mutex);
                     {
                         (*obj->callback.func)(obj->engRef, obj->selfRef, org->desc, org->ptr, org->use, (org->use / org->desc.blockAlign), obj->callback.data);
                     }
-                    NIX_MUTEX_LOCK(&obj->queues.mutex);
+                    (*obj->ctx->mutex.lock)(&obj->queues.mutex);
                 }
                 //move to reuse
                 if(!NixOpenALQueue_pushOwning(&obj->queues.reuse, &pair)){
@@ -1394,7 +1394,7 @@ void NixOpenALRecorder_notifyBuffers(STNixOpenALRecorder* obj){
             ++ammProcessed;
         }
     }
-    NIX_MUTEX_UNLOCK(&obj->queues.mutex);
+    (*obj->ctx->mutex.unlock)(&obj->queues.mutex);
 }
 
 //------
@@ -1606,12 +1606,12 @@ void nixOpenALSource_removeAllBuffersAndNotify_(STNixOpenALSource* obj){
     STNixOpenALNotifQueue notifs;
     NixOpenALNotifQueue_init(ctx, &notifs);
     //move all pending buffers to notify
-    NIX_MUTEX_LOCK(&obj->queues.mutex);
+    (*obj->ctx->mutex.lock)(&obj->queues.mutex);
     {
         NixOpenALSource_pendMoveAllBuffsToNotifyWithoutPoppingLocked_(obj);
         NixOpenALEngine_tick_addQueueNotifSrcLocked_(&notifs, obj);
     }
-    NIX_MUTEX_UNLOCK(&obj->queues.mutex);
+    (*obj->ctx->mutex.unlock)(&obj->queues.mutex);
     //notify
     {
         NixUI32 i;
@@ -1633,7 +1633,7 @@ void nixOpenALSource_free(STNixApiSourceRef pObj){ //orphans the source, will au
             if(obj->idSourceAL != NIX_OPENAL_NULL){
                 alSourceStop(obj->idSourceAL); NIX_OPENAL_ERR_VERIFY("alSourceStop");
             }
-            NixOpenALSource_setIsOrphan(obj); //source is waiting for close(), wait for the change of state and NixOpenALSource_release + NIX_FREE.
+            NixOpenALSource_setIsOrphan(obj); //source is waiting for close(), wait for the change of state and NixOpenALSource_release + free.
             NixOpenALSource_setIsPlaying(obj, NIX_FALSE);
             NixOpenALSource_setIsPaused(obj, NIX_FALSE);
             //flush all pending buffers

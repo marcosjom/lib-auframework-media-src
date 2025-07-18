@@ -79,6 +79,12 @@ struct STNixMemoryItf_;
 struct STNixMutexItf_;
 struct STNixContextItf_;
 
+#define STNixMutex_Zero { NULL }
+
+typedef struct STNixMutex_ {
+    void* opq;
+} STNixMutex;
+
 //API
 
 struct STNixApiEngineItf_;
@@ -161,10 +167,10 @@ void NixMemoryItf_fillMissingMembers(STNixMemoryItf* itf);
 //STNixMutexItf (API)
 
 typedef struct STNixMutexItf_ {
-    void*   (*alloc)(struct STNixContextItf_* ctx);
-    void    (*free)(void* obj);
-    void    (*lock)(void* obj);
-    void    (*unlock)(void* obj);
+    STNixMutex  (*alloc)(struct STNixContextItf_* ctx);
+    void        (*free)(STNixMutex* obj);
+    void        (*lock)(STNixMutex* obj);
+    void        (*unlock)(STNixMutex* obj);
 } STNixMutexItf;
 
 //Links NULL methods to a DEFAULT implementation,
