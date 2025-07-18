@@ -29,6 +29,25 @@ int main(int argc, const char * argv[]){
     //
     srand((unsigned int)time(NULL));
     //
+    //Test Itf filling missing members (missing code?)
+    {
+        STNixApiItf itf;
+        memset(&itf, 0, sizeof(itf));
+        NixApiItf_fillMissingMembers(&itf); //it ASSERTS internally
+        //validate missing implementations
+        {
+            void** ptr = (void**)&itf;
+            void** afterEnd = ptr + (sizeof(itf) / sizeof(void*));
+            while(ptr < afterEnd){
+                if(*ptr == NULL){ //function pointer should be defined
+                    printf("ERROR, missing function pointer after 'NixApiItf_fillMissingMembers()'!.\n");
+                    exit(-1);
+                }
+                ptr++;
+            }
+        }
+    }
+    //
     if(nixInit(&nix, 8)){
         nixPrintCaps(&nix);
         //randomly select a wav from the list

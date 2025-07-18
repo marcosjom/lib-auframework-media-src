@@ -46,6 +46,27 @@ void loadAndPlayWav(STNix_Engine* nix, const char* strWavPath, NixUI16* iSourceW
 void bufferCapturedCallback(STNix_Engine* nix, void* userdata, const STNix_audioDesc audioDesc, const NixUI8* audioData, const NixUI32 audioDataBytes, const NixUI32 audioDataSamples);
 
 int main(int argc, const char * argv[]) {
+    //
+    srand((unsigned int)time(NULL));
+    //
+    //Test Itf filling missing members (missing code?)
+    {
+        STNixApiItf itf;
+        memset(&itf, 0, sizeof(itf));
+        NixApiItf_fillMissingMembers(&itf); //it ASSERTS internally
+        //validate missing implementations
+        {
+            void** ptr = (void**)&itf;
+            void** afterEnd = ptr + (sizeof(itf) / sizeof(void*));
+            while(ptr < afterEnd){
+                if(*ptr == NULL){ //function pointer should be defined
+                    printf("ERROR, missing function pointer after 'NixApiItf_fillMissingMembers()'!.\n");
+                    exit(-1);
+                }
+                ptr++;
+            }
+        }
+    }
 	//
 	STNix_Engine nix;
 	nbMemmapInit(&memmap);

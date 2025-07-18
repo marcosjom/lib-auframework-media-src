@@ -72,6 +72,15 @@ typedef struct STNix_audioDesc_ {
 
 NixBOOL STNix_audioDesc_IsEqual(const STNix_audioDesc* obj, const STNix_audioDesc* other);
 
+// STNixSharedPtr (provides retain/release model)
+
+struct STNixSharedPtr_;
+
+struct STNixSharedPtr_* NixSharedPtr_create(void* opq);     //can be casted to void** to obtain the 'opq' value back
+void    NixSharedPtr_destroy(struct STNixSharedPtr_* obj);
+void*   NixSharedPtr_getOpq(struct STNixSharedPtr_* obj);
+void    NixSharedPtr_retain(struct STNixSharedPtr_* obj);
+NixSI32 NixSharedPtr_release(struct STNixSharedPtr_* obj); //returns the retainCount
 //API
 
 struct STNixApiEngineItf_;
@@ -79,111 +88,123 @@ struct STNixApiBufferItf_;
 struct STNixApiSourceItf_;
 struct STNixApiRecorderItf_;
 
-//STNixApiEngine
+//STNixApiEngineRef (shared pointer)
 
-#define STNixApiEngine_Zero     { NULL, NULL }
+#define STNixApiEngineRef_Zero     { NULL, NULL }
 
-typedef struct STNixApiEngine_ {
-    void* opq; //opaque object
+typedef struct STNixApiEngineRef_ {
+    struct STNixSharedPtr_* ptr;
     struct STNixApiEngineItf_* itf;
-} STNixApiEngine;
+} STNixApiEngineRef;
 
-//STNixApiBuffer
+void NixApiEngineRef_retain(STNixApiEngineRef* obj);
+void NixApiEngineRef_release(STNixApiEngineRef* obj);
 
-#define STNixApiBuffer_Zero     { NULL, NULL }
+//STNixApiBufferRef (shared pointer)
 
-typedef struct STNixApiBuffer_ {
-    void* opq; //opaque object
+#define STNixApiBufferRef_Zero     { NULL, NULL }
+
+typedef struct STNixApiBufferRef_ {
+    struct STNixSharedPtr_* ptr;
     struct STNixApiBufferItf_* itf;
-} STNixApiBuffer;
+} STNixApiBufferRef;
 
-//STNixApiSource
+void NixApiBufferRef_retain(STNixApiBufferRef* obj);
+void NixApiBufferRef_release(STNixApiBufferRef* obj);
 
-#define STNixApiSource_Zero     { NULL, NULL }
+//STNixApiSourceRef (shared pointer)
 
-typedef struct STNixApiSource_ {
-    void* opq;  //opaque object
-    struct STNixApiSourceItf_* itf;
-} STNixApiSource;
+#define STNixApiSourceRef_Zero     { NULL, NULL }
 
-//STNixApiRecorder
+typedef struct STNixApiSourceRef_ {
+    struct STNixSharedPtr_*     ptr;
+    struct STNixApiSourceItf_*  itf;
+} STNixApiSourceRef;
 
-#define STNixApiRecorder_Zero     { NULL, NULL }
+void NixApiSourceRef_retain(STNixApiSourceRef* obj);
+void NixApiSourceRef_release(STNixApiSourceRef* obj);
 
-typedef struct STNixApiRecorder_ {
-    void* opq;  //opaque object
+//STNixApiRecorderRef (shared pointer)
+
+#define STNixApiRecorderRef_Zero     { NULL, NULL }
+
+typedef struct STNixApiRecorderRef_ {
+    struct STNixSharedPtr_* ptr;
     struct STNixApiRecorderItf_* itf;
-} STNixApiRecorder;
+} STNixApiRecorderRef;
+
+void NixApiRecorderRef_retain(STNixApiRecorderRef* obj);
+void NixApiRecorderRef_release(STNixApiRecorderRef* obj);
 
 //Callbacks (internals)
 
-typedef void (*NixApiCaptureBufferFilledCallback)(STNixApiEngine eng, STNixApiRecorder rec, const STNix_audioDesc audioDesc, const NixUI8* audioData, const NixUI32 audioDataBytes, const NixUI32 audioDataSamples, void* userdata);
+typedef void (*NixApiCaptureBufferFilledCallback)(STNixApiEngineRef eng, STNixApiRecorderRef rec, const STNix_audioDesc audioDesc, const NixUI8* audioData, const NixUI32 audioDataBytes, const NixUI32 audioDataSamples, void* userdata);
 
-//STNixApiEngineItf
+//STNixApiEngineItf (API)
 
 typedef struct STNixApiEngineItf_ {
-    STNixApiEngine  (*create)(void);
-    void            (*destroy)(STNixApiEngine obj);
-    void            (*printCaps)(STNixApiEngine obj);
-    NixBOOL         (*ctxIsActive)(STNixApiEngine obj);
-    NixBOOL         (*ctxActivate)(STNixApiEngine obj);
-    NixBOOL         (*ctxDeactivate)(STNixApiEngine obj);
-    void            (*tick)(STNixApiEngine obj);
+    STNixApiEngineRef  (*create)(void);
+    void            (*destroy)(STNixApiEngineRef ref);
+    void            (*printCaps)(STNixApiEngineRef ref);
+    NixBOOL         (*ctxIsActive)(STNixApiEngineRef ref);
+    NixBOOL         (*ctxActivate)(STNixApiEngineRef ref);
+    NixBOOL         (*ctxDeactivate)(STNixApiEngineRef ref);
+    void            (*tick)(STNixApiEngineRef ref);
 } STNixApiEngineItf;
 
 //Links NULL methods to a NOP implementation,
 //this reduces the need to check for functions NULL pointers.
 void NixApiEngineItf_fillMissingMembers(STNixApiEngineItf* itf);
 
-//STNixApiBufferItf
+//STNixApiBufferItf (API)
 
 typedef struct STNixApiBufferItf_ {
-    STNixApiBuffer  (*create)(const STNix_audioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes);
-    void            (*destroy)(STNixApiBuffer obj);
-    NixBOOL         (*setData)(STNixApiBuffer obj, const STNix_audioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes);
-    NixBOOL         (*fillWithZeroes)(STNixApiBuffer obj);
+    STNixApiBufferRef  (*create)(const STNix_audioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes);
+    void            (*destroy)(STNixApiBufferRef ref);
+    NixBOOL         (*setData)(STNixApiBufferRef ref, const STNix_audioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes);
+    NixBOOL         (*fillWithZeroes)(STNixApiBufferRef ref);
 } STNixApiBufferItf;
 
 //Links NULL methods to a NOP implementation,
 //this reduces the need to check for functions NULL pointers.
 void NixApiBufferItf_fillMissingMembers(STNixApiBufferItf* itf);
 
-//STNixApiSourceItf
+//STNixApiSourceItf (API)
 
 typedef struct STNixApiSourceItf_ {
-    STNixApiSource  (*create)(STNixApiEngine eng);
-    void            (*destroy)(STNixApiSource obj);
-    void            (*setCallback)(STNixApiSource obj, void (*callback)(void* pEng, const NixUI32 sourceIndex, const NixUI32 ammBuffs), void* callbackEng, NixUI32 callbackSourceIndex);
-    NixBOOL         (*setVolume)(STNixApiSource obj, const float vol);
-    NixBOOL         (*setRepeat)(STNixApiSource obj, const NixBOOL isRepeat);
-    void            (*play)(STNixApiSource obj);
-    void            (*pause)(STNixApiSource obj);
-    void            (*stop)(STNixApiSource obj);
-    NixBOOL         (*isPlaying)(STNixApiSource obj);
-    NixBOOL         (*isPaused)(STNixApiSource obj);
-    NixBOOL         (*setBuffer)(STNixApiSource obj, STNixApiBuffer buff);  //static-source
-    NixBOOL         (*queueBuffer)(STNixApiSource obj, STNixApiBuffer buff); //stream-source
+    STNixApiSourceRef  (*create)(STNixApiEngineRef eng);
+    void            (*destroy)(STNixApiSourceRef ref);
+    void            (*setCallback)(STNixApiSourceRef ref, void (*callback)(void* pEng, const NixUI32 sourceIndex, const NixUI32 ammBuffs), void* callbackEng, NixUI32 callbackSourceIndex);
+    NixBOOL         (*setVolume)(STNixApiSourceRef ref, const float vol);
+    NixBOOL         (*setRepeat)(STNixApiSourceRef ref, const NixBOOL isRepeat);
+    void            (*play)(STNixApiSourceRef ref);
+    void            (*pause)(STNixApiSourceRef ref);
+    void            (*stop)(STNixApiSourceRef ref);
+    NixBOOL         (*isPlaying)(STNixApiSourceRef ref);
+    NixBOOL         (*isPaused)(STNixApiSourceRef ref);
+    NixBOOL         (*setBuffer)(STNixApiSourceRef ref, STNixApiBufferRef buff);  //static-source
+    NixBOOL         (*queueBuffer)(STNixApiSourceRef ref, STNixApiBufferRef buff); //stream-source
 } STNixApiSourceItf;
 
 //Links NULL methods to a NOP implementation,
 //this reduces the need to check for functions NULL pointers.
 void NixApiSourceItf_fillMissingMembers(STNixApiSourceItf* itf);
 
-//STNixApiRecorderItf
+//STNixApiRecorderItf (API)
 
 typedef struct STNixApiRecorderItf_ {
-    STNixApiRecorder (*create)(STNixApiEngine eng, const STNix_audioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer);
-    void            (*destroy)(STNixApiRecorder obj);
-    NixBOOL         (*setCallback)(STNixApiRecorder obj, NixApiCaptureBufferFilledCallback callback, void* callbackData);
-    NixBOOL         (*start)(STNixApiRecorder obj);
-    NixBOOL         (*stop)(STNixApiRecorder obj);
+    STNixApiRecorderRef (*create)(STNixApiEngineRef eng, const STNix_audioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer);
+    void            (*destroy)(STNixApiRecorderRef ref);
+    NixBOOL         (*setCallback)(STNixApiRecorderRef ref, NixApiCaptureBufferFilledCallback callback, void* callbackData);
+    NixBOOL         (*start)(STNixApiRecorderRef ref);
+    NixBOOL         (*stop)(STNixApiRecorderRef ref);
 } STNixApiRecorderItf;
 
 //Links NULL methods to a NOP implementation,
 //this reduces the need to check for functions NULL pointers.
 void NixApiRecorderItf_fillMissingMembers(STNixApiRecorderItf* itf);
 
-//STNixApiItf
+//STNixApiItf (API)
 
 typedef struct STNixApiItf_ {
     STNixApiEngineItf   engine;
@@ -211,6 +232,8 @@ void NixPCMBuffer_init(STNixPCMBuffer* obj);
 void NixPCMBuffer_destroy(STNixPCMBuffer* obj);
 NixBOOL NixPCMBuffer_setData(STNixPCMBuffer* obj, const STNix_audioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes);
 NixBOOL NixPCMBuffer_fillWithZeroes(STNixPCMBuffer* obj);
+
+NixBOOL NixPCMBuffer_getApiItf(STNixApiBufferItf* dst);
 
 //-------------------------------
 //-- ENGINES
