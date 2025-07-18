@@ -51,7 +51,7 @@ typedef struct STNixDemoEcoState_ {
 
 //recorder
 
-void bufferCapturedCallback(STNix_Engine* eng, void* userdata, const STNix_audioDesc audioDesc, const NixUI8* audioData, const NixUI32 audioDataBytes, const NixUI32 audioDataSamples);
+void bufferCapturedCallback(STNix_Engine* eng, void* userdata, const STNixAudioDesc audioDesc, const NixUI8* audioData, const NixUI32 audioDataBytes, const NixUI32 audioDataSamples);
 
 //player
 
@@ -76,8 +76,8 @@ int main(int argc, const char * argv[]){
         void* bufferUnqueueCallbackData = &state;
         state.iSourceStrm = nixSourceAssignStream(&state.nix, lookIntoReusable, audioGroupIndex, releaseCallBack, releaseCallBackUserData, buffsQueueSize,bufferUnqueueCallback, bufferUnqueueCallbackData);
 		if(state.iSourceStrm != 0){
-            STNix_audioDesc audioDesc   = STNix_audioDesc_Zero;
-            audioDesc.samplesFormat     = ENNix_sampleFormat_int;
+            STNixAudioDesc audioDesc   = STNixAudioDesc_Zero;
+            audioDesc.samplesFormat     = ENNixSampleFmt_Int;
             audioDesc.channels          = 1;
             audioDesc.bitsPerSample     = 16;
             audioDesc.samplerate        = 22050;
@@ -146,11 +146,11 @@ int main(int argc, const char * argv[]){
 
 //recorder
 
-void bufferCapturedCallback(STNix_Engine* eng, void* userdata, const STNix_audioDesc audioDesc, const NixUI8* audioData, const NixUI32 audioDataBytes, const NixUI32 audioDataSamples){
+void bufferCapturedCallback(STNix_Engine* eng, void* userdata, const STNixAudioDesc audioDesc, const NixUI8* audioData, const NixUI32 audioDataBytes, const NixUI32 audioDataSamples){
     STNixDemoEcoState* state = (STNixDemoEcoState*)userdata;
     state->stats.curSec.samplesRecordedCount += audioDataSamples;
     //calculate avg (for dbg and stats)
-    if(audioDesc.bitsPerSample == 16 && audioDesc.samplesFormat == ENNix_sampleFormat_int){
+    if(audioDesc.bitsPerSample == 16 && audioDesc.samplesFormat == ENNixSampleFmt_Int){
         const NixSI16* s16 = (const NixSI16*)audioData;
         const NixSI16* s16AfterEnd = s16 + (audioDataBytes / 2);
         state->stats.curSec.samplesRecordedCount += (s16AfterEnd - s16);

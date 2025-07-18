@@ -47,7 +47,7 @@ NixUI8 loadDataFromWavFile(
 #                           ifdef __ANDROID__
                             JNIEnv *env, jobject assetManager,
 #                           endif
-                            const char* pathToWav, STNix_audioDesc* audioDesc, NixUI8** audioData, NixUI32* audioDataBytes
+                            const char* pathToWav, STNixAudioDesc* audioDesc, NixUI8** audioData, NixUI32* audioDataBytes
                            )
 {
     NixUI8 success = 0;
@@ -99,7 +99,7 @@ NixUI8 loadDataFromWavFile(
                                     //    PRINTF_ERROR("Wav format not supported\n");
                                     //} else {
                                         //
-                                        audioDesc->samplesFormat    = (formato==3 ? ENNix_sampleFormat_float : ENNix_sampleFormat_int);
+                                        audioDesc->samplesFormat    = (formato==3 ? ENNixSampleFmt_Float : ENNixSampleFmt_Int);
                                         audioDesc->channels         = canales;
                                         audioDesc->bitsPerSample    = bitsPorMuestra;
                                         audioDesc->samplerate       = muestrasPorSegundo;

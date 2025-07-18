@@ -56,12 +56,12 @@ int main(int argc, const char * argv[]){
         NixUI16 iSourceOrg = 0, iSourceOrgPlayCount = 0;
         NixUI8* audioData = NULL;
         NixUI32 audioDataBytes = 0;
-        STNix_audioDesc audioDesc;
+        STNixAudioDesc audioDesc;
         //converted source
         NixUI16 iSourceConv = 0, iSourceConvPlayCount = 0;
         NixUI8* audioDataConv = NULL;
         NixUI32 audioDataBytesConv = 0;
-        STNix_audioDesc audioDescConv;
+        STNixAudioDesc audioDescConv;
         //
         if(!loadDataFromWavFile(strWavPath, &audioDesc, &audioData, &audioDataBytes)){
             printf("ERROR, loading WAV file: '%s'.\n", strWavPath);
@@ -147,20 +147,20 @@ int main(int argc, const char * argv[]){
                             }
                             switch(rand() % 4){
                                 case 0:
-                                    audioDescConv.samplesFormat = ENNix_sampleFormat_int;
+                                    audioDescConv.samplesFormat = ENNixSampleFmt_Int;
                                     audioDescConv.bitsPerSample = 8;
                                     break;
                                 case 1:
-                                    audioDescConv.samplesFormat = ENNix_sampleFormat_int;
+                                    audioDescConv.samplesFormat = ENNixSampleFmt_Int;
                                     audioDescConv.bitsPerSample = 16;
                                     break;
                                 case 2:
-                                    audioDescConv.samplesFormat = ENNix_sampleFormat_int;
+                                    audioDescConv.samplesFormat = ENNixSampleFmt_Int;
                                     audioDescConv.bitsPerSample = 32;
                                     break;
                                 default:
                                     audioDescConv.bitsPerSample = 32;
-                                    audioDescConv.samplesFormat = ENNix_sampleFormat_float;
+                                    audioDescConv.samplesFormat = ENNixSampleFmt_Float;
                                     break;
                             }
                             audioDescConv.channels = 1 + (rand() % 2);
@@ -181,7 +181,7 @@ int main(int argc, const char * argv[]){
                                 }
                             }
                             if(audioDataConv != NULL){
-                                void* conv = nixFmtConverter_create();
+                                void* conv = nixFmtConverter_alloc();
                                 if(conv != NULL){
                                     const NixUI32 srcBlocks = (audioDataBytes / audioDesc.blockAlign);
                                     const NixUI32 dstBlocks = samplesReq;
@@ -196,7 +196,7 @@ int main(int argc, const char * argv[]){
                                     } else if(!nixFmtConverter_convert(conv, srcBlocks, dstBlocks, &ammBlocksRead, &ammBlocksWritten)){
                                         printf("nixFmtConverter_convert failed.\n");
                                     } else {
-                                        printf("nixFmtConverter_convert transformed %u of %u samples (%u%%) (%u hz, %d bits, %d channels) to %u of %u samples(%u%%) (%u hz, %d bits, %d channels, %s).\n", ammBlocksRead, srcBlocks, ammBlocksRead * 100 / srcBlocks, audioDesc.samplerate, audioDesc.bitsPerSample, audioDesc.channels, ammBlocksWritten, dstBlocks, ammBlocksWritten * 100 / dstBlocks, audioDescConv.samplerate, audioDescConv.bitsPerSample, audioDescConv.channels, audioDescConv.samplesFormat == ENNix_sampleFormat_float ? "float" : "int");
+                                        printf("nixFmtConverter_convert transformed %u of %u samples (%u%%) (%u hz, %d bits, %d channels) to %u of %u samples(%u%%) (%u hz, %d bits, %d channels, %s).\n", ammBlocksRead, srcBlocks, ammBlocksRead * 100 / srcBlocks, audioDesc.samplerate, audioDesc.bitsPerSample, audioDesc.channels, ammBlocksWritten, dstBlocks, ammBlocksWritten * 100 / dstBlocks, audioDescConv.samplerate, audioDescConv.bitsPerSample, audioDescConv.channels, audioDescConv.samplesFormat == ENNixSampleFmt_Float ? "float" : "int");
                                         //iSourceConv
                                         NixUI16 iSrcConv = nixSourceAssignStatic(&nix, NIX_TRUE, 0, NULL, NULL);
                                         if(iSrcConv == 0){
@@ -235,7 +235,7 @@ int main(int argc, const char * argv[]){
                                             iSrcConv = 0;
                                         }
                                     }
-                                    nixFmtConverter_destroy(conv);
+                                    nixFmtConverter_free(conv);
                                     conv = NULL;
                                 }
                             }

@@ -67,16 +67,13 @@
 
 //Audio description
    
-NixBOOL STNix_audioDesc_IsEqual(const STNix_audioDesc* obj, const STNix_audioDesc* other){
+NixBOOL STNixAudioDesc_IsEqual(const STNixAudioDesc* obj, const STNixAudioDesc* other){
     return (obj->samplesFormat == other->samplesFormat
             && obj->channels == other->channels
             && obj->bitsPerSample == other->bitsPerSample
             && obj->samplerate == other->samplerate
             && obj->blockAlign == other->blockAlign) ? NIX_TRUE : NIX_FALSE;
 }
-
-#define NIX_ITF_SET_MISSING_METHOD_TO_NOP(ITF, ITF_NAME, M_NAME) \
-    if(itf->M_NAME == NULL) itf->M_NAME = ITF_NAME ## _nop_ ## M_NAME
 
 // STNixSharedPtr (provides retain/release model)
 
@@ -139,8 +136,8 @@ void NixApiEngineRef_retain(STNixApiEngineRef* obj){
 void NixApiEngineRef_release(STNixApiEngineRef* obj){
     if(obj != NULL && obj->ptr != NULL){
         if(0 == NixSharedPtr_release(obj->ptr)){
-            if(obj->itf != NULL && obj->itf->destroy != NULL){
-                (*obj->itf->destroy)(*obj);
+            if(obj->itf != NULL && obj->itf->free != NULL){
+                (*obj->itf->free)(*obj);
             }
         }
     }
@@ -159,8 +156,8 @@ void NixApiBufferRef_retain(STNixApiBufferRef* obj){
 void NixApiBufferRef_release(STNixApiBufferRef* obj){
     if(obj != NULL && obj->ptr != NULL){
         if(0 == NixSharedPtr_release(obj->ptr)){
-            if(obj->itf != NULL && obj->itf->destroy != NULL){
-                (*obj->itf->destroy)(*obj);
+            if(obj->itf != NULL && obj->itf->free != NULL){
+                (*obj->itf->free)(*obj);
             }
         }
     }
@@ -179,8 +176,8 @@ void NixApiSourceRef_retain(STNixApiSourceRef* obj){
 void NixApiSourceRef_release(STNixApiSourceRef* obj){
     if(obj != NULL && obj->ptr != NULL){
         if(0 == NixSharedPtr_release(obj->ptr)){
-            if(obj->itf != NULL && obj->itf->destroy != NULL){
-                (*obj->itf->destroy)(*obj);
+            if(obj->itf != NULL && obj->itf->free != NULL){
+                (*obj->itf->free)(*obj);
             }
         }
     }
@@ -199,17 +196,154 @@ void NixApiRecorderRef_retain(STNixApiRecorderRef* obj){
 void NixApiRecorderRef_release(STNixApiRecorderRef* obj){
     if(obj != NULL && obj->ptr != NULL){
         if(0 == NixSharedPtr_release(obj->ptr)){
-            if(obj->itf != NULL && obj->itf->destroy != NULL){
-                (*obj->itf->destroy)(*obj);
+            if(obj->itf != NULL && obj->itf->free != NULL){
+                (*obj->itf->free)(*obj);
             }
         }
     }
 }
 
+//
+
+#define NIX_ITF_SET_MISSING_METHOD_TO_NOP(ITF, ITF_NAME, M_NAME) \
+    if(itf->M_NAME == NULL) itf->M_NAME = ITF_NAME ## _nop_ ## M_NAME
+
+#define NIX_ITF_SET_MISSING_METHOD_TO_DEFAULT(ITF, ITF_NAME, M_NAME) \
+    if(itf->M_NAME == NULL) itf->M_NAME = ITF_NAME ## _default_ ## M_NAME
+
+//STNixMemoryItf (API)
+
+void* NixMemoryItf_default_malloc(const NixUI32 newSz, const char* dbgHintStr){
+    return malloc(newSz);
+}
+
+void* NixMemoryItf_default_realloc(void* ptr, const NixUI32 newSz){
+    return realloc(ptr, newSz);
+}
+
+void NixMemoryItf_default_free(void* ptr){
+    free(ptr);
+}
+
+//Links NULL methods to a DEFAULT implementation,
+//this reduces the need to check for functions NULL pointers.
+void NixMemoryItf_fillMissingMembers(STNixMemoryItf* itf){
+    if(itf == NULL) return;
+    NIX_ITF_SET_MISSING_METHOD_TO_DEFAULT(itf, NixMemoryItf, malloc);
+    NIX_ITF_SET_MISSING_METHOD_TO_DEFAULT(itf, NixMemoryItf, realloc);
+    NIX_ITF_SET_MISSING_METHOD_TO_DEFAULT(itf, NixMemoryItf, free);
+    //validate missing implementations
+#   ifdef NIX_ASSERTS_ACTIVATED
+    {
+        void** ptr = (void**)itf;
+        void** afterEnd = ptr + (sizeof(*itf) / sizeof(void*));
+        while(ptr < afterEnd){
+            NIX_ASSERT(*ptr != NULL) //function pointer should be defined
+            ptr++;
+        }
+    }
+#   endif
+}
+
+//STNixMutexItf (API)
+
+#if !defined(NIX_MUTEX_T) || !defined(NIX_MUTEX_INIT) || !defined(NIX_MUTEX_DESTROY) || !defined(NIX_MUTEX_LOCK) || !defined(NIX_MUTEX_UNLOCK)
+#   ifdef _WIN32
+//#     define WIN32_LEAN_AND_MEAN
+#       include <windows.h>             //for CRITICAL_SECTION
+#       define NIX_MUTEX_T              CRITICAL_SECTION
+#       define NIX_MUTEX_INIT(PTR)      InitializeCriticalSection(PTR)
+#       define NIX_MUTEX_DESTROY(PTR)   DeleteCriticalSection(PTR)
+#       define NIX_MUTEX_LOCK(PTR)      EnterCriticalSection(PTR)
+#       define NIX_MUTEX_UNLOCK(PTR)    LeaveCriticalSection(PTR)
+#   else
+#       include <pthread.h>             //for pthread_mutex_t
+#       define NIX_MUTEX_T              pthread_mutex_t
+#       define NIX_MUTEX_INIT(PTR)      pthread_mutex_init(PTR, NULL)
+#       define NIX_MUTEX_DESTROY(PTR)   pthread_mutex_destroy(PTR)
+#       define NIX_MUTEX_LOCK(PTR)      pthread_mutex_lock(PTR)
+#       define NIX_MUTEX_UNLOCK(PTR)    pthread_mutex_unlock(PTR)
+#   endif
+#endif
+
+typedef struct STNixMutex_ {
+    NIX_MUTEX_T             mutex;
+    struct STNixContextItf_ ctx;
+} STNixMutex;
+
+void* NixMutexItf_default_alloc(struct STNixContextItf_* ctx){
+    STNixMutex* obj = (STNixMutex*)(*ctx->mem.malloc)(sizeof(STNixMutex), "NixMutexItf_default_alloc");
+    if(obj != NULL){
+        NIX_MUTEX_INIT(&obj->mutex);
+        obj->ctx = *ctx;
+    }
+    return obj;
+}
+
+void NixMutexItf_default_free(void* pObj){
+    STNixMutex* obj = (STNixMutex*)pObj;
+    if(obj != NULL){
+        NIX_MUTEX_DESTROY(&obj->mutex);
+        (*obj->ctx.mem.free)(obj);
+    }
+}
+
+void NixMutexItf_default_lock(void* pObj){
+    STNixMutex* obj = (STNixMutex*)pObj;
+    NIX_MUTEX_LOCK(&obj->mutex);
+}
+
+void NixMutexItf_default_unlock(void* pObj){
+    STNixMutex* obj = (STNixMutex*)pObj;
+    NIX_MUTEX_UNLOCK(&obj->mutex);
+}
+
+//Links NULL methods to a DEFAULT implementation,
+//this reduces the need to check for functions NULL pointers.
+void NixMutexItf_fillMissingMembers(STNixMutexItf* itf){
+    if(itf == NULL) return;
+    NIX_ITF_SET_MISSING_METHOD_TO_DEFAULT(itf, NixMutexItf, alloc);
+    NIX_ITF_SET_MISSING_METHOD_TO_DEFAULT(itf, NixMutexItf, free);
+    NIX_ITF_SET_MISSING_METHOD_TO_DEFAULT(itf, NixMutexItf, lock);
+    NIX_ITF_SET_MISSING_METHOD_TO_DEFAULT(itf, NixMutexItf, unlock);
+    //validate missing implementations
+#   ifdef NIX_ASSERTS_ACTIVATED
+    {
+        void** ptr = (void**)itf;
+        void** afterEnd = ptr + (sizeof(*itf) / sizeof(void*));
+        while(ptr < afterEnd){
+            NIX_ASSERT(*ptr != NULL) //function pointer should be defined
+            ptr++;
+        }
+    }
+#   endif
+}
+
+//STNixContextItf (API)
+
+//Links NULL methods to a DEFAULT implementation,
+//this reduces the need to check for functions NULL pointers.
+void NixContextItf_fillMissingMembers(STNixContextItf* itf){
+    if(itf == NULL) return;
+    NixMemoryItf_fillMissingMembers(&itf->mem);
+    NixMutexItf_fillMissingMembers(&itf->mutex);
+    //validate missing implementations
+#   ifdef NIX_ASSERTS_ACTIVATED
+    {
+        void** ptr = (void**)itf;
+        void** afterEnd = ptr + (sizeof(*itf) / sizeof(void*));
+        while(ptr < afterEnd){
+            NIX_ASSERT(*ptr != NULL) //function pointer should be defined
+            ptr++;
+        }
+    }
+#   endif
+}
+
 //STNixApiEngineItf
 
-STNixApiEngineRef  NixApiEngineItf_nop_create(void) { return (STNixApiEngineRef)STNixApiEngineRef_Zero; }
-void            NixApiEngineItf_nop_destroy(STNixApiEngineRef ref) { }
+STNixApiEngineRef  NixApiEngineItf_nop_alloc(STNixContextItf* ctx) { return (STNixApiEngineRef)STNixApiEngineRef_Zero; }
+void            NixApiEngineItf_nop_free(STNixApiEngineRef ref) { }
 void            NixApiEngineItf_nop_printCaps(STNixApiEngineRef ref) { }
 NixBOOL         NixApiEngineItf_nop_ctxIsActive(STNixApiEngineRef ref) { return NIX_FALSE; }
 NixBOOL         NixApiEngineItf_nop_ctxActivate(STNixApiEngineRef ref) { return NIX_FALSE; }
@@ -219,62 +353,60 @@ void            NixApiEngineItf_nop_tick(STNixApiEngineRef ref) { }
 //Links NULL methods to a NOP implementation,
 //this reduces the need to check for functions NULL pointers.
 void NixApiEngineItf_fillMissingMembers(STNixApiEngineItf* itf){
-    if(itf != NULL){
-        NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiEngineItf, create);
-        NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiEngineItf, destroy);
-        NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiEngineItf, printCaps);
-        NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiEngineItf, ctxIsActive);
-        NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiEngineItf, ctxActivate);
-        NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiEngineItf, ctxActivate);
-        NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiEngineItf, ctxDeactivate);
-        NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiEngineItf, tick);
-        //validate missing implementations
-#       ifdef NIX_ASSERTS_ACTIVATED
-        {
-            void** ptr = (void**)itf;
-            void** afterEnd = ptr + (sizeof(*itf) / sizeof(void*));
-            while(ptr < afterEnd){
-                NIX_ASSERT(*ptr != NULL) //function pointer should be defined
-                ptr++;
-            }
+    if(itf == NULL) return;
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiEngineItf, alloc);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiEngineItf, free);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiEngineItf, printCaps);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiEngineItf, ctxIsActive);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiEngineItf, ctxActivate);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiEngineItf, ctxActivate);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiEngineItf, ctxDeactivate);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiEngineItf, tick);
+    //validate missing implementations
+#   ifdef NIX_ASSERTS_ACTIVATED
+    {
+        void** ptr = (void**)itf;
+        void** afterEnd = ptr + (sizeof(*itf) / sizeof(void*));
+        while(ptr < afterEnd){
+            NIX_ASSERT(*ptr != NULL) //function pointer should be defined
+            ptr++;
         }
-#       endif
     }
+#   endif
 }
 
 //STNixApiBufferItf
 
-STNixApiBufferRef  NixApiBufferItf_nop_create(const STNix_audioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes) { return (STNixApiBufferRef)STNixApiBufferRef_Zero; }
-void            NixApiBufferItf_nop_destroy(STNixApiBufferRef ref) { }
-NixBOOL         NixApiBufferItf_nop_setData(STNixApiBufferRef ref, const STNix_audioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes) { return NIX_FALSE; }
+STNixApiBufferRef  NixApiBufferItf_nop_alloc(STNixContextItf* ctx, const STNixAudioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes) { return (STNixApiBufferRef)STNixApiBufferRef_Zero; }
+void            NixApiBufferItf_nop_free(STNixApiBufferRef ref) { }
+NixBOOL         NixApiBufferItf_nop_setData(STNixApiBufferRef ref, const STNixAudioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes) { return NIX_FALSE; }
 NixBOOL         NixApiBufferItf_nop_fillWithZeroes(STNixApiBufferRef ref) { return NIX_FALSE; }
 
 //Links NULL methods to a NOP implementation,
 //this reduces the need to check for functions NULL pointers.
 void NixApiBufferItf_fillMissingMembers(STNixApiBufferItf* itf){
-    if(itf != NULL){
-        NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiBufferItf, create);
-        NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiBufferItf, destroy);
-        NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiBufferItf, setData);
-        NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiBufferItf, fillWithZeroes);
-        //validate missing implementations
-#       ifdef NIX_ASSERTS_ACTIVATED
-        {
-            void** ptr = (void**)itf;
-            void** afterEnd = ptr + (sizeof(*itf) / sizeof(void*));
-            while(ptr < afterEnd){
-                NIX_ASSERT(*ptr != NULL) //function pointer should be defined
-                ptr++;
-            }
+    if(itf == NULL) return;
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiBufferItf, alloc);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiBufferItf, free);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiBufferItf, setData);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiBufferItf, fillWithZeroes);
+    //validate missing implementations
+#   ifdef NIX_ASSERTS_ACTIVATED
+    {
+        void** ptr = (void**)itf;
+        void** afterEnd = ptr + (sizeof(*itf) / sizeof(void*));
+        while(ptr < afterEnd){
+            NIX_ASSERT(*ptr != NULL) //function pointer should be defined
+            ptr++;
         }
-#       endif
     }
+#   endif
 }
 
 //STNixApiSourceItf
 
-STNixApiSourceRef  NixApiSourceItf_nop_create(STNixApiEngineRef eng) { return (STNixApiSourceRef)STNixApiSourceRef_Zero; }
-void            NixApiSourceItf_nop_destroy(STNixApiSourceRef ref) { }
+STNixApiSourceRef  NixApiSourceItf_nop_alloc(STNixApiEngineRef eng) { return (STNixApiSourceRef)STNixApiSourceRef_Zero; }
+void            NixApiSourceItf_nop_free(STNixApiSourceRef ref) { }
 void            NixApiSourceItf_nop_setCallback(STNixApiSourceRef ref, void (*callback)(void* pEng, const NixUI32 sourceIndex, const NixUI32 ammBuffs), void* callbackEng, NixUI32 callbackSourceIndex) { }
 NixBOOL         NixApiSourceItf_nop_setVolume(STNixApiSourceRef ref, const float vol)  { return NIX_FALSE; }
 NixBOOL         NixApiSourceItf_nop_setRepeat(STNixApiSourceRef ref, const NixBOOL isRepeat)  { return NIX_FALSE; }
@@ -289,38 +421,37 @@ NixBOOL         NixApiSourceItf_nop_queueBuffer(STNixApiSourceRef ref, STNixApiB
 //Links NULL methods to a NOP implementation,
 //this reduces the need to check for functions NULL pointers.
 void NixApiSourceItf_fillMissingMembers(STNixApiSourceItf* itf){
-    if(itf != NULL){
-        NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiSourceItf, create);
-        NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiSourceItf, destroy);
-        NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiSourceItf, setCallback);
-        NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiSourceItf, setVolume);
-        NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiSourceItf, setRepeat);
-        NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiSourceItf, play);
-        NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiSourceItf, pause);
-        NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiSourceItf, stop);
-        NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiSourceItf, isPlaying);
-        NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiSourceItf, isPaused);
-        NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiSourceItf, setBuffer);
-        NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiSourceItf, queueBuffer);
-        //validate missing implementations
-#       ifdef NIX_ASSERTS_ACTIVATED
-        {
-            void** ptr = (void**)itf;
-            void** afterEnd = ptr + (sizeof(*itf) / sizeof(void*));
-            while(ptr < afterEnd){
-                NIX_ASSERT(*ptr != NULL) //function pointer should be defined
-                ptr++;
-            }
+    if(itf == NULL) return;
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiSourceItf, alloc);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiSourceItf, free);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiSourceItf, setCallback);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiSourceItf, setVolume);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiSourceItf, setRepeat);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiSourceItf, play);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiSourceItf, pause);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiSourceItf, stop);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiSourceItf, isPlaying);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiSourceItf, isPaused);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiSourceItf, setBuffer);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiSourceItf, queueBuffer);
+    //validate missing implementations
+#   ifdef NIX_ASSERTS_ACTIVATED
+    {
+        void** ptr = (void**)itf;
+        void** afterEnd = ptr + (sizeof(*itf) / sizeof(void*));
+        while(ptr < afterEnd){
+            NIX_ASSERT(*ptr != NULL) //function pointer should be defined
+            ptr++;
         }
-#       endif
     }
+#   endif
 }
 
 //STNixApiRecorderItf
 
-STNixApiRecorderRef NixApiRecorderItf_nop_create(STNixApiEngineRef eng, const STNix_audioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer) { return (STNixApiRecorderRef)STNixApiRecorderRef_Zero; }
-void            NixApiRecorderItf_nop_destroy(STNixApiRecorderRef ref) { }
-NixBOOL         NixApiRecorderItf_nop_setCallback(STNixApiRecorderRef ref, NixApiCaptureBufferFilledCallback callback, void* callbackData) { return NIX_FALSE; }
+STNixApiRecorderRef NixApiRecorderItf_nop_alloc(STNixApiEngineRef eng, const STNixAudioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer) { return (STNixApiRecorderRef)STNixApiRecorderRef_Zero; }
+void            NixApiRecorderItf_nop_free(STNixApiRecorderRef ref) { }
+NixBOOL         NixApiRecorderItf_nop_setCallback(STNixApiRecorderRef ref, NixApiRecorderCallback callback, void* callbackData) { return NIX_FALSE; }
 NixBOOL         NixApiRecorderItf_nop_start(STNixApiRecorderRef ref) { return NIX_FALSE; }
 NixBOOL         NixApiRecorderItf_nop_stop(STNixApiRecorderRef ref) { return NIX_FALSE; }
 
@@ -328,24 +459,23 @@ NixBOOL         NixApiRecorderItf_nop_stop(STNixApiRecorderRef ref) { return NIX
 //Links NULL methods to a NOP implementation,
 //this reduces the need to check for functions NULL pointers.
 void NixApiRecorderItf_fillMissingMembers(STNixApiRecorderItf* itf){
-    if(itf != NULL){
-        NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiRecorderItf, create);
-        NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiRecorderItf, destroy);
-        NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiRecorderItf, setCallback);
-        NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiRecorderItf, start);
-        NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiRecorderItf, stop);
-        //validate missing implementations
-#       ifdef NIX_ASSERTS_ACTIVATED
-        {
-            void** ptr = (void**)itf;
-            void** afterEnd = ptr + (sizeof(*itf) / sizeof(void*));
-            while(ptr < afterEnd){
-                NIX_ASSERT(*ptr != NULL) //function pointer should be defined
-                ptr++;
-            }
+    if(itf == NULL) return;
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiRecorderItf, alloc);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiRecorderItf, free);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiRecorderItf, setCallback);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiRecorderItf, start);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixApiRecorderItf, stop);
+    //validate missing implementations
+#   ifdef NIX_ASSERTS_ACTIVATED
+    {
+        void** ptr = (void**)itf;
+        void** afterEnd = ptr + (sizeof(*itf) / sizeof(void*));
+        while(ptr < afterEnd){
+            NIX_ASSERT(*ptr != NULL) //function pointer should be defined
+            ptr++;
         }
-#       endif
     }
+#   endif
 }
 
 //STNixApiItf
@@ -353,23 +483,22 @@ void NixApiRecorderItf_fillMissingMembers(STNixApiRecorderItf* itf){
 //Links NULL methods to a NOP implementation,
 //this reduces the need to check for functions NULL pointers.
 void NixApiItf_fillMissingMembers(STNixApiItf* itf){
-    if(itf != NULL){
-        NixApiEngineItf_fillMissingMembers(&itf->engine);
-        NixApiBufferItf_fillMissingMembers(&itf->buffer);
-        NixApiSourceItf_fillMissingMembers(&itf->source);
-        NixApiRecorderItf_fillMissingMembers(&itf->recorder);
-        //validate missing implementations
-#       ifdef NIX_ASSERTS_ACTIVATED
-        {
-            void** ptr = (void**)itf;
-            void** afterEnd = ptr + (sizeof(*itf) / sizeof(void*));
-            while(ptr < afterEnd){
-                NIX_ASSERT(*ptr != NULL) //function pointer should be defined
-                ptr++;
-            }
+    if(itf == NULL) return;
+    NixApiEngineItf_fillMissingMembers(&itf->engine);
+    NixApiBufferItf_fillMissingMembers(&itf->buffer);
+    NixApiSourceItf_fillMissingMembers(&itf->source);
+    NixApiRecorderItf_fillMissingMembers(&itf->recorder);
+    //validate missing implementations
+#   ifdef NIX_ASSERTS_ACTIVATED
+    {
+        void** ptr = (void**)itf;
+        void** afterEnd = ptr + (sizeof(*itf) / sizeof(void*));
+        while(ptr < afterEnd){
+            NIX_ASSERT(*ptr != NULL) //function pointer should be defined
+            ptr++;
         }
-#       endif
     }
+#   endif
 }
 
 //------
@@ -389,12 +518,12 @@ void NixPCMBuffer_destroy(STNixPCMBuffer* obj){
     memset(obj, 0, sizeof(STNixPCMBuffer));
 }
 
-NixBOOL NixPCMBuffer_setData(STNixPCMBuffer* obj, const STNix_audioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes){
+NixBOOL NixPCMBuffer_setData(STNixPCMBuffer* obj, const STNixAudioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes){
     NixBOOL r = NIX_FALSE;
     if(audioDesc != NULL && audioDesc->blockAlign > 0){
         const NixUI32 reqBytes = (audioDataPCMBytes / audioDesc->blockAlign * audioDesc->blockAlign);
         //destroy current buffer (if necesary)
-        if(!STNix_audioDesc_IsEqual(&obj->desc, audioDesc) || obj->sz < reqBytes){
+        if(!STNixAudioDesc_IsEqual(&obj->desc, audioDesc) || obj->sz < reqBytes){
             if(obj->ptr != NULL){
                 NIX_FREE(obj->ptr);
                 obj->ptr = NULL;
@@ -442,9 +571,9 @@ NixBOOL NixPCMBuffer_fillWithZeroes(STNixPCMBuffer* obj){
 }
 
 //STNixPCMBuffer (API, common)
-STNixApiBufferRef nixPCMBuffer_create(const STNix_audioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes);
-void            nixPCMBuffer_destroy(STNixApiBufferRef ref);
-NixBOOL         nixPCMBuffer_setData(STNixApiBufferRef ref, const STNix_audioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes);
+STNixApiBufferRef nixPCMBuffer_alloc(STNixContextItf* ctx, const STNixAudioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes);
+void            nixPCMBuffer_free(STNixApiBufferRef ref);
+NixBOOL         nixPCMBuffer_setData(STNixApiBufferRef ref, const STNixAudioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes);
 NixBOOL         nixPCMBuffer_fillWithZeroes(STNixApiBufferRef ref);
 
 NixBOOL NixPCMBuffer_getApiItf(STNixApiBufferItf* dst){
@@ -452,9 +581,9 @@ NixBOOL NixPCMBuffer_getApiItf(STNixApiBufferItf* dst){
     if(dst != NULL){
         memset(dst, 0, sizeof(*dst));
         //
-        dst->create = nixPCMBuffer_create;
-        dst->destroy = nixPCMBuffer_destroy;
-        dst->setData = nixPCMBuffer_setData;
+        dst->alloc      = nixPCMBuffer_alloc;
+        dst->free       = nixPCMBuffer_free;
+        dst->setData    = nixPCMBuffer_setData;
         dst->fillWithZeroes = nixPCMBuffer_fillWithZeroes;
         //
         NixApiBufferItf_fillMissingMembers(dst);
@@ -468,24 +597,23 @@ NixBOOL NixPCMBuffer_getApiItf(STNixApiBufferItf* dst){
 //PCMBuffer API
 //------
 
-STNixApiBufferRef nixPCMBuffer_create(const STNix_audioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes){
+STNixApiBufferRef nixPCMBuffer_alloc(STNixContextItf* ctx, const STNixAudioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes){
     STNixApiBufferRef r = STNixApiBufferRef_Zero;
     if(audioDesc != NULL && audioDesc->blockAlign > 0){
-        STNixPCMBuffer* obj = NULL;
+        STNixPCMBuffer* obj = (STNixPCMBuffer*)(*ctx->mem.malloc)(sizeof(STNixPCMBuffer), "STNixPCMBuffer");
         STNixApiBufferItf* itf = NULL;
-        NIX_MALLOC(obj, STNixPCMBuffer, sizeof(STNixPCMBuffer), "STNixPCMBuffer");
         if(obj != NULL){
             NixPCMBuffer_init(obj);
             if(!NixPCMBuffer_setData(obj, audioDesc, audioDataPCM, audioDataPCMBytes)){
-                NIX_PRINTF_ERROR("nixPCMBuffer_create::NixPCMBuffer_setData failed.\n");
+                NIX_PRINTF_ERROR("nixPCMBuffer_alloc::NixPCMBuffer_setData failed.\n");
             } else {
-                NIX_MALLOC(itf, STNixApiBufferItf, sizeof(STNixApiBufferItf), "STNixApiBufferItf");
+                itf = (STNixApiBufferItf*)(*ctx->mem.malloc)(sizeof(STNixApiBufferItf), "STNixApiBufferItf");
                 if(itf == NULL){
-                    NIX_PRINTF_ERROR("nixPCMBuffer_create::NIX_MALLOC(STNixApiBufferItf) failed.\n");
+                    NIX_PRINTF_ERROR("nixPCMBuffer_alloc::NIX_MALLOC(STNixApiBufferItf) failed.\n");
                 } else if(!NixPCMBuffer_getApiItf(itf)){
-                    NIX_PRINTF_ERROR("nixPCMBuffer_create::NixPCMBuffer_getApiItf failed.\n");
+                    NIX_PRINTF_ERROR("nixPCMBuffer_alloc::NixPCMBuffer_getApiItf failed.\n");
                 } else if(NULL == (r.ptr = NixSharedPtr_create(obj))){
-                    NIX_PRINTF_ERROR("nixPCMBuffer_create::NixSharedPtr_create failed.\n");
+                    NIX_PRINTF_ERROR("nixPCMBuffer_alloc::NixSharedPtr_create failed.\n");
                 } else {
                     NIX_ASSERT(r.ptr != NULL)
                     r.itf = itf; itf = NULL; //consume
@@ -507,7 +635,7 @@ STNixApiBufferRef nixPCMBuffer_create(const STNix_audioDesc* audioDesc, const Ni
     return r;
 }
 
-void nixPCMBuffer_destroy(STNixApiBufferRef pObj){
+void nixPCMBuffer_free(STNixApiBufferRef pObj){
     if(pObj.ptr != NULL){
         STNixPCMBuffer* obj = (STNixPCMBuffer*)NixSharedPtr_getOpq(pObj.ptr);
         if(obj != NULL){
@@ -522,7 +650,7 @@ void nixPCMBuffer_destroy(STNixApiBufferRef pObj){
     }
 }
    
-NixBOOL nixPCMBuffer_setData(STNixApiBufferRef pObj, const STNix_audioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes){
+NixBOOL nixPCMBuffer_setData(STNixApiBufferRef pObj, const STNixAudioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes){
     NixBOOL r = NIX_FALSE;
     if(pObj.ptr != NULL && audioDesc != NULL && audioDesc->blockAlign > 0){
         STNixPCMBuffer* obj = (STNixPCMBuffer*)NixSharedPtr_getOpq(pObj.ptr);
@@ -559,7 +687,7 @@ typedef enum ENNixBufferState_ {
 //Audio buffer description
 typedef struct STNix_bufferDesc_ {
 	ENNixBufferState	state;
-	STNix_audioDesc		audioDesc;
+	STNixAudioDesc		audioDesc;
 	NixUI8*				dataPointer;
 	NixUI32				dataBytesCount;
 } STNix_bufferDesc;
@@ -567,7 +695,7 @@ typedef struct STNix_bufferDesc_ {
 typedef struct STNix_bufferAL_ {
 	NixUI8				regInUse;
 	NixUI32				retainCount;
-    STNixApiBufferRef      apiBuff;
+    STNixApiBufferRef   apiBuff;
     STNixApiBufferItf   api;
 	STNix_bufferDesc	bufferDesc;
 #   ifdef NIX_MSWAIT_BEFORE_DELETING_BUFFERS
@@ -628,7 +756,8 @@ typedef struct STNix_source_ {
 
 typedef struct STNix_EngineObjetcs_ {
 	NixUI32				maskCapabilities;
-    STNixApiEngineRef      apiEngine;
+    STNixContextItf     ctx;
+    STNixApiEngineRef   apiEngine;
     STNixApiItf         api;
 	//Audio sources
 	STNix_source*		sourcesArr;
@@ -642,7 +771,7 @@ typedef struct STNix_EngineObjetcs_ {
     STNixApiRecorderRef    apiRecorder;
 	NixUI8				captureInProgess;
 	NixUI32				captureSamplesPerBuffer;
-	STNix_audioDesc		captureFormat;
+	STNixAudioDesc		captureFormat;
 	//Capture buffers
 	STNix_bufferDesc*	buffersCaptureArr;
 	NixUI16				buffersCaptureArrFirst;
@@ -669,7 +798,7 @@ NixUI16	__nixBufferCreate(STNix_EngineObjetcs* eng);
 void	__nixBufferDestroy(STNix_bufferAL* buffer, const NixUI16 bufferIndex);
 void	__nixBufferRetain(STNix_bufferAL* buffer);
 void	__nixBufferRelease(STNix_bufferAL* buffer, const NixUI16 bufferIndex);
-NixBOOL __nixBufferSetData(STNix_EngineObjetcs* eng, STNix_bufferAL* buffer, const STNix_audioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes);
+NixBOOL __nixBufferSetData(STNix_EngineObjetcs* eng, STNix_bufferAL* buffer, const STNixAudioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes);
 NixBOOL __nixBufferFillZeroes(STNix_EngineObjetcs* eng, STNix_bufferAL* buffer);
 
 //Audio sources
@@ -766,8 +895,8 @@ NixUI16 __nixBufferCreate(STNix_EngineObjetcs* eng){
 
 void __nixBufferDestroy(STNix_bufferAL* buffer, const NixUI16 bufferIndex){
 	NIX_ASSERT(buffer->regInUse)
-    if(buffer->api.destroy != NULL){
-        (*buffer->api.destroy)(buffer->apiBuff);
+    if(buffer->api.free != NULL){
+        (*buffer->api.free)(buffer->apiBuff);
         buffer->apiBuff = (STNixApiBufferRef)STNixApiBufferRef_Zero;
     }
 	if(buffer->bufferDesc.dataPointer != NULL){
@@ -797,11 +926,11 @@ void __nixBufferRelease(STNix_bufferAL* buffer, const NixUI16 bufferIndex){
 	}
 }
 
-NixBOOL __nixBufferSetData(STNix_EngineObjetcs* eng, STNix_bufferAL* buffer, const STNix_audioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes){
+NixBOOL __nixBufferSetData(STNix_EngineObjetcs* eng, STNix_bufferAL* buffer, const STNixAudioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes){
     NixBOOL r = NIX_FALSE;
     if(buffer->apiBuff.ptr == NULL){
-        if(eng->api.buffer.create != NULL){
-            buffer->apiBuff = (*eng->api.buffer.create)(audioDesc, audioDataPCM, audioDataPCMBytes);
+        if(eng->api.buffer.alloc != NULL){
+            buffer->apiBuff = (*eng->api.buffer.alloc)(&eng->ctx, audioDesc, audioDataPCM, audioDataPCMBytes);
             if(buffer->apiBuff.ptr == NULL){
                 NIX_PRINTF_ERROR("buffer->apiBuff.ptr is NULL.\n");
             } else {
@@ -933,8 +1062,8 @@ void __nixSourceFinalize(STNix_Engine* engAbs, STNix_source* source, const NixUI
 	//Delete source
 	if(!forReuse){
         if(source->apiSource.ptr != NULL){
-            if(source->api.destroy != NULL){
-                (*source->api.destroy)(source->apiSource);
+            if(source->api.free != NULL){
+                (*source->api.free)(source->apiSource);
             }
             source->apiSource = (STNixApiSourceRef)STNixApiSourceRef_Zero;
         }
@@ -1068,8 +1197,9 @@ NixUI16 __nixSrcQueueFirstBuffer(STNix_source* src){
 //-- ENGINES
 //-------------------------------
 
-NixBOOL nixInitBase_(STNix_EngineObjetcs* eng, const NixUI16 pregeneratedSources){
+NixBOOL nixInitBase_(STNix_EngineObjetcs* eng, STNixContextItf* ctx, const NixUI16 pregeneratedSources){
     NixBOOL r = NIX_FALSE;
+    eng->ctx                        = *ctx;
     eng->maskCapabilities            = 0;
     //
     eng->sourcesArrUse                = 1; //Source index zero is reserved
@@ -1103,22 +1233,22 @@ NixBOOL nixInitBase_(STNix_EngineObjetcs* eng, const NixUI16 pregeneratedSources
 }
     
 
-NixBOOL nixInit(STNix_Engine* engAbs, const NixUI16 pregeneratedSources){
+NixBOOL nixInit(STNix_Engine* engAbs, STNixContextItf* ctx, const NixUI16 pregeneratedSources){
     NixBOOL r = NIX_FALSE;
     STNix_EngineObjetcs* eng; NIX_MALLOC(eng, STNix_EngineObjetcs, sizeof(STNix_EngineObjetcs), "STNix_EngineObjetcs");
     memset(eng, 0, sizeof(*eng));
     engAbs->o = eng;
-    if(!nixInitBase_(eng, pregeneratedSources)){
+    if(!nixInitBase_(eng, ctx, pregeneratedSources)){
         NIX_PRINTF_ERROR("nixInitBase_ failed.\n");
     } else {
         //API
 #       ifdef NIX_DEFAULT_API_AVFAUDIO
         if(!nixAVAudioEngine_getApiItf(&eng->api)){
             NIX_PRINTF_ERROR("nixAVAudioEngine_getApiItf failed.\n");
-        } else if(eng->api.engine.create == NULL){
+        } else if(eng->api.engine.alloc == NULL){
             NIX_PRINTF_ERROR("nixAVAudioEngine_getApiItf provided NULL for eng->api.engine.create.\n");
         } else {
-            eng->apiEngine = (*eng->api.engine.create)();
+            eng->apiEngine = (*eng->api.engine.alloc)(ctx);
             if(eng->apiEngine.ptr == NULL){
                 NIX_PRINTF_ERROR("nixAVAudioEngine_getApiItf::eng->api.engine.create provided NULL engine.\n");
             } else {
@@ -1129,10 +1259,10 @@ NixBOOL nixInit(STNix_Engine* engAbs, const NixUI16 pregeneratedSources){
 #       elif defined(NIX_DEFAULT_API_AAUDIO)
         if(!nixAAudioEngine_getApiItf(&eng->api)){
             NIX_PRINTF_ERROR("nixAVAudioEngine_getApiItf failed.\n");
-        } else if(eng->api.engine.create == NULL){
+        } else if(eng->api.engine.alloc == NULL){
             NIX_PRINTF_ERROR("nixAVAudioEngine_getApiItf provided NULL for eng->api.engine.create.\n");
         } else {
-            eng->apiEngine = (*eng->api.engine.create)();
+            eng->apiEngine = (*eng->api.engine.alloc)(ctx);
             if(eng->apiEngine.ptr == NULL){
                 NIX_PRINTF_ERROR("nixAVAudioEngine_getApiItf::eng->api.engine.create provided NULL engine.\n");
             } else {
@@ -1143,10 +1273,10 @@ NixBOOL nixInit(STNix_Engine* engAbs, const NixUI16 pregeneratedSources){
 #       elif defined(NIX_DEFAULT_API_OPENAL)
         if(!nixOpenALEngine_getApiItf(&eng->api)){
             NIX_PRINTF_ERROR("nixOpenALEngine_getApiItf failed.\n");
-        } else if(eng->api.engine.create == NULL){
+        } else if(eng->api.engine.alloc == NULL){
             NIX_PRINTF_ERROR("nixOpenALEngine_getApiItf provided NULL for eng->api.engine.create.\n");
         } else {
-            eng->apiEngine = (*eng->api.engine.create)();
+            eng->apiEngine = (*eng->api.engine.alloc)(ctx);
             if(eng->apiEngine.ptr == NULL){
                 NIX_PRINTF_ERROR("nixOpenALEngine_getApiItf::eng->api.engine.create provided NULL engine.\n");
             } else {
@@ -1194,10 +1324,10 @@ NixBOOL nixInitWithOpenAL(STNix_Engine* engAbs, const NixUI16 pregeneratedSource
         //API
         if(!nixOpenALEngine_getApiItf(&eng->api)){
             NIX_PRINTF_ERROR("nixOpenALEngine_getApiItf failed.\n");
-        } else if(eng->api.engine.create == NULL){
+        } else if(eng->api.engine.alloc == NULL){
             NIX_PRINTF_ERROR("nixOpenALEngine_getApiItf provided NULL for eng->api.engine.create.\n");
         } else {
-            eng->apiEngine = (*eng->api.engine.create)();
+            eng->apiEngine = (*eng->api.engine.alloc)();
             if(eng->apiEngine.ptr == NULL){
                 NIX_PRINTF_ERROR("nixOpenALEngine_getApiItf::eng->api.engine.create provided NULL engine.\n");
             } else {
@@ -1222,10 +1352,10 @@ NixBOOL nixInitWithAVFAudio(STNix_Engine* engAbs, const NixUI16 pregeneratedSour
         //API
         if(!nixAVAudioEngine_getApiItf(&eng->api)){
             NIX_PRINTF_ERROR("nixAVAudioEngine_getApiItf failed.\n");
-        } else if(eng->api.engine.create == NULL){
+        } else if(eng->api.engine.alloc == NULL){
             NIX_PRINTF_ERROR("nixAVAudioEngine_getApiItf provided NULL for eng->api.engine.create.\n");
         } else {
-            eng->apiEngine = (*eng->api.engine.create)();
+            eng->apiEngine = (*eng->api.engine.alloc)();
             if(eng->apiEngine.ptr == NULL){
                 NIX_PRINTF_ERROR("nixAVAudioEngine_getApiItf::eng->api.engine.create provided NULL engine.\n");
             } else {
@@ -1250,10 +1380,10 @@ NixBOOL nixInitWithAAudio(STNix_Engine* engAbs, const NixUI16 pregeneratedSource
         //API
         if(!nixAAudioEngine_getApiItf(&eng->api)){
             NIX_PRINTF_ERROR("nixAVAudioEngine_getApiItf failed.\n");
-        } else if(eng->api.engine.create == NULL){
+        } else if(eng->api.engine.alloc == NULL){
             NIX_PRINTF_ERROR("nixAVAudioEngine_getApiItf provided NULL for eng->api.engine.create.\n");
         } else {
-            eng->apiEngine = (*eng->api.engine.create)();
+            eng->apiEngine = (*eng->api.engine.alloc)();
             if(eng->apiEngine.ptr == NULL){
                 NIX_PRINTF_ERROR("nixAVAudioEngine_getApiItf::eng->api.engine.create provided NULL engine.\n");
             } else {
@@ -1363,8 +1493,8 @@ void nixFinalize(STNix_Engine* engAbs){
     }
 	//Destroy context and device
     if(eng->apiEngine.ptr != NULL){
-        if(eng->api.engine.destroy != NULL){
-            (*eng->api.engine.destroy)(eng->apiEngine);
+        if(eng->api.engine.free != NULL){
+            (*eng->api.engine.free)(eng->apiEngine);
             eng->apiEngine = (STNixApiEngineRef)STNixApiEngineRef_Zero;
         }
     }
@@ -1494,9 +1624,9 @@ NixUI16 __nixSourceAssign(STNix_Engine* engAbs, NixUI8 lookIntoReusable, NixUI8 
 		}
 	}
 	//Try to Generate new source
-    if(eng->api.source.create != NULL){
+    if(eng->api.source.alloc != NULL){
         STNix_AudioGroup* grp = &__nixSrcGroups[audioGroupIndex];
-        STNixApiSourceRef src = (*eng->api.source.create)(eng->apiEngine);
+        STNixApiSourceRef src = (*eng->api.source.alloc)(eng->apiEngine);
         if(src.ptr == NULL){
             NIX_PRINTF_ERROR("eng->api.source.create failed.\n");
         } else {
@@ -1513,8 +1643,8 @@ NixUI16 __nixSourceAssign(STNix_Engine* engAbs, NixUI8 lookIntoReusable, NixUI8 
             NIX_ASSERT(audioSource.regInUse)
             newSourceIndex = __nixSourceAdd(eng, &audioSource);
             if(newSourceIndex == 0){
-                if(eng->api.source.destroy != NULL){
-                    (*eng->api.source.destroy)(src);
+                if(eng->api.source.free != NULL){
+                    (*eng->api.source.free)(src);
                     src = (STNixApiSourceRef)STNixApiSourceRef_Zero;
                 }
             } else {
@@ -2043,7 +2173,7 @@ void __nixSourceBufferQueueCallback(void* pEng, NixUI32 sourceIndex, const NixUI
 
 //------------------------------------------
 
-NixUI16 nixBufferWithData(STNix_Engine* engAbs, const STNix_audioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes){
+NixUI16 nixBufferWithData(STNix_Engine* engAbs, const STNixAudioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes){
 	STNix_EngineObjetcs* eng = (STNix_EngineObjetcs*)engAbs->o;
 	NixUI16 i; const NixUI16 useCount = eng->buffersArrUse;
 	NIX_ASSERT(audioDesc->blockAlign == ((audioDesc->bitsPerSample / 8) * audioDesc->channels))
@@ -2073,7 +2203,7 @@ NixUI16 nixBufferWithData(STNix_Engine* engAbs, const STNix_audioDesc* audioDesc
 	return 0;
 }
 
-NixBOOL nixBufferSetData(STNix_Engine* engAbs, const NixUI16 buffIndex, const STNix_audioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes){
+NixBOOL nixBufferSetData(STNix_Engine* engAbs, const NixUI16 buffIndex, const STNixAudioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes){
 	STNix_EngineObjetcs* eng = (STNix_EngineObjetcs*)engAbs->o;
 	NIX_GET_BUFFER_START(eng, buffIndex, buffer) {
 		return __nixBufferSetData(eng, buffer, audioDesc, audioDataPCM, audioDataPCMBytes);
@@ -2121,7 +2251,7 @@ float nixBufferSeconds(STNix_Engine* engAbs, const NixUI16 buffIndex){
 			NIX_ASSERT(eng->buffersArr[buffIndex].regInUse)
 			if(eng->buffersArr[buffIndex].regInUse){
 				STNix_bufferDesc* bufferDesc = &eng->buffersArr[buffIndex].bufferDesc;
-				STNix_audioDesc* audioDesc = &bufferDesc->audioDesc;
+				STNixAudioDesc* audioDesc = &bufferDesc->audioDesc;
 				if(bufferDesc->dataBytesCount != 0 && audioDesc->bitsPerSample != 0 && audioDesc->channels != 0 && audioDesc->samplerate != 0){
 					r = (float)bufferDesc->dataBytesCount / (float)(audioDesc->samplerate * audioDesc->channels * audioDesc->bitsPerSample / 8);
 				}
@@ -2131,9 +2261,9 @@ float nixBufferSeconds(STNix_Engine* engAbs, const NixUI16 buffIndex){
 	return r;
 }
 
-STNix_audioDesc nixBufferAudioDesc(STNix_Engine* engAbs, const NixUI16 buffIndex){
+STNixAudioDesc nixBufferAudioDesc(STNix_Engine* engAbs, const NixUI16 buffIndex){
 	STNix_EngineObjetcs* eng = (STNix_EngineObjetcs*)engAbs->o;
-	STNix_audioDesc r;
+	STNixAudioDesc r;
 	r.channels = 0;
 	r.bitsPerSample = 0;
 	r.samplerate = 0;
@@ -2151,7 +2281,7 @@ STNix_audioDesc nixBufferAudioDesc(STNix_Engine* engAbs, const NixUI16 buffIndex
 	return r;
 }
 
-void nixCaptureBufferFilledCallback_(STNixApiEngineRef apiEng, STNixApiRecorderRef rec, const STNix_audioDesc audioDesc, const NixUI8* audioData, const NixUI32 audioDataBytes, const NixUI32 audioDataSamples, void* userdata){
+void nixCaptureBufferFilledCallback_(STNixApiEngineRef apiEng, STNixApiRecorderRef rec, const STNixAudioDesc audioDesc, const NixUI8* audioData, const NixUI32 audioDataBytes, const NixUI32 audioDataSamples, void* userdata){
     STNix_EngineObjetcs* eng = (STNix_EngineObjetcs*)userdata;
     STNix_Engine enAbs = { eng };
     if(eng->buffersCaptureCallback != NULL){
@@ -2159,12 +2289,12 @@ void nixCaptureBufferFilledCallback_(STNixApiEngineRef apiEng, STNixApiRecorderR
     }
 }
 
-NixBOOL nixCaptureInit(STNix_Engine* engAbs, const STNix_audioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer, PTRNIX_CaptureBufferFilledCallback bufferCaptureCallback, void* bufferCaptureCallbackUserData){
+NixBOOL nixCaptureInit(STNix_Engine* engAbs, const STNixAudioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer, PTRNIX_CaptureBufferFilledCallback bufferCaptureCallback, void* bufferCaptureCallbackUserData){
     NixBOOL r = NIX_FALSE;
 	STNix_EngineObjetcs* eng = (STNix_EngineObjetcs*)engAbs->o;
 	NIX_PRINTF_INFO("CaptureInit with channels(%d) bitsPerSample(%d) samplerate(%d) blockAlign(%d).\n", audioDesc->channels, audioDesc->bitsPerSample, audioDesc->samplerate, audioDesc->blockAlign);
-    if(eng->apiEngine.ptr != NULL && eng->apiRecorder.ptr == NULL && eng->api.recorder.create != NULL && buffersCount != 0 && samplesPerBuffer != 0){
-        STNixApiRecorderRef recorder = (*eng->api.recorder.create)(eng->apiEngine, audioDesc, buffersCount, samplesPerBuffer);
+    if(eng->apiEngine.ptr != NULL && eng->apiRecorder.ptr == NULL && eng->api.recorder.alloc != NULL && buffersCount != 0 && samplesPerBuffer != 0){
+        STNixApiRecorderRef recorder = (*eng->api.recorder.alloc)(eng->apiEngine, audioDesc, buffersCount, samplesPerBuffer);
         if(recorder.ptr != NULL){
             //set callback
             if(eng->api.recorder.setCallback != NULL){
@@ -2180,8 +2310,8 @@ NixBOOL nixCaptureInit(STNix_Engine* engAbs, const STNix_audioDesc* audioDesc, c
         }
         //release (if not consumed)
         if(recorder.ptr != NULL){
-            if(eng->api.recorder.destroy != NULL){
-                (*eng->api.recorder.destroy)(recorder);
+            if(eng->api.recorder.free != NULL){
+                (*eng->api.recorder.free)(recorder);
             }
             recorder = (STNixApiRecorderRef)STNixApiRecorderRef_Zero;
         }
@@ -2196,8 +2326,8 @@ void nixCaptureFinalize(STNix_Engine* engAbs){
         if(eng->api.recorder.stop != NULL){
             (*eng->api.recorder.stop)(eng->apiRecorder);
         }
-        if(eng->api.recorder.destroy != NULL){
-            (*eng->api.recorder.destroy)(eng->apiRecorder);
+        if(eng->api.recorder.free != NULL){
+            (*eng->api.recorder.free)(eng->apiRecorder);
         }
         eng->apiRecorder = (STNixApiRecorderRef)STNixApiRecorderRef_Zero;
     }
@@ -2286,7 +2416,7 @@ typedef struct STNix_FmtConverterChannel_ {
 } STNix_FmtConverterChannel;
 
 typedef struct STNix_FmtConverterSide_ {
-    STNix_audioDesc             desc;
+    STNixAudioDesc             desc;
     STNix_FmtConverterChannel   channels[NIX_FMT_CONVERTER_CHANNELS_MAX];
 } STNix_FmtConverterSide;
 
@@ -2306,14 +2436,14 @@ typedef struct STNix_FmtConverter_ {
     } samplesAccum;
 } STNix_FmtConverter;
 
-void* nixFmtConverter_create(void){
+void* nixFmtConverter_alloc(void){
     STNix_FmtConverter* r = NULL;
     NIX_MALLOC(r, STNix_FmtConverter, sizeof(STNix_FmtConverter), "STNix_FmtConverter");
     memset(r, 0, sizeof(STNix_FmtConverter));
     return r;
 }
 
-void nixFmtConverter_destroy(void* pObj){
+void nixFmtConverter_free(void* pObj){
     STNix_FmtConverter* obj = (STNix_FmtConverter*)pObj;
     if(obj != NULL){
         NIX_FREE(obj);
@@ -2321,17 +2451,17 @@ void nixFmtConverter_destroy(void* pObj){
     }
 }
 
-NixBOOL nixFmtConverter_prepare(void* pObj, const STNix_audioDesc* srcDesc, const STNix_audioDesc* dstDesc){
+NixBOOL nixFmtConverter_prepare(void* pObj, const STNixAudioDesc* srcDesc, const STNixAudioDesc* dstDesc){
     NixBOOL r = NIX_FALSE;
     STNix_FmtConverter* obj = (STNix_FmtConverter*)pObj;
     if(obj != NULL && srcDesc != NULL && dstDesc != NULL && srcDesc->channels > 0 && srcDesc->channels <= NIX_FMT_CONVERTER_CHANNELS_MAX && dstDesc->channels > 0 && dstDesc->channels <= NIX_FMT_CONVERTER_CHANNELS_MAX){
         if(
            //src
-           (srcDesc->samplesFormat == ENNix_sampleFormat_float && srcDesc->bitsPerSample == 32)
-           || (srcDesc->samplesFormat == ENNix_sampleFormat_int && (srcDesc->bitsPerSample == 8 || srcDesc->bitsPerSample == 16 || srcDesc->bitsPerSample == 32))
+           (srcDesc->samplesFormat == ENNixSampleFmt_Float && srcDesc->bitsPerSample == 32)
+           || (srcDesc->samplesFormat == ENNixSampleFmt_Int && (srcDesc->bitsPerSample == 8 || srcDesc->bitsPerSample == 16 || srcDesc->bitsPerSample == 32))
            //dst
-           || (dstDesc->samplesFormat == ENNix_sampleFormat_float && dstDesc->bitsPerSample == 32)
-           || (dstDesc->samplesFormat == ENNix_sampleFormat_int && (dstDesc->bitsPerSample == 8 || dstDesc->bitsPerSample == 16 || dstDesc->bitsPerSample == 32))
+           || (dstDesc->samplesFormat == ENNixSampleFmt_Float && dstDesc->bitsPerSample == 32)
+           || (dstDesc->samplesFormat == ENNixSampleFmt_Int && (dstDesc->bitsPerSample == 8 || dstDesc->bitsPerSample == 16 || dstDesc->bitsPerSample == 32))
            )
         {
             memset(&obj->src, 0, sizeof(obj->src));
@@ -2344,7 +2474,7 @@ NixBOOL nixFmtConverter_prepare(void* pObj, const STNix_audioDesc* srcDesc, cons
     return r;
 }
 
-NixBOOL nixFmtConverter_setPtrAtSrcChannel(void* pObj, const NixUI32 iChannel, void* ptr, const NixUI32 sampleAlign){
+NixBOOL nixFmtConverter_setPtrAtSrc(void* pObj, const NixUI32 iChannel, void* ptr, const NixUI32 sampleAlign){
     NixBOOL r = NIX_FALSE;
     STNix_FmtConverter* obj = (STNix_FmtConverter*)pObj;
     if(obj != NULL && ptr != NULL && sampleAlign > 0 && iChannel < obj->src.desc.channels && iChannel < (sizeof(obj->src.channels) / sizeof(obj->src.channels[0]))){
@@ -2356,7 +2486,7 @@ NixBOOL nixFmtConverter_setPtrAtSrcChannel(void* pObj, const NixUI32 iChannel, v
     return r;
 }
 
-NixBOOL nixFmtConverter_setPtrAtDstChannel(void* pObj, const NixUI32 iChannel, void* ptr, const NixUI32 sampleAlign){
+NixBOOL nixFmtConverter_setPtrAtDst(void* pObj, const NixUI32 iChannel, void* ptr, const NixUI32 sampleAlign){
     NixBOOL r = NIX_FALSE;
     STNix_FmtConverter* obj = (STNix_FmtConverter*)pObj;
     if(obj != NULL && ptr != NULL && sampleAlign > 0 && iChannel < obj->dst.desc.channels && iChannel < (sizeof(obj->dst.channels) / sizeof(obj->dst.channels[0]))){
@@ -2368,7 +2498,7 @@ NixBOOL nixFmtConverter_setPtrAtDstChannel(void* pObj, const NixUI32 iChannel, v
     return r;
 }
 
-NixBOOL nixFmtConverter_setPtrAtSrcInterlaced(void* pObj, const STNix_audioDesc* desc, void* ptr, const NixUI32 iFirstSample){
+NixBOOL nixFmtConverter_setPtrAtSrcInterlaced(void* pObj, const STNixAudioDesc* desc, void* ptr, const NixUI32 iFirstSample){
     NixBOOL r = NIX_FALSE;
     STNix_FmtConverter* obj = (STNix_FmtConverter*)pObj;
     if(obj != NULL && desc != NULL){
@@ -2377,8 +2507,8 @@ NixBOOL nixFmtConverter_setPtrAtSrcInterlaced(void* pObj, const STNix_audioDesc*
         for(iCh = 0; iCh < chCountDst && iCh < NIX_FMT_CONVERTER_CHANNELS_MAX; ++iCh){
             const NixUI32 samplePos = (iFirstSample * desc->blockAlign);
             const NixUI32 sampleChannelPos = samplePos + ((desc->bitsPerSample / 8) * iCh);
-            if(!nixFmtConverter_setPtrAtSrcChannel(pObj, iCh, &(((NixBYTE*)ptr)[sampleChannelPos]), desc->blockAlign)){
-                NIX_PRINTF_ERROR("nixFmtConverter_setPtrAtSrcInterlaced::nixFmtConverter_setPtrAtSrcChannel(iCh:%d, blockAlign:%d, ptr:%s) failed.\n", iCh, desc->blockAlign, (ptr != NULL ? "not-null" : "NULL"));
+            if(!nixFmtConverter_setPtrAtSrc(pObj, iCh, &(((NixBYTE*)ptr)[sampleChannelPos]), desc->blockAlign)){
+                NIX_PRINTF_ERROR("nixFmtConverter_setPtrAtSrcInterlaced::nixFmtConverter_setPtrAtSrc(iCh:%d, blockAlign:%d, ptr:%s) failed.\n", iCh, desc->blockAlign, (ptr != NULL ? "not-null" : "NULL"));
                 r = NIX_FALSE;
                 break;
             }
@@ -2387,7 +2517,7 @@ NixBOOL nixFmtConverter_setPtrAtSrcInterlaced(void* pObj, const STNix_audioDesc*
     return r;
 }
 
-NixBOOL nixFmtConverter_setPtrAtDstInterlaced(void* pObj, const STNix_audioDesc* desc, void* ptr, const NixUI32 iFirstSample){
+NixBOOL nixFmtConverter_setPtrAtDstInterlaced(void* pObj, const STNixAudioDesc* desc, void* ptr, const NixUI32 iFirstSample){
     NixBOOL r = NIX_FALSE;
     STNix_FmtConverter* obj = (STNix_FmtConverter*)pObj;
     if(obj != NULL && desc != NULL){
@@ -2396,7 +2526,7 @@ NixBOOL nixFmtConverter_setPtrAtDstInterlaced(void* pObj, const STNix_audioDesc*
         for(iCh = 0; iCh < chCountDst && iCh < NIX_FMT_CONVERTER_CHANNELS_MAX; ++iCh){
             const NixUI32 samplePos = (iFirstSample * desc->blockAlign);
             const NixUI32 sampleChannelPos = samplePos + ((desc->bitsPerSample / 8) * iCh);
-            if(!nixFmtConverter_setPtrAtDstChannel(pObj, iCh, &(((NixBYTE*)ptr)[sampleChannelPos]), desc->blockAlign)){
+            if(!nixFmtConverter_setPtrAtDst(pObj, iCh, &(((NixBYTE*)ptr)[sampleChannelPos]), desc->blockAlign)){
                 r = NIX_FALSE;
                 break;
             }
@@ -2427,10 +2557,10 @@ NixBOOL nixFmtConverter_convert(void* pObj, const NixUI32 srcBlocks, NixUI32 dst
     return r;
 }
 
-#define FMT_CONVERTER_IS_FLOAT32(DESC)  ((DESC).samplesFormat == ENNix_sampleFormat_float && (DESC).bitsPerSample == 32)
-#define FMT_CONVERTER_IS_SI32(DESC)     ((DESC).samplesFormat == ENNix_sampleFormat_int && (DESC).bitsPerSample == 32)
-#define FMT_CONVERTER_IS_SI16(DESC)     ((DESC).samplesFormat == ENNix_sampleFormat_int && (DESC).bitsPerSample == 16)
-#define FMT_CONVERTER_IS_UI8(DESC)      ((DESC).samplesFormat == ENNix_sampleFormat_int && (DESC).bitsPerSample == 8)
+#define FMT_CONVERTER_IS_FLOAT32(DESC)  ((DESC).samplesFormat == ENNixSampleFmt_Float && (DESC).bitsPerSample == 32)
+#define FMT_CONVERTER_IS_SI32(DESC)     ((DESC).samplesFormat == ENNixSampleFmt_Int && (DESC).bitsPerSample == 32)
+#define FMT_CONVERTER_IS_SI16(DESC)     ((DESC).samplesFormat == ENNixSampleFmt_Int && (DESC).bitsPerSample == 16)
+#define FMT_CONVERTER_IS_UI8(DESC)      ((DESC).samplesFormat == ENNixSampleFmt_Int && (DESC).bitsPerSample == 8)
 
 #define FMT_CONVERTER_SAME_FREQ_1_CH(LEFT_TYPE, RIGHT_TYPE, RIGHT_MATH_CAST, RIGHT_MATH_OP1, RIGHT_MATH_OP2) \
     STNix_FmtConverterChannel* srcCh0 = &obj->src.channels[0]; \

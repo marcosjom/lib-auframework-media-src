@@ -46,16 +46,16 @@
 //OpenAL interface
 
 //Engine
-STNixApiEngineRef  nixOpenALEngine_create(void);
-void            nixOpenALEngine_destroy(STNixApiEngineRef ref);
+STNixApiEngineRef  nixOpenALEngine_alloc(STNixContextItf* ctx);
+void            nixOpenALEngine_free(STNixApiEngineRef ref);
 void            nixOpenALEngine_printCaps(STNixApiEngineRef ref);
 NixBOOL         nixOpenALEngine_ctxIsActive(STNixApiEngineRef ref);
 NixBOOL         nixOpenALEngine_ctxActivate(STNixApiEngineRef ref);
 NixBOOL         nixOpenALEngine_ctxDeactivate(STNixApiEngineRef ref);
 void            nixOpenALEngine_tick(STNixApiEngineRef ref);
 //Source
-STNixApiSourceRef  nixOpenALSource_create(STNixApiEngineRef eng);
-void            nixOpenALSource_destroy(STNixApiSourceRef ref);
+STNixApiSourceRef  nixOpenALSource_alloc(STNixApiEngineRef eng);
+void            nixOpenALSource_free(STNixApiSourceRef ref);
 void            nixOpenALSource_setCallback(STNixApiSourceRef ref, void (*callback)(void* pEng, const NixUI32 sourceIndex, const NixUI32 ammBuffs), void* callbackEng, NixUI32 callbackSourceIndex);
 NixBOOL         nixOpenALSource_setVolume(STNixApiSourceRef ref, const float vol);
 NixBOOL         nixOpenALSource_setRepeat(STNixApiSourceRef ref, const NixBOOL isRepeat);
@@ -67,9 +67,9 @@ NixBOOL         nixOpenALSource_isPaused(STNixApiSourceRef ref);
 NixBOOL         nixOpenALSource_setBuffer(STNixApiSourceRef ref, STNixApiBufferRef buff);  //static-source
 NixBOOL         nixOpenALSource_queueBuffer(STNixApiSourceRef ref, STNixApiBufferRef buff); //stream-source
 //Recorder
-STNixApiRecorderRef nixOpenALRecorder_create(STNixApiEngineRef eng, const STNix_audioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer);
-void            nixOpenALRecorder_destroy(STNixApiRecorderRef ref);
-NixBOOL         nixOpenALRecorder_setCallback(STNixApiRecorderRef ref, NixApiCaptureBufferFilledCallback callback, void* callbackData);
+STNixApiRecorderRef nixOpenALRecorder_alloc(STNixApiEngineRef eng, const STNixAudioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer);
+void            nixOpenALRecorder_free(STNixApiRecorderRef ref);
+NixBOOL         nixOpenALRecorder_setCallback(STNixApiRecorderRef ref, NixApiRecorderCallback callback, void* callbackData);
 NixBOOL         nixOpenALRecorder_start(STNixApiRecorderRef ref);
 NixBOOL         nixOpenALRecorder_stop(STNixApiRecorderRef ref);
 
@@ -77,8 +77,8 @@ NixBOOL nixOpenALEngine_getApiItf(STNixApiItf* dst){
     NixBOOL r = NIX_FALSE;
     if(dst != NULL){
         memset(dst, 0, sizeof(*dst));
-        dst->engine.create      = nixOpenALEngine_create;
-        dst->engine.destroy     = nixOpenALEngine_destroy;
+        dst->engine.alloc       = nixOpenALEngine_alloc;
+        dst->engine.free        = nixOpenALEngine_free;
         dst->engine.printCaps   = nixOpenALEngine_printCaps;
         dst->engine.ctxIsActive = nixOpenALEngine_ctxIsActive;
         dst->engine.ctxActivate = nixOpenALEngine_ctxActivate;
@@ -87,8 +87,8 @@ NixBOOL nixOpenALEngine_getApiItf(STNixApiItf* dst){
         //PCMBuffer
         NixPCMBuffer_getApiItf(&dst->buffer);
         //Source
-        dst->source.create      = nixOpenALSource_create;
-        dst->source.destroy     = nixOpenALSource_destroy;
+        dst->source.alloc       = nixOpenALSource_alloc;
+        dst->source.free        = nixOpenALSource_free;
         dst->source.setCallback = nixOpenALSource_setCallback;
         dst->source.setVolume   = nixOpenALSource_setVolume;
         dst->source.setRepeat   = nixOpenALSource_setRepeat;
@@ -100,8 +100,8 @@ NixBOOL nixOpenALEngine_getApiItf(STNixApiItf* dst){
         dst->source.setBuffer   = nixOpenALSource_setBuffer;  //static-source
         dst->source.queueBuffer = nixOpenALSource_queueBuffer; //stream-source
         //Recorder
-        dst->recorder.create    = nixOpenALRecorder_create;
-        dst->recorder.destroy   = nixOpenALRecorder_destroy;
+        dst->recorder.alloc     = nixOpenALRecorder_alloc;
+        dst->recorder.free      = nixOpenALRecorder_free;
         dst->recorder.setCallback   = nixOpenALRecorder_setCallback;
         dst->recorder.start     = nixOpenALRecorder_start;
         dst->recorder.stop      = nixOpenALRecorder_stop;
@@ -125,6 +125,7 @@ struct STNixOpenALRecorder_;
 //------
 
 typedef struct STNixOpenALEngine_ {
+    STNixContextItf ctx;
     STNixApiItf     apiItf;
     NixUI32         maskCapabilities;
     NixBOOL         contextALIsCurrent;
@@ -142,7 +143,7 @@ typedef struct STNixOpenALEngine_ {
     struct STNixOpenALRecorder_* rec;
 } STNixOpenALEngine;
 
-void NixOpenALEngine_init(STNixOpenALEngine* obj);
+void NixOpenALEngine_init(STNixOpenALEngine* obj, STNixContextItf* ctx);
 void NixOpenALEngine_destroy(STNixOpenALEngine* obj);
 NixBOOL NixOpenALEngine_srcsAdd(STNixOpenALEngine* obj, struct STNixOpenALSource_* src);
 void NixOpenALEngine_tick(STNixOpenALEngine* obj, const NixBOOL isFinalCleanup);
@@ -217,9 +218,10 @@ NixBOOL NixOpenALQueue_popMovingTo(STNixOpenALQueue* obj, STNixOpenALQueue* othe
 //------
 
 typedef struct STNixOpenALSource_ {
+    STNixContextItf*        ctx;
     struct STNixOpenALEngine_* eng;    //parent engine
-    STNix_audioDesc         buffsFmt;   //first attached buffers' format (defines the converter config)
-    STNix_audioDesc         srcFmt;
+    STNixAudioDesc          buffsFmt;   //first attached buffers' format (defines the converter config)
+    STNixAudioDesc          srcFmt;
     ALenum                  srcFmtAL;
     ALuint                  idSourceAL;
     //queues
@@ -284,15 +286,15 @@ typedef struct STNixOpenALRecorder_ {
     STNixApiEngineRef       engRef;
     STNixApiRecorderRef     selfRef;
     ALuint                  idCaptureAL;
-    STNix_audioDesc         capFmt;
+    STNixAudioDesc         capFmt;
     //callback
     struct {
-        NixApiCaptureBufferFilledCallback func;
+        NixApiRecorderCallback func;
         void*               data;
     } callback;
     //cfg
     struct {
-        STNix_audioDesc     fmt;
+        STNixAudioDesc     fmt;
         NixUI16             samplesPerBuffer;
         NixUI16             maxBuffers;
     } cfg;
@@ -314,8 +316,8 @@ typedef struct STNixOpenALRecorder_ {
 void NixOpenALRecorder_init(STNixOpenALRecorder* obj);
 void NixOpenALRecorder_destroy(STNixOpenALRecorder* obj);
 //
-NixBOOL NixOpenALRecorder_prepare(STNixOpenALRecorder* obj, STNixOpenALEngine* eng, const STNix_audioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer);
-NixBOOL NixOpenALRecorder_setCallback(STNixOpenALRecorder* obj, NixApiCaptureBufferFilledCallback callback, void* callbackData);
+NixBOOL NixOpenALRecorder_prepare(STNixOpenALRecorder* obj, STNixOpenALEngine* eng, const STNixAudioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer);
+NixBOOL NixOpenALRecorder_setCallback(STNixOpenALRecorder* obj, NixApiRecorderCallback callback, void* callbackData);
 NixBOOL NixOpenALRecorder_start(STNixOpenALRecorder* obj);
 NixBOOL NixOpenALRecorder_stop(STNixOpenALRecorder* obj);
 NixBOOL NixOpenALRecorder_flush(STNixOpenALRecorder* obj);
@@ -326,9 +328,10 @@ void NixOpenALRecorder_notifyBuffers(STNixOpenALRecorder* obj);
 //Engine
 //------
 
-void NixOpenALEngine_init(STNixOpenALEngine* obj){
+void NixOpenALEngine_init(STNixOpenALEngine* obj, STNixContextItf* ctx){
     memset(obj, 0, sizeof(STNixOpenALEngine));
     //
+    obj->ctx = *ctx;
     nixOpenALEngine_getApiItf(&obj->apiItf);
     //
     obj->deviceAL = NIX_OPENAL_NULL;
@@ -771,7 +774,7 @@ void NixOpenALSource_destroy(STNixOpenALSource* obj){
             obj->queues.conv.buff.sz = 0;
         }
         if(obj->queues.conv.obj != NULL){
-            nixFmtConverter_destroy(obj->queues.conv.obj);
+            nixFmtConverter_free(obj->queues.conv.obj);
             obj->queues.conv.obj = NULL;
         }
         NixOpenALQueue_destroy(&obj->queues.pend);
@@ -785,10 +788,10 @@ NixBOOL NixOpenALSource_queueBufferForOutput(STNixOpenALSource* obj, STNixApiBuf
     NixBOOL r = NIX_FALSE;
     if(pBuff.ptr != NULL){
         STNixPCMBuffer* buff = (STNixPCMBuffer*)NixSharedPtr_getOpq(pBuff.ptr);
-        if(!STNix_audioDesc_IsEqual(&obj->buffsFmt, &buff->desc)){
+        if(!STNixAudioDesc_IsEqual(&obj->buffsFmt, &buff->desc)){
             //error
         } else {
-            STNix_audioDesc dataFmt;
+            STNixAudioDesc dataFmt;
             void* data = NULL;
             NixUI32 dataSz = 0;
             if(obj->queues.conv.obj == NULL){
@@ -829,11 +832,11 @@ NixBOOL NixOpenALSource_queueBufferForOutput(STNixOpenALSource* obj, STNixApiBuf
                                          , obj->buffsFmt.samplerate
                                          , obj->buffsFmt.channels
                                          , obj->buffsFmt.bitsPerSample
-                                         , obj->buffsFmt.samplesFormat == ENNix_sampleFormat_int ? "int" : obj->buffsFmt.samplesFormat == ENNix_sampleFormat_float ? "float" : "unknown"
+                                         , obj->buffsFmt.samplesFormat == ENNixSampleFmt_Int ? "int" : obj->buffsFmt.samplesFormat == ENNixSampleFmt_Float ? "float" : "unknown"
                                          , obj->srcFmt.samplerate
                                          , obj->srcFmt.channels
                                          , obj->srcFmt.bitsPerSample
-                                         , obj->srcFmt.samplesFormat == ENNix_sampleFormat_int ? "int" : obj->srcFmt.samplesFormat == ENNix_sampleFormat_float ? "float" : "unknown"
+                                         , obj->srcFmt.samplesFormat == ENNixSampleFmt_Int ? "int" : obj->srcFmt.samplesFormat == ENNixSampleFmt_Float ? "float" : "unknown"
                                          );
                     } else {
                         data = obj->queues.conv.buff.ptr;
@@ -1038,7 +1041,7 @@ void NixOpenALRecorder_destroy(STNixOpenALRecorder* obj){
             NixOpenALQueue_destroy(&obj->queues.notify);
             NixOpenALQueue_destroy(&obj->queues.reuse);
             if(obj->queues.conv != NULL){
-                nixFmtConverter_destroy(obj->queues.conv);
+                nixFmtConverter_free(obj->queues.conv);
                 obj->queues.conv = NULL;
             }
             //tmp
@@ -1074,25 +1077,25 @@ void NixOpenALRecorder_destroy(STNixOpenALRecorder* obj){
     }
 }
 
-NixBOOL NixOpenALRecorder_prepare(STNixOpenALRecorder* obj, STNixOpenALEngine* eng, const STNix_audioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer){
+NixBOOL NixOpenALRecorder_prepare(STNixOpenALRecorder* obj, STNixOpenALEngine* eng, const STNixAudioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer){
     NixBOOL r = NIX_FALSE;
     NIX_MUTEX_LOCK(&obj->queues.mutex);
     if(obj->queues.conv == NULL && audioDesc->blockAlign > 0){
-        STNix_audioDesc inDesc = STNix_audioDesc_Zero;
+        STNixAudioDesc inDesc = STNixAudioDesc_Zero;
         ALenum apiFmt = AL_UNDETERMINED;
         switch(audioDesc->channels){
             case 1:
                 switch(audioDesc->bitsPerSample){
                     case 8:
                         apiFmt = AL_FORMAT_MONO8;
-                        inDesc.samplesFormat   = ENNix_sampleFormat_int;
+                        inDesc.samplesFormat   = ENNixSampleFmt_Int;
                         inDesc.bitsPerSample   = 8;
                         inDesc.channels        = audioDesc->channels;
                         inDesc.samplerate      = audioDesc->samplerate;
                         break;
                     default:
                         apiFmt = AL_FORMAT_MONO16;
-                        inDesc.samplesFormat   = ENNix_sampleFormat_int;
+                        inDesc.samplesFormat   = ENNixSampleFmt_Int;
                         inDesc.bitsPerSample   = 16;
                         inDesc.channels        = audioDesc->channels;
                         inDesc.samplerate      = audioDesc->samplerate;
@@ -1103,14 +1106,14 @@ NixBOOL NixOpenALRecorder_prepare(STNixOpenALRecorder* obj, STNixOpenALEngine* e
                 switch(audioDesc->bitsPerSample){
                     case 8:
                         apiFmt = AL_FORMAT_STEREO8;
-                        inDesc.samplesFormat   = ENNix_sampleFormat_int;
+                        inDesc.samplesFormat   = ENNixSampleFmt_Int;
                         inDesc.bitsPerSample   = 8;
                         inDesc.channels        = audioDesc->channels;
                         inDesc.samplerate      = audioDesc->samplerate;
                         break;
                     default:
                         apiFmt = AL_FORMAT_STEREO16;
-                        inDesc.samplesFormat   = ENNix_sampleFormat_int;
+                        inDesc.samplesFormat   = ENNixSampleFmt_Int;
                         inDesc.bitsPerSample   = 16;
                         inDesc.channels        = audioDesc->channels;
                         inDesc.samplerate      = audioDesc->samplerate;
@@ -1145,17 +1148,17 @@ NixBOOL NixOpenALRecorder_prepare(STNixOpenALRecorder* obj, STNixOpenALEngine* e
                 if(tmpBuff == NULL){
                     NIX_PRINTF_ERROR("NixOpenALRecorder_prepare::allocation of temporary buffer failed.\n");
                 } else {
-                    void* conv = nixFmtConverter_create();
+                    void* conv = nixFmtConverter_alloc();
                     if(!nixFmtConverter_prepare(conv, &inDesc, audioDesc)){
                         NIX_PRINTF_ERROR("NixOpenALRecorder_prepare::nixFmtConverter_prepare failed.\n");
-                        nixFmtConverter_destroy(conv);
+                        nixFmtConverter_free(conv);
                         conv = NULL;
                     } else {
                         //allocate reusable buffers
                         while(obj->queues.reuse.use < buffersCount){
                             STNixOpenALQueuePair pair;
                             NixOpenALQueuePair_init(&pair);
-                            pair.org = (eng->apiItf.buffer.create)(audioDesc, NULL, audioDesc->blockAlign * samplesPerBuffer);
+                            pair.org = (eng->apiItf.buffer.alloc)(&eng->ctx, audioDesc, NULL, audioDesc->blockAlign * samplesPerBuffer);
                             if(pair.org.ptr == NULL){
                                 NIX_PRINTF_ERROR("NixOpenALRecorder_prepare::pair.org allocation failed.\n");
                                 NixOpenALQueuePair_destroy(&pair);
@@ -1185,7 +1188,7 @@ NixBOOL NixOpenALRecorder_prepare(STNixOpenALRecorder* obj, STNixOpenALEngine* e
                     }
                     //release (if not consumed)
                     if(conv != NULL){
-                        nixFmtConverter_destroy(conv);
+                        nixFmtConverter_free(conv);
                         conv = NULL;
                     }
                 }
@@ -1202,7 +1205,7 @@ NixBOOL NixOpenALRecorder_prepare(STNixOpenALRecorder* obj, STNixOpenALEngine* e
     return r;
 }
 
-NixBOOL NixOpenALRecorder_setCallback(STNixOpenALRecorder* obj, NixApiCaptureBufferFilledCallback callback, void* callbackData){
+NixBOOL NixOpenALRecorder_setCallback(STNixOpenALRecorder* obj, NixApiRecorderCallback callback, void* callbackData){
     NixBOOL r = NIX_FALSE;
     {
         obj->callback.func = callback;
@@ -1391,12 +1394,12 @@ void NixOpenALRecorder_notifyBuffers(STNixOpenALRecorder* obj){
 //Engine API
 //------
 
-STNixApiEngineRef nixOpenALEngine_create(void){
+STNixApiEngineRef nixOpenALEngine_alloc(STNixContextItf* ctx){
     STNixApiEngineRef r = STNixApiEngineRef_Zero;
     STNixOpenALEngine* obj = NULL;
     NIX_MALLOC(obj, STNixOpenALEngine, sizeof(STNixOpenALEngine), "STNixOpenALEngine");
     if(obj != NULL){
-        NixOpenALEngine_init(obj);
+        NixOpenALEngine_init(obj, ctx);
         obj->deviceAL = alcOpenDevice(NULL);
         if(obj->deviceAL == NULL){
             NIX_PRINTF_ERROR("OpenAL::alcOpenDevice failed.\n");
@@ -1433,7 +1436,7 @@ STNixApiEngineRef nixOpenALEngine_create(void){
     return r;
 }
 
-void nixOpenALEngine_destroy(STNixApiEngineRef pObj){
+void nixOpenALEngine_free(STNixApiEngineRef pObj){
     if(pObj.ptr != NULL){
         STNixOpenALEngine* obj = (STNixOpenALEngine*)NixSharedPtr_getOpq(pObj.ptr);
         if(obj != NULL){
@@ -1553,14 +1556,16 @@ void nixOpenALEngine_tick(STNixApiEngineRef pObj){
 //Source API
 //------
 
-STNixApiSourceRef nixOpenALSource_create(STNixApiEngineRef pEng){
+STNixApiSourceRef nixOpenALSource_alloc(STNixApiEngineRef pEng){
     STNixApiSourceRef r = STNixApiSourceRef_Zero;
     STNixOpenALEngine* eng = (STNixOpenALEngine*)NixSharedPtr_getOpq(pEng.ptr);
     if(eng != NULL){
+        STNixContextItf* ctx = &eng->ctx;
         STNixOpenALSource* obj = NULL;
         NIX_MALLOC(obj, STNixOpenALSource, sizeof(STNixOpenALSource), "STNixOpenALSource");
         if(obj != NULL){
             NixOpenALSource_init(obj);
+            obj->ctx = ctx;
             obj->eng = eng;
             //
             ALenum errorAL;
@@ -1614,7 +1619,7 @@ void nixOpenALSource_removeAllBuffersAndNotify_(STNixOpenALSource* obj){
     }
 }
 
-void nixOpenALSource_destroy(STNixApiSourceRef pObj){ //orphans the source, will automatically be destroyed after internal cleanup
+void nixOpenALSource_free(STNixApiSourceRef pObj){ //orphans the source, will automatically be destroyed after internal cleanup
     if(pObj.ptr != NULL){
         STNixOpenALSource* obj = (STNixOpenALSource*)NixSharedPtr_getOpq(pObj.ptr);
         if(obj != NULL){
@@ -1726,7 +1731,7 @@ NixBOOL nixOpenALSource_isPaused(STNixApiSourceRef pObj){
     return r;
 }
 
-ALenum nixOpenALSource_alFormat(const STNix_audioDesc* fmt){
+ALenum nixOpenALSource_alFormat(const STNixAudioDesc* fmt){
     ALenum dataFormat = AL_UNDETERMINED;
     switch(fmt->bitsPerSample){
         case 8:
@@ -1755,9 +1760,9 @@ ALenum nixOpenALSource_alFormat(const STNix_audioDesc* fmt){
     return dataFormat;
 }
 
-NixBOOL nixOpenALSource_prepareSourceForFmtAndSz_(STNixOpenALSource* obj, const STNix_audioDesc* fmt, const NixUI32 buffSz){
+NixBOOL nixOpenALSource_prepareSourceForFmtAndSz_(STNixOpenALSource* obj, const STNixAudioDesc* fmt, const NixUI32 buffSz){
     NixBOOL r = NIX_FALSE;
-    if(fmt != NULL && fmt->blockAlign > 0 && fmt->bitsPerSample > 0 && fmt->channels > 0 && fmt->samplerate > 0 && fmt->samplesFormat > ENNix_sampleFormat_none && fmt->samplesFormat <= ENNix_sampleFormat_count){
+    if(fmt != NULL && fmt->blockAlign > 0 && fmt->bitsPerSample > 0 && fmt->channels > 0 && fmt->samplerate > 0 && fmt->samplesFormat > ENNixSampleFmt_Unknown && fmt->samplesFormat <= ENNixSampleFmt_Count){
         ALenum fmtAL = nixOpenALSource_alFormat(fmt);
         if(fmtAL != AL_UNDETERMINED){
             //buffer format cmpatible qith OpenAL
@@ -1767,12 +1772,12 @@ NixBOOL nixOpenALSource_prepareSourceForFmtAndSz_(STNixOpenALSource* obj, const 
             r = NIX_TRUE;
         } else {
             //prepare converter
-            void* conv = nixFmtConverter_create();
-            STNix_audioDesc convFmt = STNix_audioDesc_Zero;
+            void* conv = nixFmtConverter_alloc();
+            STNixAudioDesc convFmt = STNixAudioDesc_Zero;
             convFmt.channels        = fmt->channels;
             convFmt.bitsPerSample   = 16;
             convFmt.samplerate      = fmt->samplerate;
-            convFmt.samplesFormat   = ENNix_sampleFormat_int;
+            convFmt.samplesFormat   = ENNixSampleFmt_Int;
             convFmt.blockAlign      = (convFmt.bitsPerSample / 8) * convFmt.channels;
             if(!nixFmtConverter_prepare(conv, fmt, &convFmt)){
                 NIX_PRINTF_ERROR("nixOpenALSource_prepareSourceForFmtAndSz_, nixFmtConverter_prepare failed.\n");
@@ -1798,7 +1803,7 @@ NixBOOL nixOpenALSource_prepareSourceForFmtAndSz_(STNixOpenALSource* obj, const 
             }
             //release (if not consumed)
             if(conv != NULL){
-                nixFmtConverter_destroy(conv);
+                nixFmtConverter_free(conv);
                 conv = NULL;
             }
         }
@@ -1823,7 +1828,7 @@ NixBOOL nixOpenALSource_setBuffer(STNixApiSourceRef pObj, STNixApiBufferRef pBuf
             NIX_PRINTF_ERROR("nixOpenALSource_setBuffer, source already has buffer.\n");
         } else if(NixOpenALSource_isStatic(obj)){
             NIX_PRINTF_ERROR("nixOpenALSource_setBuffer, source is already static.\n");
-        } else if(!STNix_audioDesc_IsEqual(&obj->buffsFmt, &buff->desc)){
+        } else if(!STNixAudioDesc_IsEqual(&obj->buffsFmt, &buff->desc)){
             NIX_PRINTF_ERROR("nixOpenALSource_setBuffer, new buffer doesnt match first buffer's format.\n");
         } else {
             NixOpenALSource_setIsStatic(obj, NIX_TRUE);
@@ -1854,7 +1859,7 @@ NixBOOL nixOpenALSource_queueBuffer(STNixApiSourceRef pObj, STNixApiBufferRef pB
             NIX_PRINTF_ERROR("nixOpenALSource_queueBuffer, no source available.\n");
         } else if(NixOpenALSource_isStatic(obj)){
             NIX_PRINTF_ERROR("nixOpenALSource_queueBuffer, source is static.\n");
-        } else if(!STNix_audioDesc_IsEqual(&obj->buffsFmt, &buff->desc)){
+        } else if(!STNixAudioDesc_IsEqual(&obj->buffsFmt, &buff->desc)){
             NIX_PRINTF_ERROR("nixOpenALSource_queueBuffer, new buffer doesnt match first buffer's format.\n");
         } else {
             //schedule
@@ -1873,7 +1878,7 @@ NixBOOL nixOpenALSource_queueBuffer(STNixApiSourceRef pObj, STNixApiBufferRef pB
 //Recorder API
 //------
 
-STNixApiRecorderRef nixOpenALRecorder_create(STNixApiEngineRef pEng, const STNix_audioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer){
+STNixApiRecorderRef nixOpenALRecorder_alloc(STNixApiEngineRef pEng, const STNixAudioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer){
     STNixApiRecorderRef r = STNixApiRecorderRef_Zero;
     STNixOpenALEngine* eng = (STNixOpenALEngine*)NixSharedPtr_getOpq(pEng.ptr);
     if(eng != NULL && audioDesc != NULL && audioDesc->samplerate > 0 && audioDesc->blockAlign > 0 && eng->rec == NULL){
@@ -1902,7 +1907,7 @@ STNixApiRecorderRef nixOpenALRecorder_create(STNixApiEngineRef pEng, const STNix
     return r;
 }
 
-void nixOpenALRecorder_destroy(STNixApiRecorderRef pObj){
+void nixOpenALRecorder_free(STNixApiRecorderRef pObj){
     if(pObj.ptr != NULL){
         STNixOpenALRecorder* obj = (STNixOpenALRecorder*)NixSharedPtr_getOpq(pObj.ptr);
         if(obj != NULL){
@@ -1915,7 +1920,7 @@ void nixOpenALRecorder_destroy(STNixApiRecorderRef pObj){
     //itf belongs to Engine
 }
 
-NixBOOL nixOpenALRecorder_setCallback(STNixApiRecorderRef pObj, NixApiCaptureBufferFilledCallback callback, void* callbackData){
+NixBOOL nixOpenALRecorder_setCallback(STNixApiRecorderRef pObj, NixApiRecorderCallback callback, void* callbackData){
     NixBOOL r = NIX_FALSE;
     STNixOpenALRecorder* obj = (STNixOpenALRecorder*)NixSharedPtr_getOpq(pObj.ptr);
     if(obj != NULL){

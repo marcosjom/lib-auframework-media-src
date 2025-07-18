@@ -54,7 +54,7 @@ int main(int argc, const char * argv[]){
 		const char* strWavPath = _nixUtilFilesList[rand() % (sizeof(_nixUtilFilesList) / sizeof(_nixUtilFilesList[0]))];
         NixUI8* audioData = NULL;
         NixUI32 audioDataBytes = 0;
-        STNix_audioDesc audioDesc;
+        STNixAudioDesc audioDesc;
 		if(!loadDataFromWavFile(strWavPath, &audioDesc, &audioData, &audioDataBytes)){
 			printf("ERROR, loading WAV file: '%s'.\n", strWavPath);
 		} else {

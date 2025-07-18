@@ -35,12 +35,12 @@ static NixUI32 msAccum = 0;
 static NixUI16 iSourceOrg = 0, iSourceOrgPlayCount = 0;
 static NixUI8* audioData = NULL;
 static NixUI32 audioDataBytes = 0;
-static STNix_audioDesc audioDesc;
+static STNixAudioDesc audioDesc;
 //converted source
 static NixUI16 iSourceConv = 0, iSourceConvPlayCount = 0;
 static NixUI8* audioDataConv = NULL;
 static NixUI32 audioDataBytesConv = 0;
-static STNix_audioDesc audioDescConv;
+static STNixAudioDesc audioDescConv;
 
 JNIEXPORT jboolean JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_testStart(JNIEnv* env, jobject obj, jobject assetManager){
     jboolean r = 0;
@@ -157,20 +157,20 @@ JNIEXPORT void JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_testTick(JNI
                     }
                     switch(rand() % 4){
                         case 0:
-                            audioDescConv.samplesFormat = ENNix_sampleFormat_int;
+                            audioDescConv.samplesFormat = ENNixSampleFmt_Int;
                             audioDescConv.bitsPerSample = 8;
                             break;
                         case 1:
-                            audioDescConv.samplesFormat = ENNix_sampleFormat_int;
+                            audioDescConv.samplesFormat = ENNixSampleFmt_Int;
                             audioDescConv.bitsPerSample = 16;
                             break;
                         case 2:
-                            audioDescConv.samplesFormat = ENNix_sampleFormat_int;
+                            audioDescConv.samplesFormat = ENNixSampleFmt_Int;
                             audioDescConv.bitsPerSample = 32;
                             break;
                         default:
                             audioDescConv.bitsPerSample = 32;
-                            audioDescConv.samplesFormat = ENNix_sampleFormat_float;
+                            audioDescConv.samplesFormat = ENNixSampleFmt_Float;
                             break;
                     }
                     audioDescConv.channels = 1 + (rand() % 2);
@@ -191,7 +191,7 @@ JNIEXPORT void JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_testTick(JNI
                         }
                     }
                     if(audioDataConv != NULL){
-                        void* conv = nixFmtConverter_create();
+                        void* conv = nixFmtConverter_alloc();
                         if(conv != NULL){
                             const NixUI32 srcBlocks = (audioDataBytes / audioDesc.blockAlign);
                             const NixUI32 dstBlocks = samplesReq;
@@ -206,7 +206,7 @@ JNIEXPORT void JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_testTick(JNI
                             } else if(!nixFmtConverter_convert(conv, srcBlocks, dstBlocks, &ammBlocksRead, &ammBlocksWritten)){
                                 PRINTF_ERROR("nixFmtConverter_convert failed.\n");
                             } else {
-                                PRINTF_INFO("nixFmtConverter_convert transformed %u of %u samples (%u%%) (%u hz, %d bits, %d channels) to %u of %u samples(%u%%) (%u hz, %d bits, %d channels, %s).\n", ammBlocksRead, srcBlocks, ammBlocksRead * 100 / srcBlocks, audioDesc.samplerate, audioDesc.bitsPerSample, audioDesc.channels, ammBlocksWritten, dstBlocks, ammBlocksWritten * 100 / dstBlocks, audioDescConv.samplerate, audioDescConv.bitsPerSample, audioDescConv.channels, audioDescConv.samplesFormat == ENNix_sampleFormat_float ? "float" : "int");
+                                PRINTF_INFO("nixFmtConverter_convert transformed %u of %u samples (%u%%) (%u hz, %d bits, %d channels) to %u of %u samples(%u%%) (%u hz, %d bits, %d channels, %s).\n", ammBlocksRead, srcBlocks, ammBlocksRead * 100 / srcBlocks, audioDesc.samplerate, audioDesc.bitsPerSample, audioDesc.channels, ammBlocksWritten, dstBlocks, ammBlocksWritten * 100 / dstBlocks, audioDescConv.samplerate, audioDescConv.bitsPerSample, audioDescConv.channels, audioDescConv.samplesFormat == ENNixSampleFmt_Float ? "float" : "int");
                                 //iSourceConv
                                 NixUI16 iSrcConv = nixSourceAssignStatic(&nix, NIX_TRUE, 0, NULL, NULL);
                                 if(iSrcConv == 0){
@@ -245,7 +245,7 @@ JNIEXPORT void JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_testTick(JNI
                                     iSrcConv = 0;
                                 }
                             }
-                            nixFmtConverter_destroy(conv);
+                            nixFmtConverter_free(conv);
                             conv = NULL;
                         }
                     }

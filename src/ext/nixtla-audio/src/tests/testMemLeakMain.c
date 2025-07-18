@@ -43,7 +43,7 @@ STNB_MemMap memmap;
 
 void printMemReport();
 void loadAndPlayWav(STNix_Engine* nix, const char* strWavPath, NixUI16* iSourceWav, NixUI16* iBufferWav);
-void bufferCapturedCallback(STNix_Engine* nix, void* userdata, const STNix_audioDesc audioDesc, const NixUI8* audioData, const NixUI32 audioDataBytes, const NixUI32 audioDataSamples);
+void bufferCapturedCallback(STNix_Engine* nix, void* userdata, const STNixAudioDesc audioDesc, const NixUI8* audioData, const NixUI32 audioDataBytes, const NixUI32 audioDataSamples);
 
 int main(int argc, const char * argv[]) {
     //
@@ -71,7 +71,7 @@ int main(int argc, const char * argv[]) {
 	STNix_Engine nix;
 	nbMemmapInit(&memmap);
 	if(nixInit(&nix, 8)){
-		STNix_audioDesc audioDesc; NixUI16 iSourceStrm;
+		STNixAudioDesc audioDesc; NixUI16 iSourceStrm;
 		nixPrintCaps(&nix);
 		//Load and play wav file
 		NixUI16 iSourceWav = 0; NixUI16 iBufferWav = 0;
@@ -83,7 +83,7 @@ int main(int argc, const char * argv[]) {
 		if(iSourceStrm != 0){
 			nixSourcePlay(&nix, iSourceStrm);
 			//Init the capture
-			audioDesc.samplesFormat		= ENNix_sampleFormat_int;
+			audioDesc.samplesFormat		= ENNixSampleFmt_Int;
 			audioDesc.channels			= 1;
 			audioDesc.bitsPerSample		= 16;
 			audioDesc.samplerate		= 22050;
@@ -131,7 +131,7 @@ void printMemReport(){
 }
 
 void loadAndPlayWav(STNix_Engine* nix, const char* strWavPath, NixUI16* p_iSourceWav, NixUI16* p_iBufferWav){
-	STNix_audioDesc audioDesc;
+	STNixAudioDesc audioDesc;
 	NixUI16 iSourceWav = 0, iBufferWav = 0;
 	NixUI8* audioData = NULL;
     NixUI32 audioDataBytes = 0;
@@ -165,7 +165,7 @@ void loadAndPlayWav(STNix_Engine* nix, const char* strWavPath, NixUI16* p_iSourc
 	*p_iBufferWav = iBufferWav;
 }
 
-void bufferCapturedCallback(STNix_Engine* nix, void* userdata, const STNix_audioDesc audioDesc, const NixUI8* audioData, const NixUI32 audioDataBytes, const NixUI32 audioDataSamples){
+void bufferCapturedCallback(STNix_Engine* nix, void* userdata, const STNixAudioDesc audioDesc, const NixUI8* audioData, const NixUI32 audioDataBytes, const NixUI32 audioDataSamples){
 	const NixUI16 iSource = *((NixUI16*)userdata);
 	const NixUI16 iBuffer = nixBufferWithData(nix, &audioDesc, audioData, audioDataBytes);
 	if(iBuffer == 0){

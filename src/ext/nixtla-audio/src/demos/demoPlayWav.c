@@ -29,14 +29,18 @@ int main(int argc, const char * argv[]){
     //
     srand((unsigned int)time(NULL));
     //
-	if(nixInit(&nix, 8)){
+    STNixContextItf ctx;
+    memset(&ctx, 0, sizeof(ctx));
+    NixContextItf_fillMissingMembers(&ctx);
+    //
+	if(nixInit(&nix, &ctx, 8)){
         nixPrintCaps(&nix);
         NixUI16 iSourcePlay = 0;
         //randomly select a wav from the list
 		const char* strWavPath = _nixUtilFilesList[rand() % (sizeof(_nixUtilFilesList) / sizeof(_nixUtilFilesList[0]))];
         NixUI8* audioData = NULL;
         NixUI32 audioDataBytes = 0;
-        STNix_audioDesc audioDesc;
+        STNixAudioDesc audioDesc;
 		if(!loadDataFromWavFile(strWavPath, &audioDesc, &audioData, &audioDataBytes)){
 			printf("ERROR, loading WAV file: '%s'.\n", strWavPath);
 		} else {

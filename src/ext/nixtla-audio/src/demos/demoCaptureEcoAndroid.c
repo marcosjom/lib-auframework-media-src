@@ -58,7 +58,7 @@ static NixUI32 msAccum = 0;
 
 //recorder
 
-void bufferCapturedCallback(STNix_Engine* eng, void* userdata, const STNix_audioDesc audioDesc, const NixUI8* audioData, const NixUI32 audioDataBytes, const NixUI32 audioDataSamples);
+void bufferCapturedCallback(STNix_Engine* eng, void* userdata, const STNixAudioDesc audioDesc, const NixUI8* audioData, const NixUI32 audioDataBytes, const NixUI32 audioDataSamples);
 
 //player
 
@@ -83,8 +83,8 @@ JNIEXPORT jboolean JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_demoCapt
         void* bufferUnqueueCallbackData = &state;
         state.iSourceStrm = nixSourceAssignStream(&state.nix, lookIntoReusable, audioGroupIndex, releaseCallBack, releaseCallBackUserData, buffsQueueSize,bufferUnqueueCallback, bufferUnqueueCallbackData);
         if(state.iSourceStrm != 0){
-            STNix_audioDesc audioDesc   = STNix_audioDesc_Zero;
-            audioDesc.samplesFormat     = ENNix_sampleFormat_int;
+            STNixAudioDesc audioDesc   = STNixAudioDesc_Zero;
+            audioDesc.samplesFormat     = ENNixSampleFmt_Int;
             audioDesc.channels          = 1;
             audioDesc.bitsPerSample     = 16;
             audioDesc.samplerate        = 22050;
@@ -162,11 +162,11 @@ JNIEXPORT void JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_demoCaptureE
 
 //recorder
 
-void bufferCapturedCallback(STNix_Engine* eng, void* userdata, const STNix_audioDesc audioDesc, const NixUI8* audioData, const NixUI32 audioDataBytes, const NixUI32 audioDataSamples){
+void bufferCapturedCallback(STNix_Engine* eng, void* userdata, const STNixAudioDesc audioDesc, const NixUI8* audioData, const NixUI32 audioDataBytes, const NixUI32 audioDataSamples){
     STNixDemoEcoState* state = (STNixDemoEcoState*)userdata;
     state->stats.curSec.samplesRecordedCount += audioDataSamples;
     //calculate avg (for dbg and stats)
-    if(audioDesc.bitsPerSample == 16 && audioDesc.samplesFormat == ENNix_sampleFormat_int){
+    if(audioDesc.bitsPerSample == 16 && audioDesc.samplesFormat == ENNixSampleFmt_Int){
         const NixSI16* s16 = (const NixSI16*)audioData;
         const NixSI16* s16AfterEnd = s16 + (audioDataBytes / 2);
         state->stats.curSec.samplesRecordedCount += (s16AfterEnd - s16);

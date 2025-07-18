@@ -63,7 +63,7 @@ JNIEXPORT jboolean JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_demoStre
         const char* strWavPath = _nixUtilFilesList[rand() % (sizeof(_nixUtilFilesList) / sizeof(_nixUtilFilesList[0]))];
         NixUI8* audioData = NULL;
         NixUI32 audioDataBytes = 0;
-        STNix_audioDesc audioDesc;
+        STNixAudioDesc audioDesc;
         if(!loadDataFromWavFile(env, assetManager, strWavPath, &audioDesc, &audioData, &audioDataBytes)){
             PRINTF_ERROR("ERROR, loading WAV file: '%s'.\n", strWavPath);
         } else {
