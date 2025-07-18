@@ -56,7 +56,11 @@ JNIEXPORT jboolean JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_demoStre
     //
     srand((unsigned int)time(NULL));
     //
-    if(nixInit(&state.nix, 8)){
+    STNixContextItf ctx;
+    memset(&ctx, 0, sizeof(ctx));
+    NixContextItf_fillMissingMembers(&ctx);
+    //
+    if(nixInit(&ctx, &state.nix, 8)){
         nixPrintCaps(&state.nix);
         const NixUI32 ammBuffs = (sizeof(state.buffsWav) / sizeof(state.buffsWav[0])); //ammount of buffers for stream
         //randomly select a wav from the list

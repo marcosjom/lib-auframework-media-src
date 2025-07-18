@@ -43,7 +43,11 @@ JNIEXPORT jboolean JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_demoStar
     //
     srand((unsigned int)time(NULL));
     //
-    if(nixInit(&nix, 8)){
+    STNixContextItf ctx;
+    memset(&ctx, 0, sizeof(ctx));
+    NixContextItf_fillMissingMembers(&ctx);
+    //
+    if(nixInit(&ctx, &nix, 8)){
         nixPrintCaps(&nix);
         NixUI16 iSourcePlay = 0;
         //randomly select a wav from the list

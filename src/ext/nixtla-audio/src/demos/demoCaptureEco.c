@@ -63,8 +63,13 @@ int main(int argc, const char * argv[]){
 	//
     STNixDemoEcoState state;
     memset(&state, 0, sizeof(state));
+    //
+    STNixContextItf ctx;
+    memset(&ctx, 0, sizeof(ctx));
+    NixContextItf_fillMissingMembers(&ctx);
+    //
     const NixUI16 ammPregeneratedSources = 0;
-	if(nixInit(&state.nix, ammPregeneratedSources)){
+	if(nixInit(&ctx, &state.nix, ammPregeneratedSources)){
 		nixPrintCaps(&state.nix);
 		//Source for stream eco (play the captured audio)
         const NixUI8 lookIntoReusable   = NIX_TRUE;

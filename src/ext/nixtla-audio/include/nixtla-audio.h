@@ -72,17 +72,9 @@ typedef struct STNixAudioDesc_ {
 
 NixBOOL STNixAudioDesc_IsEqual(const STNixAudioDesc* obj, const STNixAudioDesc* other);
 
-// STNixSharedPtr (provides retain/release model)
-
-struct STNixSharedPtr_;
-struct STNixSharedPtr_* NixSharedPtr_create(void* opq);     //can be casted to void** to obtain the 'opq' value back
-void    NixSharedPtr_destroy(struct STNixSharedPtr_* obj);
-void*   NixSharedPtr_getOpq(struct STNixSharedPtr_* obj);
-void    NixSharedPtr_retain(struct STNixSharedPtr_* obj);
-NixSI32 NixSharedPtr_release(struct STNixSharedPtr_* obj); //returns the retainCount
-
 //Context
 
+struct STNixSharedPtr_;
 struct STNixMemoryItf_;
 struct STNixMutexItf_;
 struct STNixContextItf_;
@@ -93,6 +85,14 @@ struct STNixApiEngineItf_;
 struct STNixApiBufferItf_;
 struct STNixApiSourceItf_;
 struct STNixApiRecorderItf_;
+
+// STNixSharedPtr (provides retain/release model)
+
+struct STNixSharedPtr_* NixSharedPtr_alloc(struct STNixContextItf_* ctx, void* opq);     //can be casted to void** to obtain the 'opq' value back
+void    NixSharedPtr_destroy(struct STNixSharedPtr_* obj);
+void*   NixSharedPtr_getOpq(struct STNixSharedPtr_* obj);
+void    NixSharedPtr_retain(struct STNixSharedPtr_* obj);
+NixSI32 NixSharedPtr_release(struct STNixSharedPtr_* obj); //returns the retainCount
 
 //STNixApiEngineRef (shared pointer)
 
@@ -268,9 +268,10 @@ typedef struct STNixPCMBuffer_ {
     NixUI32         use;
     NixUI32         sz;
     STNixAudioDesc desc;
+    STNixContextItf ctx;
 } STNixPCMBuffer;
 
-void NixPCMBuffer_init(STNixPCMBuffer* obj);
+void NixPCMBuffer_init(STNixContextItf* ctx, STNixPCMBuffer* obj);
 void NixPCMBuffer_destroy(STNixPCMBuffer* obj);
 NixBOOL NixPCMBuffer_setData(STNixPCMBuffer* obj, const STNixAudioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes);
 NixBOOL NixPCMBuffer_fillWithZeroes(STNixPCMBuffer* obj);
@@ -288,7 +289,7 @@ NixBOOL NixPCMBuffer_getApiItf(STNixApiBufferItf* dst);
 // * float32, int32, int16 or uint8 sample-types only
 // * from-to any frequency
 //
-void*   nixFmtConverter_alloc(void);
+void*   nixFmtConverter_alloc(STNixContextItf* ctx);
 void    nixFmtConverter_free(void* obj);
 NixBOOL nixFmtConverter_prepare(void* obj, const STNixAudioDesc* srcDesc, const STNixAudioDesc* dstDesc);
 NixBOOL nixFmtConverter_setPtrAtSrc(void* obj, const NixUI32 iChannel, void* ptr, const NixUI32 sampleAlign); //one channel
@@ -336,7 +337,7 @@ typedef void (*PTRNIX_StreamBufferUnqueuedCallback)(STNix_Engine* engAbs, void* 
 typedef void (*PTRNIX_CaptureBufferFilledCallback)(STNix_Engine* engAbs, void* userdata, const STNixAudioDesc audioDesc, const NixUI8* audioData, const NixUI32 audioDataBytes, const NixUI32 audioDataSamples);
 
 //Engine
-NixBOOL		nixInit(STNix_Engine* engAbs, STNixContextItf* ctx, const NixUI16 pregeneratedSources);
+NixBOOL		nixInit(STNixContextItf* ctx, STNix_Engine* engAbs, const NixUI16 pregeneratedSources);
 //NixBOOL   nixInitWithOpenAL(STNix_Engine* engAbs, const NixUI16 pregeneratedSources);     //Cross-platform
 //NixBOOL   nixInitWithAVFAudio(STNix_Engine* engAbs, const NixUI16 pregeneratedSources);   //Mac/iOS
 //NixBOOL   nixInitWithAAudio(STNix_Engine* engAbs, const NixUI16 pregeneratedSources);     //Android

@@ -67,10 +67,14 @@ int main(int argc, const char * argv[]) {
             }
         }
     }
+    //
+    STNixContextItf ctx;
+    memset(&ctx, 0, sizeof(ctx));
+    NixContextItf_fillMissingMembers(&ctx);
 	//
 	STNix_Engine nix;
 	nbMemmapInit(&memmap);
-	if(nixInit(&nix, 8)){
+	if(nixInit(&ctx, &nix, 8)){
 		STNixAudioDesc audioDesc; NixUI16 iSourceStrm;
 		nixPrintCaps(&nix);
 		//Load and play wav file

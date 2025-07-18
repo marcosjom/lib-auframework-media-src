@@ -33,7 +33,7 @@ int main(int argc, const char * argv[]){
     memset(&ctx, 0, sizeof(ctx));
     NixContextItf_fillMissingMembers(&ctx);
     //
-	if(nixInit(&nix, &ctx, 8)){
+	if(nixInit(&ctx, &nix, 8)){
         nixPrintCaps(&nix);
         NixUI16 iSourcePlay = 0;
         //randomly select a wav from the list

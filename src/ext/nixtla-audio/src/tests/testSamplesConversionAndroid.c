@@ -48,7 +48,11 @@ JNIEXPORT jboolean JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_testStar
     //
     srand((unsigned int)time(NULL));
     //
-    if(nixInit(&nix, 8)){
+    STNixContextItf ctx;
+    memset(&ctx, 0, sizeof(ctx));
+    NixContextItf_fillMissingMembers(&ctx);
+    //
+    if(nixInit(&ctx, &nix, 8)){
         nixPrintCaps(&nix);
         //randomly select a wav from the list
         const char* strWavPath = _nixUtilFilesList[rand() % (sizeof(_nixUtilFilesList) / sizeof(_nixUtilFilesList[0]))];
