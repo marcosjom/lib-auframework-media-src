@@ -62,9 +62,10 @@ NixBOOL         nixAAudioSource_queueBuffer(STNixApiSource obj, STNixApiBuffer b
 //Recorder
 STNixApiRecorder nixAAudioRecorder_create(STNixApiEngine eng, const STNix_audioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer);
 void            nixAAudioRecorder_destroy(STNixApiRecorder obj);
+NixBOOL         nixAAudioRecorder_setCallback(STNixApiRecorder obj, NixApiCaptureBufferFilledCallback callback, void* callbackData);
 NixBOOL         nixAAudioRecorder_start(STNixApiRecorder obj);
 NixBOOL         nixAAudioRecorder_stop(STNixApiRecorder obj);
-void            nixAAudioRecorder_notifyBuffers(STNixApiRecorder obj, STNix_Engine* engAbs, PTRNIX_CaptureBufferFilledCallback bufferCaptureCallback, void* bufferCaptureCallbackUserData);
+
 
 NixBOOL nixAAudioEngine_getApiItf(STNixApiItf* dst){
     NixBOOL r = NIX_FALSE;
@@ -96,10 +97,11 @@ NixBOOL nixAAudioEngine_getApiItf(STNixApiItf* dst){
         dst->source.setBuffer   = nixAAudioSource_setBuffer;  //static-source
         dst->source.queueBuffer = nixAAudioSource_queueBuffer; //stream-source
         //Recorder
-        /*dst->recorder.create  = nixAAudioRecorder_create;
+        dst->recorder.create    = nixAAudioRecorder_create;
         dst->recorder.destroy   = nixAAudioRecorder_destroy;
+        dst->recorder.setCallback = nixAAudioRecorder_setCallback;
         dst->recorder.start     = nixAAudioRecorder_start;
-        dst->recorder.stop      = nixAAudioRecorder_stop;*/
+        dst->recorder.stop      = nixAAudioRecorder_stop;
         //
         r = NIX_TRUE;
     }
@@ -221,31 +223,70 @@ struct STNix_AAudioQueue_;
 struct STNix_AAudioQueuePair_;
 struct STNix_AAudioSrcNotif_;
 struct STNix_AAudioNotifQueue_;
-struct STNix_AAudioPCMBuffer_;
+struct STNix_AAudioRecorder_;
 
 //------
-//PCMBuffer
+//Engine
 //------
 
-typedef struct STNix_AAudioPCMBuffer_ {
-    NixUI8*         ptr;
-    NixUI32         use;
-    NixUI32         sz;
-    STNix_audioDesc desc;
-} STNix_AAudioPCMBuffer;
+typedef struct STNix_AAudioEngine_ {
+    //srcs
+    struct {
+        NIX_MUTEX_T                 mutex;
+        struct STNix_AAudioSource_** arr;
+        NixUI32                     use;
+        NixUI32                     sz;
+        NixUI32 changingStateCountHint;
+    } srcs;
+    struct STNix_AAudioRecorder_* rec;
+} STNix_AAudioEngine;
 
-void Nix_AAudioPCMBuffer_init(STNix_AAudioPCMBuffer* obj);
-void Nix_AAudioPCMBuffer_destroy(STNix_AAudioPCMBuffer* obj);
-NixBOOL Nix_AAudioPCMBuffer_setData(STNix_AAudioPCMBuffer* obj, const STNix_audioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes);
-NixBOOL Nix_AAudioPCMBuffer_fillWithZeroes(STNix_AAudioPCMBuffer* obj);
+void Nix_AAudioEngine_init(STNix_AAudioEngine* obj);
+void Nix_AAudioEngine_destroy(STNix_AAudioEngine* obj);
+NixBOOL Nix_AAudioEngine_srcsAdd(STNix_AAudioEngine* obj, struct STNix_AAudioSource_* src);
+void Nix_AAudioEngine_tick(STNix_AAudioEngine* obj, const NixBOOL isFinalCleanup);
+
+//------
+//Notif
+//------
+
+typedef struct STNix_AAudioSourceCallback_ {
+    void            (*func)(void* pEng, const NixUI32 sourceIndex, const NixUI32 ammBuffs);
+    void*           eng;
+    NixUI32         sourceIndex;
+} STNix_AAudioSourceCallback;
+
+typedef struct STNix_AAudioSrcNotif_ {
+    STNix_AAudioSourceCallback callback;
+    NixUI32 ammBuffs;
+} STNix_AAudioSrcNotif;
+
+void Nix_AAudioSrcNotif_init(STNix_AAudioSrcNotif* obj);
+void Nix_AAudioSrcNotif_destroy(STNix_AAudioSrcNotif* obj);
+
+//------
+//NotifQueue
+//------
+
+typedef struct STNix_AAudioNotifQueue_ {
+    STNix_AAudioSrcNotif*  arr;
+    NixUI32                use;
+    NixUI32                sz;
+    STNix_AAudioSrcNotif  arrEmbedded[32];
+} STNix_AAudioNotifQueue;
+
+void Nix_AAudioNotifQueue_init(STNix_AAudioNotifQueue* obj);
+void Nix_AAudioNotifQueue_destroy(STNix_AAudioNotifQueue* obj);
+//
+NixBOOL Nix_AAudioNotifQueue_push(STNix_AAudioNotifQueue* obj, STNix_AAudioSrcNotif* pair);
 
 //------
 //QueuePair (Buffers)
 //------
 
 typedef struct STNix_AAudioQueuePair_ {
-    STNix_AAudioPCMBuffer*  org;    //original buffer (owned by the user)
-    STNix_AAudioPCMBuffer*  cnv;    //converted buffer (owned by the source)
+    STNixPCMBuffer*  org;    //original buffer (owned by the user)
+    STNixPCMBuffer*  cnv;    //converted buffer (owned by the source)
 } STNix_AAudioQueuePair;
 
 void Nix_AAudioQueuePair_init(STNix_AAudioQueuePair* obj);
@@ -268,16 +309,11 @@ NixBOOL Nix_AAudioQueue_flush(STNix_AAudioQueue* obj, const NixBOOL nullifyOrgs)
 NixBOOL Nix_AAudioQueue_prepareForSz(STNix_AAudioQueue* obj, const NixUI32 minSz);
 NixBOOL Nix_AAudioQueue_pushOwning(STNix_AAudioQueue* obj, STNix_AAudioQueuePair* pair);
 NixBOOL Nix_AAudioQueue_popOrphaning(STNix_AAudioQueue* obj, STNix_AAudioQueuePair* dst);
+NixBOOL Nix_AAudioQueue_popMovingTo(STNix_AAudioQueue* obj, STNix_AAudioQueue* other);
 
 //------
 //Source
 //------
-
-typedef struct STNix_AAudioSourceCallback_ {
-    void            (*func)(void* pEng, const NixUI32 sourceIndex, const NixUI32 ammBuffs);
-    void*           eng;
-    NixUI32         sourceIndex;
-} STNix_AAudioSourceCallback;
 
 #define NIX_AAudioSource_BIT_isStatic   (0x1 << 0)  //source expects only one buffer, repeats or pauses after playing it
 #define NIX_AAudioSource_BIT_isChanging (0x1 << 1)  //source is changing state after a call to request*()
@@ -308,8 +344,8 @@ typedef struct STNix_AAudioSource_ {
 } STNix_AAudioSource;
 
 void Nix_AAudioSource_init(STNix_AAudioSource* obj);
-void Nix_AAudioSource_release(STNix_AAudioSource* obj);
-NixBOOL Nix_AAudioSource_queueBufferForOutput(STNix_AAudioSource* obj, STNix_AAudioPCMBuffer* buff);
+void Nix_AAudioSource_destroy(STNix_AAudioSource* obj);
+NixBOOL Nix_AAudioSource_queueBufferForOutput(STNix_AAudioSource* obj, STNixPCMBuffer* buff);
 NixUI32 Nix_AAudioSource_feedSamplesTo(STNix_AAudioSource* obj, void* dst, const NixUI32 samplesMax, NixBOOL* dstExplicitStop);
 NixBOOL Nix_AAudioSource_pendPopOldestBuffLocked_(STNix_AAudioSource* obj);
 NixBOOL Nix_AAudioSource_pendMoveAllBuffsToNotifyWithoutPoppingLocked_(STNix_AAudioSource* obj);
@@ -332,98 +368,48 @@ NixBOOL Nix_AAudioSource_pendMoveAllBuffsToNotifyWithoutPoppingLocked_(STNix_AAu
 #define Nix_AAudioSource_setIsOrphan(OBJ)       (OBJ)->stateBits = ((OBJ)->stateBits | NIX_AAudioSource_BIT_isOrphan)
 
 //------
-//Notif
-//------
-
-typedef struct STNix_AAudioSrcNotif_ {
-    STNix_AAudioSourceCallback callback;
-    NixUI32 ammBuffs;
-} STNix_AAudioSrcNotif;
-
-void Nix_AAudioSrcNotif_init(STNix_AAudioSrcNotif* obj);
-void Nix_AAudioSrcNotif_destroy(STNix_AAudioSrcNotif* obj);
-
-//------
-//NotifQueue
-//------
-
-typedef struct STNix_AAudioNotifQueue_ {
-    STNix_AAudioSrcNotif*  arr;
-    NixUI32                use;
-    NixUI32                sz;
-    STNix_AAudioSrcNotif  arrEmbedded[32];
-} STNix_AAudioNotifQueue;
-
-void Nix_AAudioNotifQueue_init(STNix_AAudioNotifQueue* obj);
-void Nix_AAudioNotifQueue_destroy(STNix_AAudioNotifQueue* obj);
-//
-NixBOOL Nix_AAudioNotifQueue_push(STNix_AAudioNotifQueue* obj, STNix_AAudioSrcNotif* pair);
-
-//------
-//Engine
-//------
-
-typedef struct STNix_AAudioEngine_ {
-    //srcs
-    struct {
-        NIX_MUTEX_T                 mutex;
-        struct STNix_AAudioSource_** arr;
-        NixUI32                     use;
-        NixUI32                     sz;
-        NixUI32 changingStateCountHint;
-    } srcs;
-} STNix_AAudioEngine;
-
-void Nix_AAudioEngine_init(STNix_AAudioEngine* obj);
-void Nix_AAudioEngine_destroy(STNix_AAudioEngine* obj);
-NixBOOL Nix_AAudioEngine_srcsAdd(STNix_AAudioEngine* obj, struct STNix_AAudioSource_* src);
-void Nix_AAudioEngine_tick(STNix_AAudioEngine* obj, const NixBOOL isFinalCleanup);
-
-//------
 //Recorder
 //------
 
-/*
 typedef struct STNix_AAudioRecorder_ {
     NixBOOL                 engStarted;
-    AAudioEngine*          eng;    //AAudioEngine
-    //out
+    STNix_AAudioEngine*     engNx;
+    AAudioStream*           rec;
+    STNix_audioDesc         capFmt;
+    //callback
+    struct {
+        NixApiCaptureBufferFilledCallback func;
+        void*               data;
+    } callback;
+    //cfg
     struct {
         STNix_audioDesc     fmt;
         NixUI16             samplesPerBuffer;
-        //conv
-        struct {
-            void*           obj;  //nixFmtConverter
-            //src
-            struct {
-                AAudioPCMBuffer* buff; //current buffer converting from format
-                NixUI32     curSample;  //cur sample converting
-            } src;
-            //dst
-            struct {
-                NixBYTE*    buff;       //current buffer converting to format
-                NixUI32     buffSz;     //cur sample converting
-                NixUI32     curSample;  //cur sample converting
-            } dst;
-        } conv;
-    } out;
-    //in
+        NixUI16             maxBuffers;
+    } cfg;
+    //queues
     struct {
-        NSLock*              lock;
-        //buffs
+        NIX_MUTEX_T         mutex;
+        void*               conv;   //nixFmtConverter
+        STNix_AAudioQueue   notify;
+        STNix_AAudioQueue   reuse;
+        //filling
         struct {
-            AAudioPCMBuffer** arr;
-            NixUI32         use;
-            NixUI32         sz;
-        } buffs;
-        //samples
-        struct {
-            NixUI32         cur;    //currently in buffer
-            NixUI32         max;    //bassed on out.audioDesc, out.buffersCount, out.samplesPerBuffer
-        } samples;
-    } in;
+            NixSI32         iCurSample; //at first buffer in 'reuse'
+        } filling;
+    } queues;
 } STNix_AAudioRecorder;
-*/
+
+void Nix_AAudioRecorder_init(STNix_AAudioRecorder* obj);
+void Nix_AAudioRecorder_destroy(STNix_AAudioRecorder* obj);
+//
+NixBOOL Nix_AAudioRecorder_prepare(STNix_AAudioRecorder* obj, const STNix_audioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer);
+NixBOOL Nix_AAudioRecorder_setCallback(STNix_AAudioRecorder* obj, NixApiCaptureBufferFilledCallback callback, void* callbackData);
+NixBOOL Nix_AAudioRecorder_start(STNix_AAudioRecorder* obj);
+NixBOOL Nix_AAudioRecorder_stop(STNix_AAudioRecorder* obj);
+NixBOOL Nix_AAudioRecorder_flush(STNix_AAudioRecorder* obj);
+void Nix_AAudioRecorder_consumeInputBuffer(STNix_AAudioRecorder* obj, void* audioData, const NixSI32 numFrames);
+void Nix_AAudioRecorder_notifyBuffers(STNix_AAudioRecorder* obj);
 
 //------
 //Engine
@@ -437,22 +423,24 @@ void Nix_AAudioEngine_init(STNix_AAudioEngine* obj){
     }
 }
 
+   
 void Nix_AAudioEngine_destroy(STNix_AAudioEngine* obj){
-    if(obj != NULL){
-        //srcs
-        {
-            //cleanup
-            while(obj->srcs.arr != NULL && obj->srcs.use > 0){
-                Nix_AAudioEngine_tick(obj, NIX_TRUE);
-            }
-            //
-            if(obj->srcs.arr != NULL){
-                NIX_FREE(obj->srcs.arr);
-                obj->srcs.arr = NULL;
-            }
-            NIX_MUTEX_DESTROY(&obj->srcs.mutex);
+    //srcs
+    {
+        //cleanup
+        while(obj->srcs.arr != NULL && obj->srcs.use > 0){
+            Nix_AAudioEngine_tick(obj, NIX_TRUE);
         }
-        obj = NULL;
+        //
+        if(obj->srcs.arr != NULL){
+            NIX_FREE(obj->srcs.arr);
+            obj->srcs.arr = NULL;
+        }
+        NIX_MUTEX_DESTROY(&obj->srcs.mutex);
+    }
+    //rec (recorder)
+    if(obj->rec != NULL){
+        obj->rec = NULL;
     }
 }
 
@@ -495,7 +483,7 @@ NixBOOL Nix_AAudioEngine_srcsAdd(STNix_AAudioEngine* obj, struct STNix_AAudioSou
 void Nix_AAudioEngine_removeSrcRecordLocked_(STNix_AAudioEngine* obj, NixSI32* idx){
     STNix_AAudioSource* src = obj->srcs.arr[*idx];
     if(src != NULL){
-        Nix_AAudioSource_release(src);
+        Nix_AAudioSource_destroy(src);
         NIX_FREE(src);
     }
     //fill gap
@@ -529,201 +517,193 @@ void Nix_AAudioEngine_tick_addQueueNotifSrcLocked_(STNix_AAudioNotifQueue* notif
 void Nix_AAudioEngine_tick(STNix_AAudioEngine* obj, const NixBOOL isFinalCleanup){
     if(obj != NULL){
         //srcs
-        STNix_AAudioNotifQueue notifs;
-        Nix_AAudioNotifQueue_init(&notifs);
-        NIX_MUTEX_LOCK(&obj->srcs.mutex);
-        if(obj->srcs.arr != NULL && obj->srcs.use > 0){
-            NixUI32 changingStateCount = 0;
-            //NIX_PRINTF_INFO("Nix_AAudioEngine_tick::%d sources.\n", obj->srcs.use);
-            NixSI32 i; for(i = 0; i < (NixSI32)obj->srcs.use; ++i){
-                STNix_AAudioSource* src = obj->srcs.arr[i];
-                //NIX_PRINTF_INFO("Nix_AAudioEngine_tick::source(#%d/%d).\n", i + 1, obj->srcs.use);
-                if(src->src == NULL){
-                    //remove
-                    //NIX_PRINTF_INFO("Nix_AAudioEngine_tick::source(#%d/%d); remove-NULL.\n", i + 1, obj->srcs.use);
-                    Nix_AAudioEngine_removeSrcRecordLocked_(obj, &i);
-                    src = NULL;
-                } else {
-                    aaudio_stream_state_t state = AAUDIO_STREAM_STATE_UNKNOWN;
-                    if(Nix_AAudioSource_isChanging(src) || Nix_AAudioSource_isOrphan(src) || isFinalCleanup){
-                        aaudio_stream_state_t state = AAudioStream_getState(src->src);
-                        switch (state) {
-                            case AAUDIO_STREAM_STATE_STARTING:
-                            case AAUDIO_STREAM_STATE_PAUSING:
-                            case AAUDIO_STREAM_STATE_FLUSHING:
-                            case AAUDIO_STREAM_STATE_STOPPING:
-                            case AAUDIO_STREAM_STATE_CLOSING:
-                                //NIX_PRINTF_INFO("Nix_AAudioEngine_tick::source(#%d/%d); state-*ING.\n", i + 1, obj->srcs.use);
+        {
+            STNix_AAudioNotifQueue notifs;
+            Nix_AAudioNotifQueue_init(&notifs);
+            NIX_MUTEX_LOCK(&obj->srcs.mutex);
+            if(obj->srcs.arr != NULL && obj->srcs.use > 0){
+                NixUI32 changingStateCount = 0;
+                NixSI32 i; for(i = 0; i < (NixSI32)obj->srcs.use; ++i){
+                    STNix_AAudioSource* src = obj->srcs.arr[i];
+                    if(src->src == NULL && Nix_AAudioSource_isOrphan(src)){
+                        //remove
+                        Nix_AAudioEngine_removeSrcRecordLocked_(obj, &i);
+                        src = NULL;
+                    } else {
+                        aaudio_stream_state_t state = AAUDIO_STREAM_STATE_UNKNOWN;
+                        if(Nix_AAudioSource_isChanging(src) || Nix_AAudioSource_isOrphan(src) || isFinalCleanup){
+                            aaudio_stream_state_t state = AAudioStream_getState(src->src);
+                            switch (state) {
+                                case AAUDIO_STREAM_STATE_STARTING:
+                                case AAUDIO_STREAM_STATE_PAUSING:
+                                case AAUDIO_STREAM_STATE_FLUSHING:
+                                case AAUDIO_STREAM_STATE_STOPPING:
+                                case AAUDIO_STREAM_STATE_CLOSING:
+                                    ++changingStateCount;
+                                    break;
+                                case AAUDIO_STREAM_STATE_FLUSHED:
+                                case AAUDIO_STREAM_STATE_STOPPED:
+                                    Nix_AAudioSource_setIsPlaying(src, NIX_FALSE);
+                                    Nix_AAudioSource_setIsPaused(src, NIX_FALSE);
+                                    Nix_AAudioSource_setIsChanging(src, NIX_FALSE);
+                                    //move all pending buffers to notify
+                                    NIX_MUTEX_LOCK(&src->queues.mutex);
+                                    {
+                                        Nix_AAudioSource_pendMoveAllBuffsToNotifyWithoutPoppingLocked_(src);
+                                    }
+                                    NIX_MUTEX_UNLOCK(&src->queues.mutex);
+                                    break;
+                                case AAUDIO_STREAM_STATE_STARTED:
+                                    Nix_AAudioSource_setIsPlaying(src, NIX_TRUE);
+                                    Nix_AAudioSource_setIsPaused(src, NIX_FALSE);
+                                    Nix_AAudioSource_setIsChanging(src, NIX_FALSE);
+                                    break;
+                                case AAUDIO_STREAM_STATE_PAUSED:
+                                    Nix_AAudioSource_setIsPlaying(src, NIX_TRUE);
+                                    Nix_AAudioSource_setIsPaused(src, NIX_TRUE);
+                                    Nix_AAudioSource_setIsChanging(src, NIX_FALSE);
+                                    break;
+                                case AAUDIO_STREAM_STATE_CLOSED:
+                                    Nix_AAudioSource_setIsPlaying(src, NIX_FALSE);
+                                    Nix_AAudioSource_setIsPaused(src, NIX_FALSE);
+                                    Nix_AAudioSource_setIsChanging(src, NIX_FALSE);
+                                    //move all pending buffers to notify
+                                    NIX_MUTEX_LOCK(&src->queues.mutex);
+                                    {
+                                        Nix_AAudioSource_pendMoveAllBuffsToNotifyWithoutPoppingLocked_(src);
+                                        //add notif before removing
+                                        Nix_AAudioEngine_tick_addQueueNotifSrcLocked_(&notifs, src);
+                                    }
+                                    NIX_MUTEX_UNLOCK(&src->queues.mutex);
+                                    //release and remove
+                                    Nix_AAudioEngine_removeSrcRecordLocked_(obj, &i);
+                                    src = NULL;
+                                    break;
+                                default:
+                                    //AAUDIO_STREAM_STATE_UNINITIALIZED
+                                    //AAUDIO_STREAM_STATE_UNKNOWN
+                                    //AAUDIO_STREAM_STATE_OPEN
+                                    //
+                                    //AAUDIO_STREAM_STATE_DISCONNECTED
+                                    break;
+                            }
+                        }
+                        //post-process
+                        if(src != NULL){
+                            //count as changing state
+                            if(Nix_AAudioSource_isOrphan(src)){
                                 ++changingStateCount;
-                                break;
-                            case AAUDIO_STREAM_STATE_FLUSHED:
-                            case AAUDIO_STREAM_STATE_STOPPED:
-                                //NIX_PRINTF_INFO("Source changed to %s.\n", state == AAUDIO_STREAM_STATE_FLUSHED ? "AAUDIO_STREAM_STATE_FLUSHED" : "AAUDIO_STREAM_STATE_STOPPED");
-                                Nix_AAudioSource_setIsPlaying(src, NIX_FALSE);
-                                Nix_AAudioSource_setIsPaused(src, NIX_FALSE);
-                                Nix_AAudioSource_setIsChanging(src, NIX_FALSE);
-                                //move all pending buffers to notify
-                                NIX_MUTEX_LOCK(&src->queues.mutex);
-                                {
-                                    Nix_AAudioSource_pendMoveAllBuffsToNotifyWithoutPoppingLocked_(src);
+                            }
+                            //close orphaned sources (or final-cleanup)
+                            if((isFinalCleanup || Nix_AAudioSource_isOrphan(src)) && state != AAUDIO_STREAM_STATE_CLOSING && state != AAUDIO_STREAM_STATE_CLOSED){
+                                if(AAUDIO_OK != AAudioStream_close(src->src)){
+                                    NIX_PRINTF_ERROR("Nix_AAudioEngine_tick::AAudioStream_close failed.\n");
+                                } else {
+                                    Nix_AAudioSource_setIsClosing(src);
+                                    Nix_AAudioSource_setIsChanging(src, NIX_TRUE);
+                                    ++changingStateCount;
                                 }
-                                NIX_MUTEX_UNLOCK(&src->queues.mutex);
-                                break;
-                            case AAUDIO_STREAM_STATE_STARTED:
-                                //NIX_PRINTF_INFO("Nix_AAudioEngine_tick::source(#%d/%d); state-started.\n", i + 1, obj->srcs.use);
-                                Nix_AAudioSource_setIsPlaying(src, NIX_TRUE);
-                                Nix_AAudioSource_setIsPaused(src, NIX_FALSE);
-                                Nix_AAudioSource_setIsChanging(src, NIX_FALSE);
-                                break;
-                            case AAUDIO_STREAM_STATE_PAUSED:
-                                //NIX_PRINTF_INFO("Nix_AAudioEngine_tick::source(#%d/%d); state-paused.\n", i + 1, obj->srcs.use);
-                                Nix_AAudioSource_setIsPlaying(src, NIX_TRUE);
-                                Nix_AAudioSource_setIsPaused(src, NIX_TRUE);
-                                Nix_AAudioSource_setIsChanging(src, NIX_FALSE);
-                                break;
-                            case AAUDIO_STREAM_STATE_CLOSED:
-                                //NIX_PRINTF_INFO("Nix_AAudioEngine_tick::source(#%d/%d); state-closed.\n", i + 1, obj->srcs.use);
                                 Nix_AAudioSource_setIsPlaying(src, NIX_FALSE);
                                 Nix_AAudioSource_setIsPaused(src, NIX_FALSE);
-                                Nix_AAudioSource_setIsChanging(src, NIX_FALSE);
-                                //move all pending buffers to notify
+                            }
+                            //add to notify queue
+                            {
                                 NIX_MUTEX_LOCK(&src->queues.mutex);
                                 {
-                                    Nix_AAudioSource_pendMoveAllBuffsToNotifyWithoutPoppingLocked_(src);
-                                    //add notif before removing
                                     Nix_AAudioEngine_tick_addQueueNotifSrcLocked_(&notifs, src);
                                 }
                                 NIX_MUTEX_UNLOCK(&src->queues.mutex);
-                                //release and remove
-                                Nix_AAudioEngine_removeSrcRecordLocked_(obj, &i);
-                                src = NULL;
-                                //NIX_PRINTF_INFO("Nix_AAudioEngine_tick::source(#%d/%d); removed from engine.\n", i + 1, obj->srcs.use);
-                                break;
-                            default:
-                                //AAUDIO_STREAM_STATE_UNINITIALIZED
-                                //AAUDIO_STREAM_STATE_UNKNOWN
-                                //AAUDIO_STREAM_STATE_OPEN
-                                //
-                                //AAUDIO_STREAM_STATE_DISCONNECTED
-                                //NIX_PRINTF_INFO("Nix_AAudioEngine_tick::source(#%d/%d); state-other.\n", i + 1, obj->srcs.use);
-                                break;
-                        }
-                    }
-                    //post-process
-                    if(src != NULL){
-                        //count as changing state
-                        if(Nix_AAudioSource_isOrphan(src)){
-                            ++changingStateCount;
-                        }
-                        //close orphaned sources (or final-cleanup)
-                        if((isFinalCleanup || Nix_AAudioSource_isOrphan(src)) && state != AAUDIO_STREAM_STATE_CLOSING && state != AAUDIO_STREAM_STATE_CLOSED){
-                            //NIX_PRINTF_INFO("Nix_AAudioEngine_tick::source(#%d/%d); closing-orphan.\n", i + 1, obj->srcs.use);
-                            if(AAUDIO_OK != AAudioStream_close(src->src)){
-                                NIX_PRINTF_ERROR("Nix_AAudioEngine_tick::AAudioStream_close failed.\n");
-                            } else {
-                                Nix_AAudioSource_setIsClosing(src);
-                                Nix_AAudioSource_setIsChanging(src, NIX_TRUE);
-                                ++changingStateCount;
                             }
-                            Nix_AAudioSource_setIsPlaying(src, NIX_FALSE);
-                            Nix_AAudioSource_setIsPaused(src, NIX_FALSE);
-                        }
-                        //add to notify queue
-                        {
-                            NIX_MUTEX_LOCK(&src->queues.mutex);
-                            {
-                                Nix_AAudioEngine_tick_addQueueNotifSrcLocked_(&notifs, src);
-                            }
-                            NIX_MUTEX_UNLOCK(&src->queues.mutex);
                         }
                     }
                 }
+                obj->srcs.changingStateCountHint = changingStateCount;
             }
-            obj->srcs.changingStateCountHint = changingStateCount;
-        }
-        NIX_MUTEX_UNLOCK(&obj->srcs.mutex);
-        //notify (unloked)
-        if(notifs.use > 0){
-            //NIX_PRINTF_INFO("Nix_AAudioEngine_tick::notify %d.\n", notifs.use);
-            NixUI32 i;
-            for(i = 0; i < notifs.use; ++i){
-                STNix_AAudioSrcNotif* n = &notifs.arr[i];
-                //NIX_PRINTF_INFO("Nix_AAudioEngine_tick::notify(#%d/%d).\n", i + 1, notifs.use);
-                if(n->callback.func != NULL){
-                    (*n->callback.func)(n->callback.eng, n->callback.sourceIndex, n->ammBuffs);
+            NIX_MUTEX_UNLOCK(&obj->srcs.mutex);
+            //notify (unloked)
+            if(notifs.use > 0){
+                NixUI32 i; for(i = 0; i < notifs.use; ++i){
+                    STNix_AAudioSrcNotif* n = &notifs.arr[i];
+                    if(n->callback.func != NULL){
+                        (*n->callback.func)(n->callback.eng, n->callback.sourceIndex, n->ammBuffs);
+                    }
                 }
             }
+            Nix_AAudioNotifQueue_destroy(&notifs);
         }
-        //NIX_PRINTF_INFO("Nix_AAudioEngine_tick::Nix_AAudioNotifQueue_destroy.\n");
-        Nix_AAudioNotifQueue_destroy(&notifs);
+        //recorder
+        if(obj->rec != NULL){
+            Nix_AAudioRecorder_notifyBuffers(obj->rec);
+        }
     }
 }
 
 //------
-//PCMBuffer
+//Notif
 //------
 
-void Nix_AAudioPCMBuffer_init(STNix_AAudioPCMBuffer* obj){
+void Nix_AAudioSrcNotif_init(STNix_AAudioSrcNotif* obj){
     memset(obj, 0, sizeof(*obj));
 }
 
-void Nix_AAudioPCMBuffer_destroy(STNix_AAudioPCMBuffer* obj){
-    if(obj->ptr != NULL){
-        NIX_FREE(obj->ptr);
-        obj->ptr = NULL;
+void Nix_AAudioSrcNotif_destroy(STNix_AAudioSrcNotif* obj){
+    //
+}
+
+//------
+//NotifQueue
+//------
+
+void Nix_AAudioNotifQueue_init(STNix_AAudioNotifQueue* obj){
+    memset(obj, 0, sizeof(*obj));
+    obj->arr = obj->arrEmbedded;
+    obj->sz = (sizeof(obj->arrEmbedded) / sizeof(obj->arrEmbedded[0]));
+}
+
+void Nix_AAudioNotifQueue_destroy(STNix_AAudioNotifQueue* obj){
+    if(obj->arr != NULL){
+        NixUI32 i; for(i = 0; i < obj->use; i++){
+            STNix_AAudioSrcNotif* b = &obj->arr[i];
+            Nix_AAudioSrcNotif_destroy(b);
+        }
+        if(obj->arr != obj->arrEmbedded){
+            NIX_FREE(obj->arr);
+        }
+        obj->arr = NULL;
     }
     obj->use = obj->sz = 0;
-    memset(obj, 0, sizeof(STNix_AAudioPCMBuffer));
 }
 
-NixBOOL Nix_AAudioPCMBuffer_setData(STNix_AAudioPCMBuffer* obj, const STNix_audioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes){
+NixBOOL Nix_AAudioNotifQueue_push(STNix_AAudioNotifQueue* obj, STNix_AAudioSrcNotif* pair){
     NixBOOL r = NIX_FALSE;
-    if(audioDesc != NULL && audioDesc->blockAlign > 0){
-        const NixUI32 reqBytes = (audioDataPCMBytes / audioDesc->blockAlign * audioDesc->blockAlign);
-        //destroy current buffer (if necesary)
-        if(!STNix_audioDesc_IsEqual(&obj->desc, audioDesc) || obj->sz < reqBytes){
-            if(obj->ptr != NULL){
-                NIX_FREE(obj->ptr);
-                obj->ptr = NULL;
+    if(obj != NULL && pair != NULL){
+        //resize array (if necesary)
+        if(obj->use >= obj->sz){
+            const NixUI32 szN = obj->use + 4;
+            STNix_AAudioSrcNotif* arrN = NULL;
+            NIX_MALLOC(arrN, STNix_AAudioSrcNotif, sizeof(STNix_AAudioSrcNotif) * szN, "Nix_AAudioNotifQueue_push::arrN");
+            if(arrN != NULL){
+                if(obj->arr != NULL){
+                    if(obj->use > 0){
+                        memcpy(arrN, obj->arr, sizeof(arrN[0]) * obj->use);
+                    }
+                    if(obj->arr != obj->arrEmbedded){
+                        NIX_FREE(obj->arr);
+                    }
+                    obj->arr = NULL;
+                }
+                obj->arr = arrN;
+                obj->sz = szN;
             }
-            obj->use = obj->sz = 0;
         }
-        //set fmt
-        obj->desc = *audioDesc;
-        obj->use = 0;
-        //copy data
-        if(reqBytes <= 0){
-            r = NIX_TRUE;
+        //add
+        if(obj->use >= obj->sz){
+            NIX_PRINTF_ERROR("Nix_AAudioNotifQueue_push failed (no allocated space).\n");
         } else {
-            //allocate buffer (if necesary)
-            if(obj->ptr == NULL){
-                NIX_MALLOC(obj->ptr, NixUI8, reqBytes, "nixAAudioPCMBuffer_create::ptr");
-                if(obj->ptr != NULL){
-                    obj->sz = reqBytes;
-                }
-            }
-            //results
-            if(obj->ptr != NULL){
-                //copy data
-                if(audioDataPCM != NULL){
-                    memcpy(obj->ptr, audioDataPCM, reqBytes);
-                }
-                obj->use = reqBytes;
-                r = NIX_TRUE;
-            }
+            //become the owner of the pair
+            obj->arr[obj->use++] = *pair;
+            r = NIX_TRUE;
         }
-    }
-    return r;
-}
-
-NixBOOL Nix_AAudioPCMBuffer_fillWithZeroes(STNix_AAudioPCMBuffer* obj){
-    NixBOOL r = NIX_FALSE;
-    if(obj->ptr != NULL){
-        if(obj->use < obj->sz){
-            memset(&((NixBYTE*)obj->ptr)[obj->use], 0, obj->sz - obj->use);
-            obj->use = obj->sz;
-        }
-        r = NIX_TRUE;
     }
     return r;
 }
@@ -743,7 +723,7 @@ void Nix_AAudioQueuePair_destroy(STNix_AAudioQueuePair* obj){
         obj->org = NULL;
     }
     if(obj->cnv != NULL){
-        Nix_AAudioPCMBuffer_destroy(obj->cnv);
+        NixPCMBuffer_destroy(obj->cnv);
         NIX_FREE(obj->cnv);
         obj->cnv = NULL;
     }
@@ -865,6 +845,28 @@ NixBOOL Nix_AAudioQueue_popOrphaning(STNix_AAudioQueue* obj, STNix_AAudioQueuePa
     return r;
 }
 
+NixBOOL Nix_AAudioQueue_popMovingTo(STNix_AAudioQueue* obj, STNix_AAudioQueue* other){
+    NixBOOL r = NIX_FALSE;
+    STNix_AAudioQueuePair pair;
+    if(!Nix_AAudioQueue_popOrphaning(obj, &pair)){
+        //
+    } else {
+        if(!Nix_AAudioQueue_pushOwning(other, &pair)){
+            //program logic error
+            NIX_ASSERT(NIX_FALSE);
+            if(pair.org != NULL){
+                NixPCMBuffer_destroy(pair.org);
+                NIX_FREE(pair.org);
+                pair.org = NULL;
+            }
+            Nix_AAudioQueuePair_destroy(&pair);
+        } else {
+            r = NIX_TRUE;
+        }
+    }
+    return r;
+}
+
 //------
 //Source
 //------
@@ -880,7 +882,7 @@ void Nix_AAudioSource_init(STNix_AAudioSource* obj){
     }
 }
 
-void Nix_AAudioSource_release(STNix_AAudioSource* obj){
+void Nix_AAudioSource_destroy(STNix_AAudioSource* obj){
     //src
     if(obj->src != NULL){
 #       ifdef NIX_ASSERTS_ACTIVATED
@@ -902,7 +904,7 @@ void Nix_AAudioSource_release(STNix_AAudioSource* obj){
     }
 }
 
-NixBOOL Nix_AAudioSource_queueBufferForOutput(STNix_AAudioSource* obj, STNix_AAudioPCMBuffer* buff){
+NixBOOL Nix_AAudioSource_queueBufferForOutput(STNix_AAudioSource* obj, STNixPCMBuffer* buff){
     NixBOOL r = NIX_FALSE;
     if(!STNix_audioDesc_IsEqual(&obj->buffsFmt, &buff->desc)){
         //error
@@ -918,12 +920,12 @@ NixBOOL Nix_AAudioSource_queueBufferForOutput(STNix_AAudioSource* obj, STNix_AAu
             STNix_AAudioQueuePair reuse;
             if(!Nix_AAudioQueue_popOrphaning(&obj->queues.reuse, &reuse)){
                 //no reusable buffer available, create new
-                NIX_MALLOC(pair.cnv, STNix_AAudioPCMBuffer, sizeof(STNix_AAudioPCMBuffer), "Nix_AAudioSource_queueBufferForOutput::pair.cnv");
+                NIX_MALLOC(pair.cnv, STNixPCMBuffer, sizeof(STNixPCMBuffer), "Nix_AAudioSource_queueBufferForOutput::pair.cnv");
                 if(pair.cnv == NULL){
                     NIX_PRINTF_ERROR("Nix_AAudioSource_queueBufferForOutput::pair.cnv could be allocated.\n");
                     r = NIX_FALSE;
                 } else {
-                    Nix_AAudioPCMBuffer_init(pair.cnv);
+                    NixPCMBuffer_init(pair.cnv);
                 }
             } else {
                 //reuse buffer
@@ -940,8 +942,8 @@ NixBOOL Nix_AAudioSource_queueBufferForOutput(STNix_AAudioSource* obj, STNix_AAu
             //convert
             if(pair.cnv == NULL){
                 r = NIX_FALSE;
-            } else if(!Nix_AAudioPCMBuffer_setData(pair.cnv, &obj->srcFmt, NULL, samplesReq * obj->srcFmt.blockAlign)){
-                NIX_PRINTF_ERROR("Nix_AAudioSource_queueBufferForOutput::Nix_AAudioPCMBuffer_setData failed.\n");
+            } else if(!NixPCMBuffer_setData(pair.cnv, &obj->srcFmt, NULL, samplesReq * obj->srcFmt.blockAlign)){
+                NIX_PRINTF_ERROR("Nix_AAudioSource_queueBufferForOutput::NixPCMBuffer_setData failed.\n");
                 r = NIX_FALSE;
             } else if(!nixFmtConverter_setPtrAtSrcInterlaced(obj->queues.conv, &buff->desc, buff->ptr, 0)){
                 NIX_PRINTF_ERROR("Nix_AAudioSource_queueBufferForOutput::nixFmtConverter_setPtrAtSrcInterlaced failed.\n");
@@ -1070,7 +1072,7 @@ NixUI32 Nix_AAudioSource_feedSamplesTo(STNix_AAudioSource* obj, void* pDst, cons
         while(r < samplesMax && obj->queues.pend.use > 0){
             NixBOOL remove = NIX_FALSE, isFullyConsumed = NIX_FALSE;
             STNix_AAudioQueuePair* pair = &obj->queues.pend.arr[0];
-            STNix_AAudioPCMBuffer* buff = (pair->cnv != NULL ? pair->cnv : pair->org);
+            STNixPCMBuffer* buff = (pair->cnv != NULL ? pair->cnv : pair->org);
             NIX_ASSERT(buff != NULL) //program logic error
             if(buff == NULL || buff->ptr == NULL || buff->desc.blockAlign <= 0 || obj->srcFmt.blockAlign <= 0 || buff->desc.blockAlign != obj->srcFmt.blockAlign){
                 //just remove
@@ -1131,7 +1133,353 @@ NixUI32 Nix_AAudioSource_feedSamplesTo(STNix_AAudioSource* obj, void* pDst, cons
 }
 
 //------
-//Engine
+//Recorder
+//------
+
+void Nix_AAudioRecorder_init(STNix_AAudioRecorder* obj){
+    memset(obj, 0, sizeof(*obj));
+    //cfg
+    {
+        //
+    }
+    //queues
+    {
+        NIX_MUTEX_INIT(&obj->queues.mutex);
+        Nix_AAudioQueue_init(&obj->queues.notify);
+        Nix_AAudioQueue_init(&obj->queues.reuse);
+    }
+}
+
+void Nix_AAudioRecorder_destroy(STNix_AAudioRecorder* obj){
+    //queues
+    {
+        NIX_MUTEX_LOCK(&obj->queues.mutex);
+        {
+            //ToDo: remove all 'org' buffers manually
+            Nix_AAudioQueue_destroy(&obj->queues.notify);
+            Nix_AAudioQueue_destroy(&obj->queues.reuse);
+        }
+        NIX_MUTEX_UNLOCK(&obj->queues.mutex);
+        NIX_MUTEX_DESTROY(&obj->queues.mutex);
+    }
+    //
+    if(obj->rec != NULL){
+        AAudioStream_close(obj->rec);
+        obj->rec = NULL;
+    }
+}
+
+void nixAAudioRecorder_errorCallback_(AAudioStream *_Nonnull stream, void *_Nullable userData, aaudio_result_t error){
+    //STNix_AAudioRecorder* obj = (STNix_AAudioRecorder*)userData;
+    NIX_PRINTF_ERROR("nixAAudioRecorder_errorCallback_::error %d = '%s'.\n", error, AAudio_convertResultToText(error));
+}
+
+aaudio_data_callback_result_t nixAAudioRecorder_dataCallback_(AAudioStream *_Nonnull stream, void *_Nullable userData, void *_Nonnull audioData, int32_t numFrames){
+    STNix_AAudioRecorder* obj = (STNix_AAudioRecorder*)userData;
+    {
+        Nix_AAudioRecorder_consumeInputBuffer(obj, audioData, numFrames);
+    }
+    return AAUDIO_CALLBACK_RESULT_CONTINUE;
+}
+
+NixBOOL Nix_AAudioRecorder_prepare(STNix_AAudioRecorder* obj, const STNix_audioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer){
+    NixBOOL r = NIX_FALSE;
+    NIX_MUTEX_LOCK(&obj->queues.mutex);
+    if(obj->queues.conv == NULL && audioDesc->blockAlign > 0){
+        AAudioStreamBuilder *bldr;
+        aaudio_result_t rr = AAudio_createStreamBuilder(&bldr);
+        if(rr != AAUDIO_OK || bldr == NULL){
+            NIX_PRINTF_ERROR("Nix_AAudioRecorder_prepare::AAudio_createStreamBuilder failed.\n");
+        } else {
+            aaudio_result_t rr = 0;
+            AAudioStream *stream = NULL;
+            AAudioStreamBuilder_setDirection(bldr, AAUDIO_DIRECTION_INPUT);
+            //AAudioStreamBuilder_setSharingMode(bldr, AAUDIO_SHARING_MODE_SHARED);
+            AAudioStreamBuilder_setSampleRate(bldr, audioDesc->samplerate);
+            AAudioStreamBuilder_setChannelCount(bldr, audioDesc->channels);
+            AAudioStreamBuilder_setDataCallback(bldr, nixAAudioRecorder_dataCallback_, obj);
+            AAudioStreamBuilder_setErrorCallback(bldr, nixAAudioRecorder_errorCallback_, obj);
+            if(audioDesc->samplesFormat == ENNix_sampleFormat_int){
+                if(audioDesc->bitsPerSample == 16){
+                    AAudioStreamBuilder_setFormat(bldr, AAUDIO_FORMAT_PCM_I16);
+                } else if(audioDesc->bitsPerSample == 32){
+                    AAudioStreamBuilder_setFormat(bldr, AAUDIO_FORMAT_PCM_I32);
+                }
+            } else if(audioDesc->samplesFormat == ENNix_sampleFormat_float){
+                if(audioDesc->bitsPerSample == 32){
+                    AAudioStreamBuilder_setFormat(bldr, AAUDIO_FORMAT_PCM_FLOAT);
+                }
+            }
+            rr = AAudioStreamBuilder_openStream(bldr, &stream);
+            if(AAUDIO_OK != rr){
+                NIX_PRINTF_ERROR("Nix_AAudioRecorder_prepare::AAudioStreamBuilder_openStream failed.\n");
+            } else {
+                STNix_audioDesc inDesc;
+                memset(&inDesc, 0, sizeof(inDesc));
+                //read properties
+                switch(AAudioStream_getFormat(stream)){
+                    case AAUDIO_FORMAT_PCM_I16:
+                        inDesc.bitsPerSample = 16;
+                        inDesc.samplesFormat = ENNix_sampleFormat_int;
+                        break;
+                    case AAUDIO_FORMAT_PCM_I32:
+                        inDesc.bitsPerSample = 32;
+                        inDesc.samplesFormat = ENNix_sampleFormat_int;
+                        break;
+                    case AAUDIO_FORMAT_PCM_FLOAT:
+                        inDesc.bitsPerSample = 32;
+                        inDesc.samplesFormat = ENNix_sampleFormat_float;
+                        break;
+                    default:
+                        inDesc.bitsPerSample = 0;
+                        inDesc.samplesFormat = ENNix_sampleFormat_none;
+                        break;
+                }
+                inDesc.channels   = AAudioStream_getChannelCount(stream);
+                inDesc.samplerate = AAudioStream_getSampleRate(stream);
+                if(inDesc.bitsPerSample <= 0 || inDesc.channels <= 0 || inDesc.samplerate <= 0){
+                    NIX_PRINTF_ERROR("Nix_AAudioRecorder_prepare, unknown stream sample format.\n");
+                } else {
+                    inDesc.blockAlign = (inDesc.bitsPerSample / 8) * inDesc.channels;
+                    void* conv = nixFmtConverter_create();
+                    if(!nixFmtConverter_prepare(conv, &inDesc, audioDesc)){
+                        NIX_PRINTF_ERROR("Nix_AAudioRecorder_prepare::nixFmtConverter_prepare failed.\n");
+                        nixFmtConverter_destroy(conv);
+                        conv = NULL;
+                    } else {
+                        //allocate reusable buffers
+                        while(obj->queues.reuse.use < buffersCount){
+                            STNix_AAudioQueuePair pair;
+                            Nix_AAudioQueuePair_init(&pair);
+                            NIX_MALLOC(pair.org, STNixPCMBuffer, sizeof(STNixPCMBuffer), "Nix_AAudioRecorder_prepare.pair.org");
+                            if(pair.org == NULL){
+                                NIX_PRINTF_ERROR("Nix_AAudioRecorder_prepare::pair.org allocation failed.\n");
+                                break;
+                            } else {
+                                NixPCMBuffer_init(pair.org);
+                                if(!NixPCMBuffer_setData(pair.org, audioDesc, NULL, audioDesc->blockAlign * samplesPerBuffer)){
+                                    NIX_PRINTF_ERROR("Nix_AAudioRecorder_prepare::NixPCMBuffer_setData failed.\n");
+                                    NixPCMBuffer_destroy(pair.org);
+                                    NIX_FREE(pair.org);
+                                    pair.org = NULL;
+                                    break;
+                                } else {
+                                    Nix_AAudioQueue_pushOwning(&obj->queues.reuse, &pair);
+                                }
+                            }
+                        }
+                        //
+                        if(obj->queues.reuse.use <= 0){
+                            NIX_PRINTF_ERROR("Nix_AAudioRecorder_prepare::no reusable buffer could be allocated.\n");
+                        } else {
+                            //prepared
+                            obj->queues.filling.iCurSample = 0;
+                            obj->queues.conv = conv; conv = NULL; //consume
+                            obj->rec = stream; stream = NULL; //consume
+                            //cfg
+                            obj->cfg.fmt = *audioDesc;
+                            obj->cfg.maxBuffers = buffersCount;
+                            obj->cfg.samplesPerBuffer = samplesPerBuffer;
+                            //
+                            obj->capFmt = inDesc;
+                            r = NIX_TRUE;
+                        }
+                    }
+                    //release (if not consumed)
+                    if(conv != NULL){
+                        nixFmtConverter_destroy(conv);
+                        conv = NULL;
+                    }
+                    
+                }
+                //release (if not consumed)
+                if(stream != NULL){
+                    AAudioStream_close(stream);
+#                   ifdef NIX_ASSERTS_ACTIVATED
+                    {
+                        aaudio_stream_state_t state = AAudioStream_getState(stream);
+                        NIX_ASSERT(state == AAUDIO_STREAM_STATE_CLOSED || state == AAUDIO_STREAM_STATE_UNINITIALIZED)
+                    }
+#                   endif
+                    stream = NULL;
+                }
+            }
+            AAudioStreamBuilder_delete(bldr);
+        }
+    }
+    NIX_MUTEX_UNLOCK(&obj->queues.mutex);
+    return r;
+}
+
+NixBOOL Nix_AAudioRecorder_setCallback(STNix_AAudioRecorder* obj, NixApiCaptureBufferFilledCallback callback, void* callbackData){
+    NixBOOL r = NIX_FALSE;
+    {
+        obj->callback.func = callback;
+        obj->callback.data = callbackData;
+        r = NIX_TRUE;
+    }
+    return r;
+}
+
+NixBOOL Nix_AAudioRecorder_start(STNix_AAudioRecorder* obj){
+    NixBOOL r = NIX_FALSE;
+    if(obj->rec != NULL){
+        r = NIX_TRUE;
+        if(!obj->engStarted){
+            if(AAUDIO_OK != AAudioStream_requestStart(obj->rec)){
+                NIX_PRINTF_ERROR("Nix_AAudioRecorder_start::AAudioStream_requestStart failed.\n");
+                r = NIX_FALSE;
+            } else {
+                obj->engStarted = NIX_TRUE;
+            }
+        }
+    }
+    return r;
+}
+
+NixBOOL Nix_AAudioRecorder_stop(STNix_AAudioRecorder* obj){
+    NixBOOL r = NIX_TRUE;
+    if(obj->rec != NULL){
+        if(AAUDIO_OK != AAudioStream_requestStop(obj->rec)){
+            NIX_PRINTF_ERROR("Nix_AAudioRecorder_stop::AAudioStream_requestStop failed.\n");
+            r = NIX_FALSE;
+        }
+        obj->engStarted = NIX_FALSE;
+    }
+    Nix_AAudioRecorder_flush(obj);
+    return r;
+}
+
+NixBOOL Nix_AAudioRecorder_flush(STNix_AAudioRecorder* obj){
+    NixBOOL r = NIX_TRUE;
+    //move filling buffer to notify (if data is available)
+    NIX_MUTEX_LOCK(&obj->queues.mutex);
+    if(obj->queues.reuse.use > 0){
+        STNix_AAudioQueuePair* pair = &obj->queues.reuse.arr[0];
+        if(pair->org != NULL && pair->org->use > 0){
+            obj->queues.filling.iCurSample = 0;
+            if(!Nix_AAudioQueue_popMovingTo(&obj->queues.reuse, &obj->queues.notify)){
+                //program logic error
+                r = NIX_FALSE;
+            }
+        }
+    }
+    NIX_MUTEX_UNLOCK(&obj->queues.mutex);
+    return r;
+}
+
+void Nix_AAudioRecorder_consumeInputBuffer(STNix_AAudioRecorder* obj, void* audioData, const NixSI32 numFrames){
+    if(obj->queues.conv != NULL && obj->rec != NULL && audioData != NULL && numFrames > 0){
+        NIX_MUTEX_LOCK(&obj->queues.mutex);
+        {
+            NixUI32 inIdx = 0;
+            NixSI32 inSz = numFrames;
+            //process
+            while(inIdx < inSz){
+                if(obj->queues.reuse.use <= 0){
+                    //move oldest-notify buffer to reuse
+                    if(!Nix_AAudioQueue_popMovingTo(&obj->queues.notify, &obj->queues.reuse)){
+                        //program logic error
+                        NIX_ASSERT(NIX_FALSE);
+                        break;
+                    }
+                } else {
+                    STNix_AAudioQueuePair* pair = &obj->queues.reuse.arr[0];
+                    if(pair->org == NULL || pair->org->desc.blockAlign <= 0){
+                        //just remove
+                        STNix_AAudioQueuePair pair;
+                        if(!Nix_AAudioQueue_popOrphaning(&obj->queues.reuse, &pair)){
+                            NIX_ASSERT(NIX_FALSE);
+                            //program logic error
+                            break;
+                        }
+                        if(pair.org != NULL){
+                            NixPCMBuffer_destroy(pair.org);
+                            NIX_FREE(pair.org);
+                            pair.org = NULL;
+                        }
+                        Nix_AAudioQueuePair_destroy(&pair);
+                    } else {
+                        const NixUI32 outSz = (pair->org->sz / pair->org->desc.blockAlign);
+                        const NixUI32 outAvail = (obj->queues.filling.iCurSample >= outSz ? 0 : outSz - obj->queues.filling.iCurSample);
+                        const NixUI32 inAvail = inSz - inIdx;
+                        NixUI32 ammBlocksRead = 0, ammBlocksWritten = 0;
+                        if(outAvail > 0 && inAvail > 0){
+                            //dst
+                            nixFmtConverter_setPtrAtDstInterlaced(obj->queues.conv, &pair->org->desc, pair->org->ptr, obj->queues.filling.iCurSample);
+                            //src
+                            nixFmtConverter_setPtrAtSrcInterlaced(obj->queues.conv, &obj->capFmt, audioData, inIdx);
+                            //convert
+                            if(!nixFmtConverter_convert(obj->queues.conv, inAvail, outAvail, &ammBlocksRead, &ammBlocksWritten)){
+                                //error
+                                break;
+                            } else if(ammBlocksRead == 0 && ammBlocksWritten == 0){
+                                //converter did nothing, avoid infinite cycle
+                                break;
+                            } else {
+                                inIdx += ammBlocksRead;
+                                obj->queues.filling.iCurSample += ammBlocksWritten;
+                                pair->org->use = (obj->queues.filling.iCurSample * pair->org->desc.blockAlign); NIX_ASSERT(pair->org->use <= pair->org->sz)
+                            }
+                        }
+                        //move reusable buffer to notify
+                        if(ammBlocksWritten == outAvail){
+                            obj->queues.filling.iCurSample = 0;
+                            if(!Nix_AAudioQueue_popMovingTo(&obj->queues.reuse, &obj->queues.notify)){
+                                //program logic error
+                                NIX_ASSERT(NIX_FALSE);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        NIX_MUTEX_UNLOCK(&obj->queues.mutex);
+    }
+}
+
+void Nix_AAudioRecorder_notifyBuffers(STNix_AAudioRecorder* obj){
+    NIX_MUTEX_LOCK(&obj->queues.mutex);
+    {
+        const NixUI32 maxProcess = obj->queues.notify.use;
+        NixUI32 ammProcessed = 0;
+        while(ammProcessed < maxProcess && obj->queues.notify.use > 0){
+            STNix_AAudioQueuePair pair;
+            if(!Nix_AAudioQueue_popOrphaning(&obj->queues.notify, &pair)){
+                NIX_ASSERT(NIX_FALSE);
+                //program logic error
+                break;
+            } else {
+                //notify (unlocked)
+                if(pair.org != NULL && pair.org->desc.blockAlign > 0 && obj->callback.func != NULL){
+                    NIX_MUTEX_UNLOCK(&obj->queues.mutex);
+                    {
+                        (*obj->callback.func)((STNixApiEngine){ obj->engNx }, (STNixApiRecorder){ obj }, pair.org->desc, pair.org->ptr, pair.org->use, (pair.org->use / pair.org->desc.blockAlign), obj->callback.data);
+                    }
+                    NIX_MUTEX_LOCK(&obj->queues.mutex);
+                }
+                //move to reuse
+                if(!Nix_AAudioQueue_pushOwning(&obj->queues.reuse, &pair)){
+                    //program logic error
+                    NIX_ASSERT(NIX_FALSE);
+                    if(pair.org != NULL){
+                        NixPCMBuffer_destroy(pair.org);
+                        NIX_FREE(pair.org);
+                        pair.org = NULL;
+                    }
+                    Nix_AAudioQueuePair_destroy(&pair);
+                }
+            }
+            //processed
+            ++ammProcessed;
+        }
+    }
+    NIX_MUTEX_UNLOCK(&obj->queues.mutex);
+}
+
+//------
+//Engine (API)
 //------
 
 STNixApiEngine nixAAudioEngine_create(void){
@@ -1192,19 +1540,19 @@ void nixAAudioEngine_tick(STNixApiEngine pObj){
 }
 
 //------
-//PCMBuffer
+//PCMBuffer (API)
 //------
 
 STNixApiBuffer nixAAudioPCMBuffer_create(const STNix_audioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes){
     STNixApiBuffer r = STNixApiBuffer_Zero;
     if(audioDesc != NULL && audioDesc->blockAlign > 0){
-        STNix_AAudioPCMBuffer* obj = NULL;
-        NIX_MALLOC(obj, STNix_AAudioPCMBuffer, sizeof(STNix_AAudioPCMBuffer), "STNix_AAudioPCMBuffer");
+        STNixPCMBuffer* obj = NULL;
+        NIX_MALLOC(obj, STNixPCMBuffer, sizeof(STNixPCMBuffer), "STNixPCMBuffer");
         if(obj != NULL){
-            Nix_AAudioPCMBuffer_init(obj);
-            if(!Nix_AAudioPCMBuffer_setData(obj, audioDesc, audioDataPCM, audioDataPCMBytes)){
-                NIX_PRINTF_ERROR("nixAAudioPCMBuffer_create::Nix_AAudioPCMBuffer_setData failed.\n");
-                Nix_AAudioPCMBuffer_destroy(obj);
+            NixPCMBuffer_init(obj);
+            if(!NixPCMBuffer_setData(obj, audioDesc, audioDataPCM, audioDataPCMBytes)){
+                NIX_PRINTF_ERROR("nixAAudioPCMBuffer_create::NixPCMBuffer_setData failed.\n");
+                NixPCMBuffer_destroy(obj);
                 NIX_FREE(obj);
                 obj = NULL;
             }
@@ -1216,8 +1564,8 @@ STNixApiBuffer nixAAudioPCMBuffer_create(const STNix_audioDesc* audioDesc, const
 
 void nixAAudioPCMBuffer_destroy(STNixApiBuffer pObj){
     if(pObj.opq != NULL){
-        STNix_AAudioPCMBuffer* obj = (STNix_AAudioPCMBuffer*)pObj.opq;
-        Nix_AAudioPCMBuffer_destroy(obj);
+        STNixPCMBuffer* obj = (STNixPCMBuffer*)pObj.opq;
+        NixPCMBuffer_destroy(obj);
         NIX_FREE(obj);
         obj = NULL;
     }
@@ -1226,8 +1574,8 @@ void nixAAudioPCMBuffer_destroy(STNixApiBuffer pObj){
 NixBOOL nixAAudioPCMBuffer_setData(STNixApiBuffer pObj, const STNix_audioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes){
     NixBOOL r = NIX_FALSE;
     if(pObj.opq != NULL && audioDesc != NULL && audioDesc->blockAlign > 0){
-        STNix_AAudioPCMBuffer* obj = (STNix_AAudioPCMBuffer*)pObj.opq;
-        r = Nix_AAudioPCMBuffer_setData(obj, audioDesc, audioDataPCM, audioDataPCMBytes);
+        STNixPCMBuffer* obj = (STNixPCMBuffer*)pObj.opq;
+        r = NixPCMBuffer_setData(obj, audioDesc, audioDataPCM, audioDataPCMBytes);
     }
     return r;
 }
@@ -1235,14 +1583,14 @@ NixBOOL nixAAudioPCMBuffer_setData(STNixApiBuffer pObj, const STNix_audioDesc* a
 NixBOOL nixAAudioPCMBuffer_fillWithZeroes(STNixApiBuffer pObj){
     NixBOOL r = NIX_FALSE;
     if(pObj.opq != NULL){
-        STNix_AAudioPCMBuffer* obj = (STNix_AAudioPCMBuffer*)pObj.opq;
-        r = Nix_AAudioPCMBuffer_fillWithZeroes(obj);
+        STNixPCMBuffer* obj = (STNixPCMBuffer*)pObj.opq;
+        r = NixPCMBuffer_fillWithZeroes(obj);
     }
     return r;
 }
 
 //------
-//Source
+//Source (API)
 //------
 
 STNixApiSource nixAAudioSource_create(STNixApiEngine pEng){
@@ -1257,9 +1605,11 @@ STNixApiSource nixAAudioSource_create(STNixApiEngine pEng){
             //add to engine
             if(!Nix_AAudioEngine_srcsAdd(eng, obj)){
                 NIX_PRINTF_ERROR("nixAAudioSource_create::Nix_AAudioEngine_srcsAdd failed.\n");
-                Nix_AAudioSource_release(obj);
+                Nix_AAudioSource_destroy(obj);
                 NIX_FREE(obj);
                 obj = NULL;
+            } else {
+                //
             }
         }
         r.opq = obj;
@@ -1279,10 +1629,8 @@ void nixAAudioSource_removeAllBuffersAndNotify_(STNix_AAudioSource* obj){
     NIX_MUTEX_UNLOCK(&obj->queues.mutex);
     //notify
     {
-        NixUI32 i;
-        for(i = 0; i < notifs.use; ++i){
+        NixUI32 i; for(i = 0; i < notifs.use; ++i){
             STNix_AAudioSrcNotif* n = &notifs.arr[i];
-            NIX_PRINTF_INFO("nixAAudioSource_removeAllBuffersAndNotify_::notify(#%d/%d).\n", i + 1, notifs.use);
             if(n->callback.func != NULL){
                 (*n->callback.func)(n->callback.eng, n->callback.sourceIndex, n->ammBuffs);
             }
@@ -1351,7 +1699,7 @@ void nixAAudioSource_play(STNixApiSource pObj){
                     if(obj->queues.pend.use == 1){
                         //last buffer to play
                         STNix_AAudioQueuePair* pair = &obj->queues.pend.arr[0];
-                        STNix_AAudioPCMBuffer* buff = (pair->cnv != NULL ? pair->cnv : pair->org);
+                        STNixPCMBuffer* buff = (pair->cnv != NULL ? pair->cnv : pair->org);
                         if(buff != NULL && buff->desc.blockAlign > 0){
                             const NixUI32 samples = buff->use / buff->desc.blockAlign;
                             if(obj->queues.pendSampleIdx >= samples){
@@ -1382,7 +1730,6 @@ void nixAAudioSource_pause(STNixApiSource pObj){
             if(AAUDIO_OK != AAudioStream_requestPause(obj->src)){
                 NIX_PRINTF_ERROR("nixAAudioSource_pause::AAudioStream_requestPause failed.\n");
             } else {
-                NIX_PRINTF_INFO("nixAAudioSource_pause::AAudioStream_requestPause.\n");
                 Nix_AAudioSource_setIsChanging(obj, NIX_TRUE);
                 ++obj->eng->srcs.changingStateCountHint;
             }
@@ -1398,7 +1745,6 @@ void nixAAudioSource_stop(STNixApiSource pObj){
             if(AAUDIO_OK != AAudioStream_requestStop(obj->src)){
                 NIX_PRINTF_ERROR("nixAAudioSource_stop::AAudioStream_requestStop failed.\n");
             } else {
-                NIX_PRINTF_INFO("nixAAudioSource_stop::AAudioStream_requestStop.\n");
                 Nix_AAudioSource_setIsChanging(obj, NIX_TRUE);
                 ++obj->eng->srcs.changingStateCountHint;
             }
@@ -1546,7 +1892,7 @@ NixBOOL nixAAudioSource_setBuffer(STNixApiSource pObj, STNixApiBuffer pBuff){  /
     NixBOOL r = NIX_FALSE;
     if(pObj.opq != NULL && pBuff.opq != NULL){
         STNix_AAudioSource* obj    = (STNix_AAudioSource*)pObj.opq;
-        STNix_AAudioPCMBuffer* buff = (STNix_AAudioPCMBuffer*)pBuff.opq;
+        STNixPCMBuffer* buff = (STNixPCMBuffer*)pBuff.opq;
         if(obj->src == NULL || obj->srcFmt.blockAlign <= 0){
             if(!nixAAudioSource_prepareSourceForFmt_(obj, &buff->desc)){
                 NIX_PRINTF_ERROR("nixAAudioSource_setBuffer::nixAAudioSource_prepareSourceForFmt_ failed.\n");
@@ -1580,10 +1926,10 @@ NixBOOL nixAAudioSource_queueBuffer(STNixApiSource pObj, STNixApiBuffer pBuff){
     NixBOOL r = NIX_FALSE;
     if(pObj.opq != NULL && pBuff.opq != NULL){
         STNix_AAudioSource* obj    = (STNix_AAudioSource*)pObj.opq;
-        STNix_AAudioPCMBuffer* buff = (STNix_AAudioPCMBuffer*)pBuff.opq;
+        STNixPCMBuffer* buff = (STNixPCMBuffer*)pBuff.opq;
         if(obj->src == NULL || obj->srcFmt.blockAlign <= 0){
             if(!nixAAudioSource_prepareSourceForFmt_(obj, &buff->desc)){
-                //error
+                NIX_PRINTF_ERROR("nixAAudioSource_queueBuffer, nixAAudioSource_prepareSourceForFmt_ failed.\n");
             } else {
                 NIX_ASSERT(obj->src != NULL) //program logic error
             }
@@ -1600,6 +1946,17 @@ NixBOOL nixAAudioSource_queueBuffer(STNixApiSource pObj, STNixApiBuffer pBuff){
             if(!Nix_AAudioSource_queueBufferForOutput(obj, buff)){
                 NIX_PRINTF_ERROR("nixAAudioSource_queueBuffer, Nix_AAudioSource_queueBufferForOutput failed.\n");
             } else {
+                //restart stream if necesary
+                if(obj->src != NULL && Nix_AAudioSource_isPlaying(obj) && !Nix_AAudioSource_isPaused(obj)){
+                    aaudio_stream_state_t state = AAudioStream_getState(obj->src);
+                    if(state != AAUDIO_STREAM_STATE_STARTING && state != AAUDIO_STREAM_STATE_STARTED){
+                        if(AAUDIO_OK != AAudioStream_requestStart(obj->src)){
+                            NIX_PRINTF_WARNING("nixAAudioSource_queueBuffer::AAudioStream_requestStart failed.\n");
+                        } else {
+                            NIX_PRINTF_INFO("nixAAudioSource_queueBuffer::AAudioStream_requestStart.\n");
+                        }
+                    }
+                }
                 r = NIX_TRUE;
             }
         }
@@ -1608,398 +1965,67 @@ NixBOOL nixAAudioSource_queueBuffer(STNixApiSource pObj, STNixApiBuffer pBuff){
 }
 
 //------
-//Notif
+//Recorder (API)
 //------
 
-void Nix_AAudioSrcNotif_init(STNix_AAudioSrcNotif* obj){
-    memset(obj, 0, sizeof(*obj));
-}
-
-void Nix_AAudioSrcNotif_destroy(STNix_AAudioSrcNotif* obj){
-    //
-}
-
-//------
-//NotifQueue
-//------
-
-void Nix_AAudioNotifQueue_init(STNix_AAudioNotifQueue* obj){
-    memset(obj, 0, sizeof(*obj));
-    obj->arr = obj->arrEmbedded;
-    obj->sz = (sizeof(obj->arrEmbedded) / sizeof(obj->arrEmbedded[0]));
-}
-
-void Nix_AAudioNotifQueue_destroy(STNix_AAudioNotifQueue* obj){
-    if(obj->arr != NULL){
-        NixUI32 i; for(i = 0; i < obj->use; i++){
-            STNix_AAudioSrcNotif* b = &obj->arr[i];
-            Nix_AAudioSrcNotif_destroy(b);
-        }
-        if(obj->arr != obj->arrEmbedded){
-            NIX_FREE(obj->arr);
-        }
-        obj->arr = NULL;
-    }
-    obj->use = obj->sz = 0;
-}
-
-NixBOOL Nix_AAudioNotifQueue_push(STNix_AAudioNotifQueue* obj, STNix_AAudioSrcNotif* pair){
-    NixBOOL r = NIX_FALSE;
-    if(obj != NULL && pair != NULL){
-        //resize array (if necesary)
-        if(obj->use >= obj->sz){
-            const NixUI32 szN = obj->use + 4;
-            STNix_AAudioSrcNotif* arrN = NULL;
-            NIX_MALLOC(arrN, STNix_AAudioSrcNotif, sizeof(STNix_AAudioSrcNotif) * szN, "Nix_AAudioNotifQueue_push::arrN");
-            if(arrN != NULL){
-                if(obj->arr != NULL){
-                    if(obj->use > 0){
-                        memcpy(arrN, obj->arr, sizeof(arrN[0]) * obj->use);
-                    }
-                    if(obj->arr != obj->arrEmbedded){
-                        NIX_FREE(obj->arr);
-                    }
-                    obj->arr = NULL;
-                }
-                obj->arr = arrN;
-                obj->sz = szN;
-            }
-        }
-        //add
-        if(obj->use >= obj->sz){
-            NIX_PRINTF_ERROR("Nix_AAudioNotifQueue_push failed (no allocated space).\n");
-        } else {
-            //become the owner of the pair
-            obj->arr[obj->use++] = *pair;
-            r = NIX_TRUE;
-        }
-    }
-    return r;
-}
-
-//------
-//Recorder
-//------
-/*
-void nixAAudioRecorder_inBuffsClearLocked_(STNix_AAudioRecorder* obj){
-    if(obj->in.buffs.arr != NULL){
-        NixUI32 i; for(i = 0; i < obj->in.buffs.use; i++){
-            AAudioPCMBuffer* b = obj->in.buffs.arr[i];
-            if(b != nil) [b release];
-            b = nil;
-        }
-        obj->in.buffs.use = 0;
-    }
-}
-
-NixBOOL nixAAudioRecorder_inBuffsPopOldestLocked_(STNix_AAudioRecorder* obj, AAudioPCMBuffer** dst){
-    NixBOOL r = NIX_FALSE;
-    if(obj->in.buffs.use > 0){
-        AAudioPCMBuffer* b = obj->in.buffs.arr[0];
-        obj->in.samples.cur -= [b frameLength];
-        --obj->in.buffs.use;
-        *dst = b;
-        //fill gap
-        {
-            NixUI32 i; for(i = 0; i < obj->in.buffs.use; i++){
-                obj->in.buffs.arr[i] = obj->in.buffs.arr[i + 1];
-            }
-        }
-        r = NIX_TRUE;
-    }
-    return r;
-}
-    
-void nixAAudioRecorder_inBuffsPushNewestLocked_(STNix_AAudioRecorder* obj, AAudioPCMBuffer* b){
-    if(b != nil && [b frameLength] > 0){
-        if(obj->in.samples.cur >= obj->in.samples.max){
-            //pop oldest first
-            AAudioPCMBuffer* oldest = nil;
-            if(nixAAudioRecorder_inBuffsPopOldestLocked_(obj, &oldest)){
-                if(oldest != nil){
-                    [oldest release];
-                    oldest = nil;
-                }
-            }
-        }
-        //push new buffer
-        if(obj->in.buffs.use >= obj->in.buffs.sz){
-            AAudioPCMBuffer** arr = NULL;
-            const NixUI32 sz = obj->in.buffs.use + 4;
-            NIX_MALLOC(arr, AAudioPCMBuffer*, sizeof(AAudioPCMBuffer*) * sz, "arr");
-            if(obj->in.buffs.arr != NULL){
-                if(obj->in.buffs.use > 0){
-                    memcpy(arr, obj->in.buffs.arr, sizeof(AAudioPCMBuffer*) * obj->in.buffs.use);
-                }
-                NIX_FREE(obj->in.buffs.arr);
-                obj->in.buffs.arr = NULL;
-            }
-            obj->in.buffs.arr = arr;
-            obj->in.buffs.sz = sz;
-        }
-        if(obj->in.buffs.use < obj->in.buffs.sz){
-            obj->in.buffs.arr[obj->in.buffs.use] = b; [b retain];
-            ++obj->in.buffs.use;
-            obj->in.samples.cur += [b frameLength];
-        }
-    }
-}
-
-void* nixAAudioRecorder_create(void* pEng, const STNix_audioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer){
-    STNix_AAudioRecorder* obj = NULL;
-    STNix_AAudioEngine* eng = (STNix_AAudioEngine*)pEng;
-    if(eng != NULL && audioDesc != NULL && audioDesc->samplerate > 0){
+STNixApiRecorder nixAAudioRecorder_create(STNixApiEngine pEng, const STNix_audioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer){
+    STNixApiRecorder r = STNixApiRecorder_Zero;
+    STNix_AAudioEngine* eng = (STNix_AAudioEngine*)pEng.opq;
+    if(eng != NULL && audioDesc != NULL && audioDesc->samplerate > 0 && audioDesc->blockAlign > 0 && eng->rec == NULL){
+        STNix_AAudioRecorder* obj = NULL;
         NIX_MALLOC(obj, STNix_AAudioRecorder, sizeof(STNix_AAudioRecorder), "STNix_AAudioRecorder");
         if(obj != NULL){
-            memset(obj, 0, sizeof(STNix_AAudioRecorder));
-            obj->eng = [[AAudioEngine alloc] init];
-            obj->in.lock = [[NSLock alloc] init];
-            {
-                AAudioInputNode* input = [obj->eng inputNode];
-                AAudioFormat* inFmt = [input inputFormatForBus:0];
-                const NixUI32 inSampleRate = [inFmt sampleRate];
-                [input installTapOnBus:0 bufferSize:(inSampleRate / 30) format:inFmt block:^(AAudioPCMBuffer * _Nonnull buffer, AAudioTime * _Nonnull when) {
-                    AAudioPCMBuffer* cpy = [buffer copy];
-                    [obj->in.lock lock];
-                    {
-                        nixAAudioRecorder_inBuffsPushNewestLocked_(obj, cpy);
-                        //printf("AAudio recorder buffer with %d samples (%d samples in memory).\n", [buffer frameLength], obj->in.samples.cur);
-                    }
-                    [obj->in.lock unlock];
-                    [cpy release];
-                }];
-                [obj->eng prepare];
-                //calculate buffers to keep
-                obj->out.fmt = *audioDesc;
-                obj->out.samplesPerBuffer = samplesPerBuffer;
-                {
-                    const NixUI32 outSamplesMax = buffersCount * samplesPerBuffer;
-                    obj->in.samples.max = outSamplesMax * inSampleRate / audioDesc->samplerate;
-                }
-                //create notification buffer
-                if(samplesPerBuffer > 0){
-                    obj->out.conv.dst.curSample = 0;
-                    obj->out.conv.dst.buffSz = samplesPerBuffer * (audioDesc->bitsPerSample / 8) * audioDesc->channels;
-                    NIX_MALLOC(obj->out.conv.dst.buff, NixBYTE, obj->out.conv.dst.buffSz, "bj->out.conv.dst.buff");
-                    if(obj->out.conv.dst.buff != NULL){
-                        //
-                    }
-                }
-            }
-        }
-    }
-    return obj;
-}
-
-void nixAAudioRecorder_destroy(void* pObj){
-    STNix_AAudioRecorder* obj = (STNix_AAudioRecorder*)pObj;
-    if(obj != NULL){
-        //in
-        {
-            [obj->in.lock lock];
-            if(obj->in.buffs.arr != NULL){
-                nixAAudioRecorder_inBuffsClearLocked_(obj);
-                //
-                NIX_FREE(obj->in.buffs.arr);
-                obj->in.buffs.arr = NULL;
-                obj->in.buffs.sz = 0;
-            }
-            [obj->in.lock unlock];
-        }
-        //out
-        {
-            obj->out.conv.src.curSample = 0;
-            if(obj->out.conv.src.buff != nil){
-                [obj->out.conv.src.buff release];
-                obj->out.conv.src.buff = nil;
-            }
-            obj->out.conv.dst.curSample = 0;
-            obj->out.conv.dst.buffSz = 0;
-            if(obj->out.conv.dst.buff != NULL){
-                NIX_FREE(obj->out.conv.dst.buff);
-                obj->out.conv.dst.buff = NULL;
-            }
-            if(obj->out.conv.obj != NULL) {
-                nixFmtConverter_destroy(obj->out.conv.obj);
-                obj->out.conv.obj = NULL;
-            }
-        }
-        if(obj->eng != nil){
-            AAudioInputNode* input = [obj->eng inputNode];
-            [input removeTapOnBus:0];
-            [obj->eng stop];
-            [obj->eng release];
-            obj->eng = nil;
-        }
-    }
-}
-
-NixBOOL nixAAudioRecorder_start(void* pObj){
-    NixBOOL r = NIX_FALSE;
-    STNix_AAudioRecorder* obj = (STNix_AAudioRecorder*)pObj;
-    if(obj != NULL){
-        r = NIX_TRUE;
-        if(!obj->engStarted){
-            NSError* err = nil;
-            if(![obj->eng startAndReturnError:&err]){
-                NIX_PRINTF_ERROR("nixAAudioRecorder_create, AAudioEngine::startAndReturnError failed: '%s'.\n", err == nil ? "unknown" : [[err description] UTF8String]);
-                r = NIX_FALSE;
+            Nix_AAudioRecorder_init(obj);
+            if(!Nix_AAudioRecorder_prepare(obj, audioDesc, buffersCount, samplesPerBuffer)){
+                NIX_PRINTF_ERROR("Nix_AAudioRecorder_create, Nix_AAudioRecorder_prepare failed.\n");
+                Nix_AAudioRecorder_destroy(obj);
+                NIX_FREE(obj);
+                obj = NULL;
             } else {
-                obj->engStarted = NIX_TRUE;
+                obj->engNx = eng;
+                eng->rec = obj;
             }
         }
+        r.opq = obj;
     }
     return r;
 }
 
-NixBOOL nixAAudioRecorder_stop(void* pObj){
+void nixAAudioRecorder_destroy(STNixApiRecorder pObj){
+    STNix_AAudioRecorder* obj = (STNix_AAudioRecorder*)pObj.opq;
+    if(obj != NULL){
+        if(obj->engNx != NULL && obj->engNx->rec == obj){
+            obj->engNx->rec = NULL;
+        }
+        Nix_AAudioRecorder_destroy(obj);
+        NIX_FREE(obj);
+        obj = NULL;
+    }
+}
+
+NixBOOL nixAAudioRecorder_setCallback(STNixApiRecorder pObj, NixApiCaptureBufferFilledCallback callback, void* callbackData){
     NixBOOL r = NIX_FALSE;
-    STNix_AAudioRecorder* obj = (STNix_AAudioRecorder*)pObj;
+    STNix_AAudioRecorder* obj = (STNix_AAudioRecorder*)pObj.opq;
     if(obj != NULL){
-        if(obj->eng != nil){
-            [obj->eng stop];
-            obj->engStarted = NIX_FALSE;
-            //in
-            {
-                [obj->in.lock lock];
-                if(obj->in.buffs.arr != NULL){
-                    nixAAudioRecorder_inBuffsClearLocked_(obj);
-                }
-                [obj->in.lock unlock];
-            }
-            //out
-            {
-                obj->out.conv.src.curSample = 0;
-                if(obj->out.conv.src.buff != nil){
-                    [obj->out.conv.src.buff release];
-                    obj->out.conv.src.buff = nil;
-                }
-                obj->out.conv.dst.curSample = 0;
-            }
-        }
-        r = NIX_FALSE;
+        r = Nix_AAudioRecorder_setCallback(obj, callback, callbackData);
     }
     return r;
 }
 
-void nixAAudioRecorder_notifyBuffers(void* pObj, STNix_Engine* engAbs, PTRNIX_CaptureBufferFilledCallback bufferCaptureCallback, void* bufferCaptureCallbackUserData){
-    STNix_AAudioRecorder* obj = (STNix_AAudioRecorder*)pObj;
+NixBOOL nixAAudioRecorder_start(STNixApiRecorder pObj){
+    NixBOOL r = NIX_FALSE;
+    STNix_AAudioRecorder* obj = (STNix_AAudioRecorder*)pObj.opq;
     if(obj != NULL){
-        //create converter
-        if(obj->out.conv.obj == NULL){
-            AAudioInputNode* input = [obj->eng inputNode];
-            AAudioFormat* inFmt = [input inputFormatForBus:0];
-            obj->out.conv.obj = nixFmtConverter_create();
-            //
-            STNix_audioDesc inDesc;
-            nixFmtConverter_buffFmtToAudioDesc(inFmt, &inDesc);
-            if(!nixFmtConverter_prepare(obj->out.conv.obj, &inDesc, &obj->out.fmt)){
-                nixFmtConverter_destroy(obj->out.conv.obj);
-                obj->out.conv.obj = NULL;
-            }
-        }
-        //convert
-        if(obj->out.conv.obj != NULL && obj->out.conv.dst.buff != NULL){
-            NixUI32 iBuff = 0, buffsSrcMax = 0;
-            [obj->in.lock lock];
-            {
-                //this count incudes the currently pending buffer
-                buffsSrcMax = (obj->out.conv.src.buff != nil ? 1 : 0) + obj->in.buffs.use;
-            }
-            [obj->in.lock unlock];
-            //
-            while(iBuff < buffsSrcMax){
-                //get buffer
-                if(obj->out.conv.src.buff == nil){
-                    //pop from queue
-                    [obj->in.lock lock];
-                    {
-                        AAudioPCMBuffer* buff = nil;
-                        nixAAudioRecorder_inBuffsPopOldestLocked_(obj, &buff);
-                        if(buff != nil){
-                            obj->out.conv.src.buff = buff;
-                            obj->out.conv.src.curSample = 0;
-                        }
-                    }
-                    [obj->in.lock unlock];
-                }
-                //no new buffer
-                if(obj->out.conv.src.buff == nil){
-                    break;
-                }
-                //configure converter
-                {
-                    NixUI32 iCh;
-                    const NixUI32 maxChannels = nixFmtConverter_maxChannels();
-                    //dst
-                    nixFmtConverter_setPtrAtDstInterlaced(obj->out.conv.obj, &obj->out.fmt, obj->out.conv.dst.buff, obj->out.conv.dst.curSample);
-                    //src
-                    AAudioFormat* orgFmt = [obj->out.conv.src.buff format];
-                    NixBOOL isInterleavedSrc = [orgFmt isInterleaved];
-                    NixUI32 chCountSrc = [orgFmt channelCount];
-                    switch([orgFmt commonFormat]) {
-                        case AAudioPCMFormatFloat32:
-                            for(iCh = 0; iCh < chCountSrc && iCh < maxChannels; ++iCh){
-                                const NixUI32 bitsPerSample = 32;
-                                const NixUI32 blockAlign = (bitsPerSample / 8) * (isInterleavedSrc ? chCountSrc : 1);
-                                nixFmtConverter_setPtrAtSrcChannel(obj->out.conv.obj, iCh, obj->out.conv.src.buff.floatChannelData[iCh] + obj->out.conv.src.curSample, blockAlign);
-                            }
-                            break;
-                        case AAudioPCMFormatInt16:
-                            for(iCh = 0; iCh < chCountSrc && iCh < maxChannels; ++iCh){
-                                const NixUI32 bitsPerSample = 16;
-                                const NixUI32 blockAlign = (bitsPerSample / 8) * (isInterleavedSrc ? chCountSrc : 1);
-                                nixFmtConverter_setPtrAtSrcChannel(obj->out.conv.obj, iCh, obj->out.conv.src.buff.int16ChannelData[iCh] + obj->out.conv.src.curSample, blockAlign);
-                            }
-                            break;
-                        case AAudioPCMFormatInt32:
-                            for(iCh = 0; iCh < chCountSrc && iCh < maxChannels; ++iCh){
-                                const NixUI32 bitsPerSample = 32;
-                                const NixUI32 blockAlign = (bitsPerSample / 8) * (isInterleavedSrc ? chCountSrc : 1);
-                                nixFmtConverter_setPtrAtSrcChannel(obj->out.conv.obj, iCh, obj->out.conv.src.buff.int32ChannelData[iCh] + obj->out.conv.src.curSample, blockAlign);
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                    //convert
-                    const NixUI32 ammBlockToRead = (obj->out.conv.dst.curSample > obj->out.samplesPerBuffer ? 0 : obj->out.samplesPerBuffer - obj->out.conv.dst.curSample);
-                    const NixUI32 ammBlockForWrite = (obj->out.conv.src.curSample > [obj->out.conv.src.buff frameLength] ? 0 : [obj->out.conv.src.buff frameLength] - obj->out.conv.src.curSample);
-                    NixUI32 ammBlocksRead = 0, ammBlocksWritten = 0;
-                    if(!nixFmtConverter_convert(obj->out.conv.obj, ammBlockToRead, ammBlockForWrite, &ammBlocksRead, &ammBlocksWritten)){
-                        //error
-                        break;
-                    } else if(ammBlocksRead == 0 && ammBlocksWritten == 0){
-                        //converter did nothing, avoid infinite cycle
-                        break;
-                    } else {
-                        //converted
-                        {
-                            obj->out.conv.src.curSample += ammBlocksRead;
-                            if(obj->out.conv.src.curSample >= [obj->out.conv.src.buff frameLength]){
-                                //release src buffer
-                                [obj->out.conv.src.buff release];
-                                obj->out.conv.src.buff = nil;
-                                obj->out.conv.src.curSample = 0;
-                                ++iBuff;
-                            }
-                        }
-                        //notify
-                        {
-                            obj->out.conv.dst.curSample += ammBlocksWritten;
-                            if(obj->out.conv.dst.curSample >= obj->out.samplesPerBuffer){
-                                if(bufferCaptureCallback != NULL){
-                                    (*bufferCaptureCallback)(engAbs, bufferCaptureCallbackUserData, obj->out.fmt, (const NixUI8*)obj->out.conv.dst.buff, (obj->out.conv.dst.curSample * obj->out.fmt.blockAlign), obj->out.conv.dst.curSample);
-                                }
-                                obj->out.conv.dst.curSample = 0;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
+        r = Nix_AAudioRecorder_start(obj);
     }
+    return r;
 }
-*/
 
+NixBOOL nixAAudioRecorder_stop(STNixApiRecorder pObj){
+    NixBOOL r = NIX_FALSE;
+    STNix_AAudioRecorder* obj = (STNix_AAudioRecorder*)pObj.opq;
+    if(obj != NULL){
+        r = Nix_AAudioRecorder_stop(obj);
+    }
+    return r;
+}
