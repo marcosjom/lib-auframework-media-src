@@ -155,6 +155,8 @@ typedef struct STNixContextItf_ {
     STNixMutexItf   mutex;
 } STNixContextItf;
 
+STNixContextItf NixContextItf_getDefault(void);
+
 //Links NULL methods to a DEFAULT implementation,
 //this reduces the need to check for functions NULL pointers.
 void NixContextItf_fillMissingMembers(STNixContextItf* itf);
@@ -163,22 +165,21 @@ void NixContextItf_fillMissingMembers(STNixContextItf* itf);
 // API (audio)
 //------------
 
+struct STNixApiItf_;
 struct STNixApiEngineItf_;
 struct STNixApiBufferItf_;
 struct STNixApiSourceItf_;
 struct STNixApiRecorderItf_;
 
-//STNixApiEngineRef (shared pointer)
+struct STNixApiEngineRef_;
+struct STNixApiBufferRef_;
+struct STNixApiSourceRef_;
+struct STNixApiRecorderRef_;
 
-#define STNixApiEngineRef_Zero     { NULL, NULL }
+//Callbacks
 
-typedef struct STNixApiEngineRef_ {
-    struct STNixSharedPtr_*     ptr;
-    struct STNixApiEngineItf_*  itf;
-} STNixApiEngineRef;
-
-void NixApiEngine_retain(STNixApiEngineRef obj);
-void NixApiEngine_release(STNixApiEngineRef* obj);
+typedef void (*NixApiSourceCallbackFnc)(void* pEng, const NixUI32 sourceIndex, NixUI32 ammBuffs);
+typedef void (*NixApiRecorderCallbackFnc)(struct STNixApiEngineRef_* eng, struct STNixApiRecorderRef_* rec, const STNixAudioDesc audioDesc, const NixUI8* audioData, const NixUI32 audioDataBytes, const NixUI32 audioDataSamples, void* userdata);
 
 //STNixApiBufferRef (shared pointer)
 
@@ -189,8 +190,10 @@ typedef struct STNixApiBufferRef_ {
     struct STNixApiBufferItf_*  itf;
 } STNixApiBufferRef;
 
-void NixApiBuffer_retain(STNixApiBufferRef obj);
-void NixApiBuffer_release(STNixApiBufferRef* obj);
+void    NixApiBuffer_retain(STNixApiBufferRef obj);
+void    NixApiBuffer_release(STNixApiBufferRef* obj);
+NixBOOL NixApiBuffer_setData(STNixApiBufferRef ref, const STNixAudioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes);
+NixBOOL NixApiBuffer_fillWithZeroes(STNixApiBufferRef ref);
 
 //STNixApiSourceRef (shared pointer)
 
@@ -201,8 +204,18 @@ typedef struct STNixApiSourceRef_ {
     struct STNixApiSourceItf_*  itf;
 } STNixApiSourceRef;
 
-void NixApiSource_retain(STNixApiSourceRef obj);
-void NixApiSource_release(STNixApiSourceRef* obj);
+void    NixApiSource_retain(STNixApiSourceRef obj);
+void    NixApiSource_release(STNixApiSourceRef* obj);
+void    NixApiSource_setCallback(STNixApiSourceRef ref, void (*callback)(void* pEng, const NixUI32 sourceIndex, const NixUI32 ammBuffs), void* callbackEng, NixUI32 callbackSourceIndex);
+NixBOOL NixApiSource_setVolume(STNixApiSourceRef ref, const float vol);
+NixBOOL NixApiSource_setRepeat(STNixApiSourceRef ref, const NixBOOL isRepeat);
+void    NixApiSource_play(STNixApiSourceRef ref);
+void    NixApiSource_pause(STNixApiSourceRef ref);
+void    NixApiSource_stop(STNixApiSourceRef ref);
+NixBOOL NixApiSource_isPlaying(STNixApiSourceRef ref);
+NixBOOL NixApiSource_isPaused(STNixApiSourceRef ref);
+NixBOOL NixApiSource_setBuffer(STNixApiSourceRef ref, STNixApiBufferRef buff);  //static-source
+NixBOOL NixApiSource_queueBuffer(STNixApiSourceRef ref, STNixApiBufferRef buff); //stream-source
 
 //STNixApiRecorderRef (shared pointer)
 
@@ -213,12 +226,34 @@ typedef struct STNixApiRecorderRef_ {
     struct STNixApiRecorderItf_* itf;
 } STNixApiRecorderRef;
 
-void NixApiRecorder_retain(STNixApiRecorderRef obj);
-void NixApiRecorder_release(STNixApiRecorderRef* obj);
+void    NixApiRecorder_retain(STNixApiRecorderRef obj);
+void    NixApiRecorder_release(STNixApiRecorderRef* obj);
+NixBOOL NixApiRecorder_setCallback(STNixApiRecorderRef ref, NixApiRecorderCallbackFnc callback, void* callbackData);
+NixBOOL NixApiRecorder_start(STNixApiRecorderRef ref);
+NixBOOL NixApiRecorder_stop(STNixApiRecorderRef ref);
 
-//Callbacks
+//STNixApiEngineRef (shared pointer)
 
-typedef void (*NixApiRecorderCallback)(STNixApiEngineRef eng, STNixApiRecorderRef rec, const STNixAudioDesc audioDesc, const NixUI8* audioData, const NixUI32 audioDataBytes, const NixUI32 audioDataSamples, void* userdata);
+#define STNixApiEngineRef_Zero     { NULL, NULL }
+
+typedef struct STNixApiEngineRef_ {
+    struct STNixSharedPtr_*     ptr;
+    struct STNixApiEngineItf_*  itf;
+} STNixApiEngineRef;
+
+STNixApiEngineRef NixApiEngine_alloc(STNixContextRef ctx, struct STNixApiItf_* apiItf);
+void    NixApiEngine_retain(STNixApiEngineRef obj);
+void    NixApiEngine_release(STNixApiEngineRef* obj);
+//
+void    NixApiEngine_printCaps(STNixApiEngineRef ref);
+NixBOOL NixApiEngine_ctxIsActive(STNixApiEngineRef ref);
+NixBOOL NixApiEngine_ctxActivate(STNixApiEngineRef ref);
+NixBOOL NixApiEngine_ctxDeactivate(STNixApiEngineRef ref);
+void    NixApiEngine_tick(STNixApiEngineRef ref);
+//Factory
+STNixApiSourceRef NixApiEngine_sourceAlloc(STNixApiEngineRef ref);
+STNixApiBufferRef NixApiEngine_bufferAlloc(STNixApiEngineRef ref, const STNixAudioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes);
+STNixApiRecorderRef NixApiEngine_recorderAlloc(STNixApiEngineRef ref, const STNixAudioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer);
 
 //STNixApiEngineItf (API)
 
@@ -230,6 +265,10 @@ typedef struct STNixApiEngineItf_ {
     NixBOOL         (*ctxActivate)(STNixApiEngineRef ref);
     NixBOOL         (*ctxDeactivate)(STNixApiEngineRef ref);
     void            (*tick)(STNixApiEngineRef ref);
+    //factory
+    STNixApiSourceRef (*sourceAlloc)(STNixApiEngineRef ref);
+    STNixApiBufferRef (*bufferAlloc)(STNixApiEngineRef ref, const STNixAudioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes);
+    STNixApiRecorderRef (*recorderAlloc)(STNixApiEngineRef ref, const STNixAudioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer);
 } STNixApiEngineItf;
 
 //Links NULL methods to a NOP implementation,
@@ -275,7 +314,7 @@ void NixApiSourceItf_fillMissingMembers(STNixApiSourceItf* itf);
 typedef struct STNixApiRecorderItf_ {
     STNixApiRecorderRef (*alloc)(STNixApiEngineRef eng, const STNixAudioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer);
     void            (*free)(STNixApiRecorderRef ref);
-    NixBOOL         (*setCallback)(STNixApiRecorderRef ref, NixApiRecorderCallback callback, void* callbackData);
+    NixBOOL         (*setCallback)(STNixApiRecorderRef ref, NixApiRecorderCallbackFnc callback, void* callbackData);
     NixBOOL         (*start)(STNixApiRecorderRef ref);
     NixBOOL         (*stop)(STNixApiRecorderRef ref);
 } STNixApiRecorderItf;
@@ -315,6 +354,41 @@ NixBOOL NixPCMBuffer_setData(STNixPCMBuffer* obj, const STNixAudioDesc* audioDes
 NixBOOL NixPCMBuffer_fillWithZeroes(STNixPCMBuffer* obj);
 
 //------
+//Notif
+//------
+
+typedef struct STNixSourceCallback_ {
+    NixApiSourceCallbackFnc func;
+    void*           eng;
+    NixUI32         sourceIndex;
+} STNixSourceCallback;
+
+typedef struct STNixSourceNotif_ {
+    STNixSourceCallback callback;
+    NixUI32 ammBuffs;
+} STNixSourceNotif;
+
+void NixSourceNotif_init(STNixSourceNotif* obj);
+void NixSourceNotif_destroy(STNixSourceNotif* obj);
+
+//------
+//NotifQueue
+//------
+
+typedef struct STNixNotifQueue_ {
+    STNixContextRef      ctx;
+    STNixSourceNotif*    arr;
+    NixUI32              use;
+    NixUI32              sz;
+    STNixSourceNotif     arrEmbedded[32];
+} STNixNotifQueue;
+
+void NixNotifQueue_init(STNixContextRef ctx, STNixNotifQueue* obj);
+void NixNotifQueue_destroy(STNixNotifQueue* obj);
+//
+NixBOOL NixNotifQueue_push(STNixNotifQueue* obj, STNixSourceNotif* pair);
+
+//------
 //PCMBuffer (API)
 //------
 
@@ -339,8 +413,11 @@ NixBOOL nixFmtConverter_convert(void* obj, const NixUI32 srcBlocks, NixUI32 dstB
 NixUI32 nixFmtConverter_maxChannels(void); //= 2, defined at compile-time
 NixUI32 nixFmtConverter_samplesForNewFrequency(const NixUI32 ammSampesOrg, const NixUI32 freqOrg, const NixUI32 freqNew); //ammount of output samples from one frequeny to another, +1 for safety
 
+//Default API
 
+NixBOOL NixApiItf_getDefaultForCurrentOS(STNixApiItf* dst);
 
+/*
 //-------------------------------
 //-- ENGINES
 //-------------------------------
@@ -445,6 +522,7 @@ void		nixCaptureFilledBuffersRelease(STNix_Engine* engAbs, NixUI32 quantBuffersT
 
 //Debug
 void		nixDbgPrintSourcesStatus(STNix_Engine* engAbs);
+*/
 
 #ifdef __cplusplus
 }

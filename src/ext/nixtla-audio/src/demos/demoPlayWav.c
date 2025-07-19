@@ -40,67 +40,88 @@ int main(int argc, const char * argv[]){
     //
     srand((unsigned int)time(NULL));
     //
-    STNixContextItf ctxItf;
-    memset(&ctxItf, 0, sizeof(ctxItf));
-    //custom memory allocation (for memory leaks dtection)
-    ctxItf.mem.malloc = NBMemMap_custom_malloc;
-    ctxItf.mem.realloc = NBMemMap_custom_realloc;
-    ctxItf.mem.free = NBMemMap_custom_free;
-    //use default for others
-    NixContextItf_fillMissingMembers(&ctxItf);
-    STNixContextRef ctx = NixContext_alloc(&ctxItf);
-    //
-    STNix_Engine nix;
-	if(nixInit(ctx, &nix, 8)){
-        nixPrintCaps(&nix);
-        NixUI16 iSourcePlay = 0;
-        //randomly select a wav from the list
-		const char* strWavPath = _nixUtilFilesList[rand() % (sizeof(_nixUtilFilesList) / sizeof(_nixUtilFilesList[0]))];
+    STNixApiEngineRef nix = STNixApiEngineRef_Zero;
+    //init engine
+    {
+        STNixContextItf ctxItf;
+        memset(&ctxItf, 0, sizeof(ctxItf));
+        //define context interface
+        {
+            //custom memory allocation (for memory leaks dtection)
+            {
+                ctxItf.mem.malloc = NBMemMap_custom_malloc;
+                ctxItf.mem.realloc = NBMemMap_custom_realloc;
+                ctxItf.mem.free = NBMemMap_custom_free;
+            }
+            //use default for others
+            NixContextItf_fillMissingMembers(&ctxItf);
+        }
+        //allocate a context
+        STNixContextRef ctx = NixContext_alloc(&ctxItf);
+        {
+            //get the API interface
+            STNixApiItf apiItf;
+            if(!NixApiItf_getDefaultForCurrentOS(&apiItf)){
+                printf("ERROR, NixApiItf_getDefaultForCurrentOS failed.\n");
+            } else {
+                //create engine
+                nix = NixApiEngine_alloc(ctx, &apiItf);
+                if(nix.ptr == NULL){
+                    printf("ERROR, api.engine.alloc failed.\n");
+                } else {
+                    
+                }
+            }
+        }
+        //context is retained by the engine
+        NixContext_release(&ctx);
+        NixContext_null(&ctx);
+    }
+    //execute
+    if(nix.ptr != NULL){
+        STNixApiSourceRef src = STNixApiSourceRef_Zero;
+        const char* strWavPath = _nixUtilFilesList[rand() % (sizeof(_nixUtilFilesList) / sizeof(_nixUtilFilesList[0]))];
         NixUI8* audioData = NULL;
         NixUI32 audioDataBytes = 0;
         STNixAudioDesc audioDesc;
-		if(!loadDataFromWavFile(strWavPath, &audioDesc, &audioData, &audioDataBytes)){
-			printf("ERROR, loading WAV file: '%s'.\n", strWavPath);
-		} else {
-			printf("WAV file loaded: '%s'.\n", strWavPath);
-            iSourcePlay = nixSourceAssignStatic(&nix, NIX_TRUE, 0, NULL, NULL);
-			if(iSourcePlay == 0){
-				printf("Source assign failed.\n");
-			} else {
-				printf("Source(%d) assigned and retained.\n", iSourcePlay);
-                NixUI16 iBufferWav = nixBufferWithData(&nix, &audioDesc, audioData, audioDataBytes);
-				if(iBufferWav == 0){
-					printf("Buffer assign failed.\n");
-				} else {
-					printf("Buffer(%d) loaded with data and retained.\n", iBufferWav);
-					if(!nixSourceSetBuffer(&nix, iSourcePlay, iBufferWav)){
-						printf("Buffer-to-source linking failed.\n");
-					} else {
-						printf("Buffer(%d) linked with source(%d).\n", iBufferWav, iSourcePlay);
-						nixSourceSetRepeat(&nix, iSourcePlay, NIX_TRUE);
-						nixSourceSetVolume(&nix, iSourcePlay, 1.0f);
-						nixSourcePlay(&nix, iSourcePlay);
-					}
-                    //release buffer (already retained by source if success)
-                    nixBufferRelease(&nix, iBufferWav);
-                    iBufferWav = 0;
-				}
-			}
-		}
+        if(!loadDataFromWavFile(strWavPath, &audioDesc, &audioData, &audioDataBytes)){
+            printf("ERROR, loading WAV file: '%s'.\n", strWavPath);
+        } else {
+            printf("WAV file loaded: '%s'.\n", strWavPath);
+            src = NixApiEngine_sourceAlloc(nix);
+            if(src.ptr == NULL){
+                printf("ERROR, api.source.alloc failed.\n");
+            } else {
+                STNixApiBufferRef buff = NixApiEngine_bufferAlloc(nix, &audioDesc, audioData, audioDataBytes);
+                if(buff.ptr == NULL){
+                    printf("ERROR, api.buffer.alloc failed.\n");
+                } else {
+                    if(!NixApiSource_setBuffer(src, buff)){
+                        printf("ERROR, api.source.setBuffer failed.\n");
+                    } else {
+                        NixApiSource_setRepeat(src, NIX_TRUE);
+                        NixApiSource_setVolume(src, 1.0f);
+                        NixApiSource_play(src);
+                    }
+                    //Buffer is already retained by the source
+                    NixApiBuffer_release(&buff);
+                }
+            }
+        }
         //wav samples already loaded into buffer
         if(audioData != NULL){
             free(audioData);
             audioData = NULL;
         }
-		//
-		//Infinite loop, usually sync with your program main loop, or in a independent thread
-		//
-        if(iSourcePlay > 0){
+        //
+        //Infinite loop, usually sync with your program main loop, or in a independent thread
+        //
+        if(src.ptr != NULL){
             const NixUI32 msPerTick = 1000 / 30;
             NixUI32 secsAccum = 0;
             NixUI32 msAccum = 0;
             while(secsAccum < NIX_DEMO_PLAY_SECS_TO_EXIT){
-                nixTick(&nix);
+                NixApiEngine_tick(nix);
                 DEMO_SLEEP_MILLISEC(msPerTick); //30 ticks per second for this demo
                 msAccum += msPerTick;
                 if(msAccum >= 1000){
@@ -110,16 +131,10 @@ int main(int argc, const char * argv[]){
                 }
             }
         }
-		//
-        if(iSourcePlay != 0){
-            nixSourceRelease(&nix, iSourcePlay);
-            iSourcePlay = 0;
-        }
-		nixFinalize(&nix);
-	}
-    //
-    NixContext_release(&ctx);
-    NixContext_null(&ctx);
+        //
+        NixApiSource_release(&src);
+        NixApiEngine_release(&nix);
+    }
     //Memory report
     nbMemmapPrintFinalReport(&memmap);
     nbMemmapFinalize(&memmap);
