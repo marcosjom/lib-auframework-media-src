@@ -90,7 +90,7 @@ int main(int argc, const char * argv[]) {
 	STNix_Engine nix;
 	if(nixInit(ctx, &nix, 8)){
 		STNixAudioDesc audioDesc; NixUI16 iSourceStrm;
-		nixPrintCaps(&nix);
+		NixEngine_printCaps(nix);
 		//Load and play wav file
 		NixUI16 iSourceWav = 0; NixUI16 iBufferWav = 0;
 		loadAndPlayWav(&nix, "./res/audioTest.wav", &iSourceWav, &iBufferWav);

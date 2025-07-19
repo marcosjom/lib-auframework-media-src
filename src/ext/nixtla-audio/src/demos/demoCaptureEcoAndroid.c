@@ -93,7 +93,7 @@ JNIEXPORT jboolean JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_demoCapt
     //
     const NixUI16 ammPregeneratedSources = 0;
     if(nixInit(ctx, &state.nix, ammPregeneratedSources)){
-        nixPrintCaps(&state.nix);
+        NixEngine_printCaps(state.nix);
         //Source for stream eco (play the captured audio)
         const NixUI8 lookIntoReusable   = NIX_TRUE;
         const NixUI8 audioGroupIndex    = 0;

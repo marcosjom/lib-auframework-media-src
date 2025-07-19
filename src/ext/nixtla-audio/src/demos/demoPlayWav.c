@@ -40,7 +40,7 @@ int main(int argc, const char * argv[]){
     //
     srand((unsigned int)time(NULL));
     //
-    STNixApiEngineRef nix = STNixApiEngineRef_Zero;
+    STNixEngineRef nix = STNixEngineRef_Zero;
     //init engine
     {
         STNixContextItf ctxItf;
@@ -49,9 +49,9 @@ int main(int argc, const char * argv[]){
         {
             //custom memory allocation (for memory leaks dtection)
             {
-                ctxItf.mem.malloc = NBMemMap_custom_malloc;
-                ctxItf.mem.realloc = NBMemMap_custom_realloc;
-                ctxItf.mem.free = NBMemMap_custom_free;
+                ctxItf.mem.malloc   = NBMemMap_custom_malloc;
+                ctxItf.mem.realloc  = NBMemMap_custom_realloc;
+                ctxItf.mem.free     = NBMemMap_custom_free;
             }
             //use default for others
             NixContextItf_fillMissingMembers(&ctxItf);
@@ -65,11 +65,9 @@ int main(int argc, const char * argv[]){
                 printf("ERROR, NixApiItf_getDefaultForCurrentOS failed.\n");
             } else {
                 //create engine
-                nix = NixApiEngine_alloc(ctx, &apiItf);
-                if(nix.ptr == NULL){
-                    printf("ERROR, api.engine.alloc failed.\n");
-                } else {
-                    
+                nix = NixEngine_alloc(ctx, &apiItf);
+                if(NixEngine_isNull(nix)){
+                    printf("ERROR, NixEngine_alloc failed.\n");
                 }
             }
         }
@@ -78,8 +76,8 @@ int main(int argc, const char * argv[]){
         NixContext_null(&ctx);
     }
     //execute
-    if(nix.ptr != NULL){
-        STNixApiSourceRef src = STNixApiSourceRef_Zero;
+    if(!NixEngine_isNull(nix)){
+        STNixSourceRef src = STNixSourceRef_Zero;
         const char* strWavPath = _nixUtilFilesList[rand() % (sizeof(_nixUtilFilesList) / sizeof(_nixUtilFilesList[0]))];
         NixUI8* audioData = NULL;
         NixUI32 audioDataBytes = 0;
@@ -88,23 +86,23 @@ int main(int argc, const char * argv[]){
             printf("ERROR, loading WAV file: '%s'.\n", strWavPath);
         } else {
             printf("WAV file loaded: '%s'.\n", strWavPath);
-            src = NixApiEngine_sourceAlloc(nix);
-            if(src.ptr == NULL){
-                printf("ERROR, api.source.alloc failed.\n");
+            src = NixEngine_sourceAlloc(nix);
+            if(NixSource_isNull(src)){
+                printf("ERROR, NixEngine_sourceAlloc failed.\n");
             } else {
-                STNixApiBufferRef buff = NixApiEngine_bufferAlloc(nix, &audioDesc, audioData, audioDataBytes);
-                if(buff.ptr == NULL){
-                    printf("ERROR, api.buffer.alloc failed.\n");
+                STNixBufferRef buff = NixEngine_bufferAlloc(nix, &audioDesc, audioData, audioDataBytes);
+                if(NixBuffer_isNull(buff)){
+                    printf("ERROR, NixEngine_bufferAlloc failed.\n");
                 } else {
-                    if(!NixApiSource_setBuffer(src, buff)){
-                        printf("ERROR, api.source.setBuffer failed.\n");
+                    if(!NixSource_setBuffer(src, buff)){
+                        printf("ERROR, NixSource_setBuffer failed.\n");
                     } else {
-                        NixApiSource_setRepeat(src, NIX_TRUE);
-                        NixApiSource_setVolume(src, 1.0f);
-                        NixApiSource_play(src);
+                        NixSource_setRepeat(src, NIX_TRUE);
+                        NixSource_setVolume(src, 1.0f);
+                        NixSource_play(src);
                     }
                     //Buffer is already retained by the source
-                    NixApiBuffer_release(&buff);
+                    NixBuffer_release(&buff);
                 }
             }
         }
@@ -116,12 +114,12 @@ int main(int argc, const char * argv[]){
         //
         //Infinite loop, usually sync with your program main loop, or in a independent thread
         //
-        if(src.ptr != NULL){
+        if(!NixSource_isNull(src)){
             const NixUI32 msPerTick = 1000 / 30;
             NixUI32 secsAccum = 0;
             NixUI32 msAccum = 0;
             while(secsAccum < NIX_DEMO_PLAY_SECS_TO_EXIT){
-                NixApiEngine_tick(nix);
+                NixEngine_tick(nix);
                 DEMO_SLEEP_MILLISEC(msPerTick); //30 ticks per second for this demo
                 msAccum += msPerTick;
                 if(msAccum >= 1000){
@@ -132,8 +130,8 @@ int main(int argc, const char * argv[]){
             }
         }
         //
-        NixApiSource_release(&src);
-        NixApiEngine_release(&nix);
+        NixSource_release(&src);
+        NixEngine_release(&nix);
     }
     //Memory report
     nbMemmapPrintFinalReport(&memmap);

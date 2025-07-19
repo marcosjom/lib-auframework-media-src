@@ -34,11 +34,12 @@ void* NBMemMap_custom_realloc(void* ptr, const NixUI32 newSz);
 void NBMemMap_custom_free(void* ptr);
 
 typedef struct STNixDemoEcoState_ {
-    STNix_Engine    nix;
-    NixUI16         iSourceStrm;
+    STNixEngineRef  nix;
+    STNixSourceRef  source;
+    STNixRecorderRef rec;
     //buffs
     struct {
-        NixUI16     arr[NIX_DEMO_ECO_RECORD_SECS * NIX_DEMO_ECO_BUFFS_PER_SEC];
+        STNixBufferRef arr[NIX_DEMO_ECO_RECORD_SECS * NIX_DEMO_ECO_BUFFS_PER_SEC];
         NixUI32     use;
         NixUI32     iFilled;
         NixUI32     iPlayed;
@@ -60,11 +61,11 @@ typedef struct STNixDemoEcoState_ {
 
 //recorder
 
-void bufferCapturedCallback(STNix_Engine* eng, void* userdata, const STNixAudioDesc audioDesc, const NixUI8* audioData, const NixUI32 audioDataBytes, const NixUI32 audioDataSamples);
+void bufferCapturedCallback(STNixEngineRef* eng, STNixRecorderRef* rec, const STNixAudioDesc audioDesc, const NixUI8* audioData, const NixUI32 audioDataBytes, const NixUI32 audioDataSamples, void* userdata);
 
 //player
 
-void bufferUnqueuedCallback(STNix_Engine* engAbs, void* userdata, const NixUI32 sourceIndex, const NixUI16 buffersUnqueuedCount);
+void bufferUnqueuedCallback(STNixSourceRef* src, STNixBufferRef* buffs, const NixUI32 buffsSz, void* userdata);
 
 //main
 
@@ -75,29 +76,46 @@ int main(int argc, const char * argv[]){
     STNixDemoEcoState state;
     memset(&state, 0, sizeof(state));
     //
-    STNixContextItf ctxItf;
-    memset(&ctxItf, 0, sizeof(ctxItf));
-    //custom memory allocation (for memory leaks dtection)
-    ctxItf.mem.malloc = NBMemMap_custom_malloc;
-    ctxItf.mem.realloc = NBMemMap_custom_realloc;
-    ctxItf.mem.free = NBMemMap_custom_free;
-    //use default for others
-    NixContextItf_fillMissingMembers(&ctxItf);
-    STNixContextRef ctx = NixContext_alloc(&ctxItf);
+    //init engine
+    {
+        STNixContextItf ctxItf;
+        memset(&ctxItf, 0, sizeof(ctxItf));
+        //define context interface
+        {
+            //custom memory allocation (for memory leaks dtection)
+            {
+                ctxItf.mem.malloc   = NBMemMap_custom_malloc;
+                ctxItf.mem.realloc  = NBMemMap_custom_realloc;
+                ctxItf.mem.free     = NBMemMap_custom_free;
+            }
+            //use default for others
+            NixContextItf_fillMissingMembers(&ctxItf);
+        }
+        //allocate a context
+        STNixContextRef ctx = NixContext_alloc(&ctxItf);
+        {
+            //get the API interface
+            STNixApiItf apiItf;
+            if(!NixApiItf_getDefaultForCurrentOS(&apiItf)){
+                printf("ERROR, NixApiItf_getDefaultForCurrentOS failed.\n");
+            } else {
+                //create engine
+                state.nix = NixEngine_alloc(ctx, &apiItf);
+                if(NixEngine_isNull(state.nix)){
+                    printf("ERROR, NixEngine_alloc failed.\n");
+                }
+            }
+        }
+        //context is retained by the engine
+        NixContext_release(&ctx);
+        NixContext_null(&ctx);
+    }
     //
-    const NixUI16 ammPregeneratedSources = 0;
-	if(nixInit(ctx, &state.nix, ammPregeneratedSources)){
-		nixPrintCaps(&state.nix);
+    if(!NixEngine_isNull(state.nix)){
+        NixEngine_printCaps(state.nix);
 		//Source for stream eco (play the captured audio)
-        const NixUI8 lookIntoReusable   = NIX_TRUE;
-        const NixUI8 audioGroupIndex    = 0;
-        PTRNIX_SourceReleaseCallback releaseCallBack = NULL;
-        void* releaseCallBackUserData   = NULL;
-        const NixUI16 buffsQueueSize    = 4;
-        PTRNIX_StreamBufferUnqueuedCallback bufferUnqueueCallback = bufferUnqueuedCallback;
-        void* bufferUnqueueCallbackData = &state;
-        state.iSourceStrm = nixSourceAssignStream(&state.nix, lookIntoReusable, audioGroupIndex, releaseCallBack, releaseCallBackUserData, buffsQueueSize,bufferUnqueueCallback, bufferUnqueueCallbackData);
-		if(state.iSourceStrm != 0){
+        state.source = NixEngine_sourceAlloc(state.nix);
+		if(!NixSource_isNull(state.source)){
             STNixAudioDesc audioDesc   = STNixAudioDesc_Zero;
             audioDesc.samplesFormat     = ENNixSampleFmt_Int;
             audioDesc.channels          = 1;
@@ -108,13 +126,13 @@ int main(int argc, const char * argv[]){
             const NixUI16 samplesPerBuffer = (audioDesc.samplerate / NIX_DEMO_ECO_BUFFS_PER_SEC);
             //allocate buffers
             while(state.buffs.use < (sizeof(state.buffs.arr) / sizeof(state.buffs.arr[0]))){
-                NixUI16 iBuffer = nixBufferWithData(&state.nix, &audioDesc, NULL, samplesPerBuffer * audioDesc.blockAlign);
-                if(iBuffer == 0){
+                STNixBufferRef buff = NixEngine_bufferAlloc(state.nix, &audioDesc, NULL, samplesPerBuffer * audioDesc.blockAlign);
+                if(NixBuffer_isNull(buff)){
                     printf("nixBufferWithData failed.\n");
                     break;
                 } else {
-                    state.buffs.arr[state.buffs.use++] = iBuffer;
-                    iBuffer = 0;
+                    state.buffs.arr[state.buffs.use++] = buff;
+                    NixBuffer_null(&buff);
                 }
             }
             //
@@ -127,20 +145,23 @@ int main(int argc, const char * argv[]){
                 state.buffs.bytesPerBuffer = samplesPerBuffer * audioDesc.blockAlign;
                 state.buffs.samplesPerBuffer = samplesPerBuffer;
                 //
-                nixSourceSetVolume(&state.nix, state.iSourceStrm, 1.0f);
-                nixSourcePlay(&state.nix, state.iSourceStrm);
+                NixSource_setCallback(state.source, bufferUnqueuedCallback, &state);
+                NixSource_setVolume(state.source, 1.0f);
+                NixSource_play(state.source);
                 //
-                if(!nixCaptureInit(&state.nix, &audioDesc, buffersCount, samplesPerBuffer, &bufferCapturedCallback, &state)){
-                    printf("nixCaptureInit failed.\n");
+                state.rec = NixEngine_recorderAlloc(state.nix, &audioDesc, buffersCount, samplesPerBuffer);
+                if(NixRecorder_isNull(state.rec)){
+                    printf("NixEngine_recorderAlloc failed.\n");
                 } else {
-                    if(!nixCaptureStart(&state.nix)){
+                    NixRecorder_setCallback(state.rec, bufferCapturedCallback, &state);
+                    if(!NixRecorder_start(state.rec)){
                         printf("nixCaptureStart failed.\n");
                     } else {
                         const NixUI32 msPerTick = 1000 / 30;
                         NixUI32 secsAccum = 0, msAccum = 0;
                         printf("Capturing and playing audio... switching every %d seconds.\n", NIX_DEMO_ECO_RECORD_SECS);
                         while(secsAccum < NIX_DEMO_ECO_SECS_TO_EXIT){ //Infinite loop, usually sync with your program main loop, or in a independent thread
-                            nixTick(&state.nix);
+                            NixEngine_tick(state.nix);
                             DEMO_SLEEP_MILLISEC(msPerTick); //30 ticks per second for this demo
                             msAccum += msPerTick;
                             if(msAccum >= 1000){
@@ -155,18 +176,18 @@ int main(int argc, const char * argv[]){
                                 msAccum %= 1000;
                             }
                         }
-                        nixCaptureStop(&state.nix);
+                        NixRecorder_stop(state.rec);
                     }
-                    nixCaptureFinalize(&state.nix);
+                    NixRecorder_release(&state.rec);
+                    NixRecorder_null(&state.rec);
                 }
             }
-			nixSourceRelease(&state.nix, state.iSourceStrm);
+            NixSource_release(&state.source);
+            NixSource_null(&state.source);
 		}
-		nixFinalize(&state.nix);
+        NixEngine_release(&state.nix);
+        NixEngine_null(&state.nix);
 	}
-    //
-    NixContext_release(&ctx);
-    NixContext_null(&ctx);
     //Memory report
     nbMemmapPrintFinalReport(&memmap);
     nbMemmapFinalize(&memmap);
@@ -176,7 +197,7 @@ int main(int argc, const char * argv[]){
 
 //recorder
 
-void bufferCapturedCallback(STNix_Engine* eng, void* userdata, const STNixAudioDesc audioDesc, const NixUI8* audioData, const NixUI32 audioDataBytes, const NixUI32 audioDataSamples){
+void bufferCapturedCallback(STNixEngineRef* eng, STNixRecorderRef* rec, const STNixAudioDesc audioDesc, const NixUI8* audioData, const NixUI32 audioDataBytes, const NixUI32 audioDataSamples, void* userdata){
     STNixDemoEcoState* state = (STNixDemoEcoState*)userdata;
     state->stats.curSec.samplesRecordedCount += audioDataSamples;
     //calculate avg (for dbg and stats)
@@ -194,14 +215,14 @@ void bufferCapturedCallback(STNix_Engine* eng, void* userdata, const STNixAudioD
         //ignore samples, probably is the flush after stopping the recording
     } else {
         //fill samples into a buffer
-        NixUI16 iBuffer = state->buffs.arr[state->buffs.iFilled];
-        if(!nixBufferSetData(eng, iBuffer, &audioDesc, audioData, audioDataBytes)){
-            printf("bufferCapturedCallback, nixBufferSetData failed for iSource(%d)\n", state->iSourceStrm);
+        STNixBufferRef buff = state->buffs.arr[state->buffs.iFilled];
+        if(!NixBuffer_setData(buff, &audioDesc, audioData, audioDataBytes)){
+            printf("bufferCapturedCallback, NixBuffer_setData failed\n");
         } else {
             if(audioDataBytes < state->buffs.bytesPerBuffer){
                 //fill remainig space with zeroes
-                if(!nixBufferFillZeroes(eng, iBuffer)){
-                    printf("bufferCapturedCallback, nixBufferFillZeroes failed for iSource(%d)\n", state->iSourceStrm);
+                if(!NixBuffer_fillWithZeroes(buff)){
+                    printf("bufferCapturedCallback, NixBuffer_fillWithZeroes failed\n");
                 }
             }
             ++state->buffs.iFilled;
@@ -209,15 +230,15 @@ void bufferCapturedCallback(STNix_Engine* eng, void* userdata, const STNixAudioD
         //start playback
         if(state->buffs.iFilled >= state->buffs.use){
             printf("bufferCapturedCallback, stopping capture, feeding stream\n");
-            nixCaptureStop(&state->nix);
+            NixRecorder_stop(state->rec);
             //
             state->buffs.iPlayed = 0;
             //queue all buffers
             {
                 NixUI32 iBuff; for(iBuff = 0; iBuff < state->buffs.use; ++iBuff){
-                    NixUI16 iBuffer = state->buffs.arr[iBuff];
-                    if(!nixSourceStreamAppendBuffer(eng, state->iSourceStrm, iBuffer)){
-                        printf("bufferCapturedCallback, ERROR attaching new buffer buffer(%d) to source(%d)\n", iBuffer, state->iSourceStrm);
+                    STNixBufferRef buff = state->buffs.arr[iBuff];
+                    if(!NixSource_queueBuffer(state->source, buff)){
+                        printf("bufferCapturedCallback, NixSource_queueBuffer failed.\n");
                     }
                 }
             }
@@ -227,17 +248,17 @@ void bufferCapturedCallback(STNix_Engine* eng, void* userdata, const STNixAudioD
 
 //player
 
-void bufferUnqueuedCallback(STNix_Engine* engAbs, void* userdata, const NixUI32 sourceIndex, const NixUI16 buffersUnqueuedCount){
+void bufferUnqueuedCallback(STNixSourceRef* src, STNixBufferRef* buffs, const NixUI32 buffsSz, void* userdata){
     STNixDemoEcoState* state = (STNixDemoEcoState*)userdata;
-    state->stats.curSec.buffsPlayedCount += buffersUnqueuedCount;
+    state->stats.curSec.buffsPlayedCount += buffsSz;
     //
-    state->buffs.iPlayed += buffersUnqueuedCount;
+    state->buffs.iPlayed += buffsSz;
     if(state->buffs.iPlayed >= state->buffs.use){
         printf("bufferCapturedCallback, stream played (hungry), starting capture\n");
         //
         state->buffs.iFilled = 0;
-        if(!nixCaptureStart(&state->nix)){
-            printf("nixCaptureStart failed.\n");
+        if(!NixRecorder_start(state->rec)){
+            printf("NixRecorder_start failed.\n");
         }
     }
 }

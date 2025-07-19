@@ -70,7 +70,7 @@ int main(int argc, const char * argv[]){
     //
     STNix_Engine nix;
     if(nixInit(ctx, &nix, 8)){
-        nixPrintCaps(&nix);
+        NixEngine_printCaps(nix);
         //randomly select a wav from the list
         const char* strWavPath = _nixUtilFilesList[rand() % (sizeof(_nixUtilFilesList) / sizeof(_nixUtilFilesList[0]))];
         //original source
@@ -186,7 +186,7 @@ int main(int argc, const char * argv[]){
                             audioDescConv.channels = 1 + (rand() % 2);
                             audioDescConv.samplerate = (rand() % 10) == 0 ? audioDesc.samplerate : 800 + (rand() % 92000);
                             audioDescConv.blockAlign = (audioDescConv.bitsPerSample / 8) * audioDescConv.channels;
-                            const NixUI32 samplesReq = nixFmtConverter_samplesForNewFrequency(audioDataBytes / audioDesc.blockAlign, audioDesc.samplerate, audioDescConv.samplerate);
+                            const NixUI32 samplesReq = NixFmtConverter_samplesForNewFrequency(audioDataBytes / audioDesc.blockAlign, audioDesc.samplerate, audioDescConv.samplerate);
                             const NixUI32 bytesReq = samplesReq * audioDescConv.blockAlign;
                             if(audioDataBytesConv < bytesReq){
                                 if(audioDataConv != NULL){
@@ -201,22 +201,22 @@ int main(int argc, const char * argv[]){
                                 }
                             }
                             if(audioDataConv != NULL){
-                                void* conv = nixFmtConverter_alloc(ctx);
+                                void* conv = NixFmtConverter_alloc(ctx);
                                 if(conv != NULL){
                                     const NixUI32 srcBlocks = (audioDataBytes / audioDesc.blockAlign);
                                     const NixUI32 dstBlocks = samplesReq;
                                     NixUI32 ammBlocksRead = 0;
                                     NixUI32 ammBlocksWritten = 0;
-                                    if(!nixFmtConverter_prepare(conv, &audioDesc, &audioDescConv)){
-                                        printf("nixFmtConverter_prepare failed.\n");
-                                    } else if(!nixFmtConverter_setPtrAtSrcInterlaced(conv, &audioDesc, audioData, 0)){
-                                        printf("nixFmtConverter_setPtrAtSrcInterlaced failed.\n");
-                                    } else if(!nixFmtConverter_setPtrAtDstInterlaced(conv, &audioDescConv, audioDataConv, 0)){
-                                        printf("nixFmtConverter_setPtrAtDstInterlaced failed.\n");
-                                    } else if(!nixFmtConverter_convert(conv, srcBlocks, dstBlocks, &ammBlocksRead, &ammBlocksWritten)){
-                                        printf("nixFmtConverter_convert failed.\n");
+                                    if(!NixFmtConverter_prepare(conv, &audioDesc, &audioDescConv)){
+                                        printf("NixFmtConverter_prepare failed.\n");
+                                    } else if(!NixFmtConverter_setPtrAtSrcInterlaced(conv, &audioDesc, audioData, 0)){
+                                        printf("NixFmtConverter_setPtrAtSrcInterlaced failed.\n");
+                                    } else if(!NixFmtConverter_setPtrAtDstInterlaced(conv, &audioDescConv, audioDataConv, 0)){
+                                        printf("NixFmtConverter_setPtrAtDstInterlaced failed.\n");
+                                    } else if(!NixFmtConverter_convert(conv, srcBlocks, dstBlocks, &ammBlocksRead, &ammBlocksWritten)){
+                                        printf("NixFmtConverter_convert failed.\n");
                                     } else {
-                                        printf("nixFmtConverter_convert transformed %u of %u samples (%u%%) (%u hz, %d bits, %d channels) to %u of %u samples(%u%%) (%u hz, %d bits, %d channels, %s).\n", ammBlocksRead, srcBlocks, ammBlocksRead * 100 / srcBlocks, audioDesc.samplerate, audioDesc.bitsPerSample, audioDesc.channels, ammBlocksWritten, dstBlocks, ammBlocksWritten * 100 / dstBlocks, audioDescConv.samplerate, audioDescConv.bitsPerSample, audioDescConv.channels, audioDescConv.samplesFormat == ENNixSampleFmt_Float ? "float" : "int");
+                                        printf("NixFmtConverter_convert transformed %u of %u samples (%u%%) (%u hz, %d bits, %d channels) to %u of %u samples(%u%%) (%u hz, %d bits, %d channels, %s).\n", ammBlocksRead, srcBlocks, ammBlocksRead * 100 / srcBlocks, audioDesc.samplerate, audioDesc.bitsPerSample, audioDesc.channels, ammBlocksWritten, dstBlocks, ammBlocksWritten * 100 / dstBlocks, audioDescConv.samplerate, audioDescConv.bitsPerSample, audioDescConv.channels, audioDescConv.samplesFormat == ENNixSampleFmt_Float ? "float" : "int");
                                         //iSourceConv
                                         NixUI16 iSrcConv = nixSourceAssignStatic(&nix, NIX_TRUE, 0, NULL, NULL);
                                         if(iSrcConv == 0){
@@ -255,7 +255,7 @@ int main(int argc, const char * argv[]){
                                             iSrcConv = 0;
                                         }
                                     }
-                                    nixFmtConverter_free(conv);
+                                    NixFmtConverter_free(conv);
                                     conv = NULL;
                                 }
                             }

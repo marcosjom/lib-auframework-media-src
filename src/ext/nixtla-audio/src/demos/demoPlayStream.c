@@ -35,9 +35,9 @@ void* NBMemMap_custom_realloc(void* ptr, const NixUI32 newSz);
 void NBMemMap_custom_free(void* ptr);
 
 typedef struct STDemoStreamState_ {
-    STNix_Engine    nix;
-    NixUI16         iSourcePlay;
-    NixUI16         buffsWav[10];
+    STNixEngineRef  nix;
+    STNixSourceRef  source;
+    STNixBufferRef  buffsWav[10];
     NixUI32         buffsUse;
     NixUI32         iOldestBuffQueued;
     //stats
@@ -49,7 +49,7 @@ typedef struct STDemoStreamState_ {
 
 //callback
 
-void demoStreamBufferUnqueuedCallback_(STNix_Engine* engAbs, void* userdata, const NixUI32 sourceIndex, const NixUI16 buffersUnqueuedCount);
+void demoStreamBufferUnqueuedCallback_(STNixSourceRef* src, STNixBufferRef* buffs, const NixUI32 buffsSz, void* userData);
 
 int main(int argc, const char * argv[]){
     //
@@ -60,18 +60,45 @@ int main(int argc, const char * argv[]){
     //
     srand((unsigned int)time(NULL));
     //
-    STNixContextItf ctxItf;
-    memset(&ctxItf, 0, sizeof(ctxItf));
-    //custom memory allocation (for memory leaks dtection)
-    ctxItf.mem.malloc = NBMemMap_custom_malloc;
-    ctxItf.mem.realloc = NBMemMap_custom_realloc;
-    ctxItf.mem.free = NBMemMap_custom_free;
-    //use default for others
-    NixContextItf_fillMissingMembers(&ctxItf);
-    STNixContextRef ctx = NixContext_alloc(&ctxItf);
+    {
+        //init engine
+        {
+            STNixContextItf ctxItf;
+            memset(&ctxItf, 0, sizeof(ctxItf));
+            //define context interface
+            {
+                //custom memory allocation (for memory leaks dtection)
+                {
+                    ctxItf.mem.malloc   = NBMemMap_custom_malloc;
+                    ctxItf.mem.realloc  = NBMemMap_custom_realloc;
+                    ctxItf.mem.free     = NBMemMap_custom_free;
+                }
+                //use default for others
+                NixContextItf_fillMissingMembers(&ctxItf);
+            }
+            //allocate a context
+            STNixContextRef ctx = NixContext_alloc(&ctxItf);
+            {
+                //get the API interface
+                STNixApiItf apiItf;
+                if(!NixApiItf_getDefaultForCurrentOS(&apiItf)){
+                    printf("ERROR, NixApiItf_getDefaultForCurrentOS failed.\n");
+                } else {
+                    //create engine
+                    state.nix = NixEngine_alloc(ctx, &apiItf);
+                    if(NixEngine_isNull(state.nix)){
+                        printf("ERROR, NixEngine_alloc failed.\n");
+                    }
+                }
+            }
+            //context is retained by the engine
+            NixContext_release(&ctx);
+            NixContext_null(&ctx);
+        }
+    }
     //
-	if(nixInit(ctx, &state.nix, 8)){
-        nixPrintCaps(&state.nix);
+	if(!NixEngine_isNull(state.nix)){
+        NixEngine_printCaps(state.nix);
         const NixUI32 ammBuffs = (sizeof(state.buffsWav) / sizeof(state.buffsWav[0])); //ammount of buffers for stream
         //randomly select a wav from the list
 		const char* strWavPath = _nixUtilFilesList[rand() % (sizeof(_nixUtilFilesList) / sizeof(_nixUtilFilesList[0]))];
@@ -82,12 +109,12 @@ int main(int argc, const char * argv[]){
 			printf("ERROR, loading WAV file: '%s'.\n", strWavPath);
 		} else {
 			printf("WAV file loaded: '%s'.\n", strWavPath);
-            state.iSourcePlay = nixSourceAssignStream(&state.nix, NIX_TRUE, 0, NULL, NULL, ammBuffs, demoStreamBufferUnqueuedCallback_, &state);
-			if(state.iSourcePlay == 0){
-				printf("Source assign failed.\n");
+            state.source = NixEngine_sourceAlloc(state.nix);
+			if(NixSource_isNull(state.source)){
+				printf("NixEngine_sourceAlloc failed.\n");
 			} else {
-				printf("Source(%d) assigned and retained.\n", state.iSourcePlay);
-                //populate buffers
+                printf("NixEngine_sourceAlloc ok.\n");
+                NixSource_setCallback(state.source, demoStreamBufferUnqueuedCallback_, &state);
                 const NixUI32 samplesWav = (audioDataBytes / audioDesc.blockAlign); //ammount of samples available
                 const NixUI32 samplesPerBuff = (samplesWav / (ammBuffs - 1)); //-1, last buffer could be ignored or partially populated
                 NixUI32 iSample = 0;
@@ -101,13 +128,13 @@ int main(int argc, const char * argv[]){
                         //no more samples to add
                         break;
                     } else {
-                        state.buffsWav[state.buffsUse] = nixBufferWithData(&state.nix, &audioDesc, samplesPtr, samplesToUse * audioDesc.blockAlign);
-                        if(state.buffsWav[state.buffsUse] == 0){
+                        state.buffsWav[state.buffsUse] = NixEngine_bufferAlloc(state.nix, &audioDesc, samplesPtr, samplesToUse * audioDesc.blockAlign);
+                        if(NixBuffer_isNull(state.buffsWav[state.buffsUse])){
                             printf("Buffer assign failed.\n");
                             break;
                         } else {
-                            printf("Buffer(%d) loaded with data and retained.\n", state.buffsWav[state.buffsUse]);
-                            if(!nixSourceStreamAppendBuffer(&state.nix, state.iSourcePlay, state.buffsWav[state.buffsUse])){
+                            printf("Buffer loaded with data and retained.\n");
+                            if(!NixSource_queueBuffer(state.source, state.buffsWav[state.buffsUse])){
                                 printf("Buffer-to-source queueing failed.\n");
                                 break;
                             } else {
@@ -119,8 +146,8 @@ int main(int argc, const char * argv[]){
                     }
                 }
                 //start stream
-                nixSourceSetVolume(&state.nix, state.iSourcePlay, 1.0f);
-                nixSourcePlay(&state.nix, state.iSourcePlay);
+                NixSource_setVolume(state.source, 1.0f);
+                NixSource_play(state.source);
 			}
 		}
         //wav samples already loaded into buffers
@@ -131,12 +158,12 @@ int main(int argc, const char * argv[]){
 		//
 		//Infinite loop, usually sync with your program main loop, or in a independent thread
 		//
-        if(state.iSourcePlay > 0){
+        if(!NixSource_isNull(state.source)){
             const NixUI32 msPerTick = 1000 / 30;
             NixUI32 secsAccum = 0;
             NixUI32 msAccum = 0;
             while(secsAccum < NIX_DEMO_STREAM_SECS_TO_EXIT){
-                nixTick(&state.nix);
+                NixEngine_tick(state.nix);
                 DEMO_SLEEP_MILLISEC(msPerTick); //30 ticks per second for this demo
                 msAccum += msPerTick;
                 if(msAccum >= 1000){
@@ -149,15 +176,11 @@ int main(int argc, const char * argv[]){
             }
         }
 		//
-        if(state.iSourcePlay != 0){
-            nixSourceRelease(&state.nix, state.iSourcePlay);
-            state.iSourcePlay = 0;
-        }
-		nixFinalize(&state.nix);
+        NixSource_release(&state.source);
+        NixSource_null(&state.source);
+        NixEngine_release(&state.nix);
+        NixEngine_null(&state.nix);
 	}
-    //
-    NixContext_release(&ctx);
-    NixContext_null(&ctx);
     //Memory report
     nbMemmapPrintFinalReport(&memmap);
     nbMemmapFinalize(&memmap);
@@ -167,15 +190,15 @@ int main(int argc, const char * argv[]){
 
 //callback
 
-void demoStreamBufferUnqueuedCallback_(STNix_Engine* engAbs, void* userdata, const NixUI32 sourceIndex, const NixUI16 buffersUnqueuedCount){
-    STDemoStreamState* state = (STDemoStreamState*)userdata;
+void demoStreamBufferUnqueuedCallback_(STNixSourceRef* src, STNixBufferRef* buffs, const NixUI32 buffsSz, void* userData){
+    STDemoStreamState* state = (STDemoStreamState*)userData;
     //re-enqueue buffers
-    NixUI16 buffToReEnq = buffersUnqueuedCount;
+    NixUI16 buffToReEnq = buffsSz;
     while(buffToReEnq > 0){
-        NixUI16 iBuff = state->buffsWav[state->iOldestBuffQueued % state->buffsUse];
+        STNixBufferRef buff = state->buffsWav[state->iOldestBuffQueued % state->buffsUse];
         state->iOldestBuffQueued = (state->iOldestBuffQueued + 1) % state->buffsUse;
-        if(!nixSourceStreamAppendBuffer(&state->nix, state->iSourcePlay, iBuff)){
-            printf("Buffer-to-source queueing failed.\n");
+        if(!NixSource_queueBuffer(state->source, buff)){
+            printf("NixSource_queueBuffer failed.\n");
         } else {
             state->stats.buffQueued++;
         }
