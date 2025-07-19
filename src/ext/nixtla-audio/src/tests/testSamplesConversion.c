@@ -21,11 +21,21 @@
 #endif
 
 #include "nixtla-audio.h"
+#include "testMemMap.h"
 #include "../utils/utilFilesList.h"
 #include "../utils/utilLoadWav.h"
 
+#define NIX_TEXT_CONVERSION_SECS_TO_EXIT   60
+
+// Custom memory allocation for this test,
+// for detecting memory-leaks using a STNBMemMap.
+STNBMemMap memmap;
+void* NBMemMap_custom_malloc(const NixUI32 newSz, const char* dbgHintStr);
+void* NBMemMap_custom_realloc(void* ptr, const NixUI32 newSz);
+void NBMemMap_custom_free(void* ptr);
+
 int main(int argc, const char * argv[]){
-    STNix_Engine nix;
+    nbMemmapInit(&memmap);
     //
     srand((unsigned int)time(NULL));
     //
@@ -48,11 +58,18 @@ int main(int argc, const char * argv[]){
         }
     }
     //
-    STNixContextItf ctx;
-    memset(&ctx, 0, sizeof(ctx));
-    NixContextItf_fillMissingMembers(&ctx);
+    STNixContextItf ctxItf;
+    memset(&ctxItf, 0, sizeof(ctxItf));
+    //custom memory allocation (for memory leaks dtection)
+    ctxItf.mem.malloc = NBMemMap_custom_malloc;
+    ctxItf.mem.realloc = NBMemMap_custom_realloc;
+    ctxItf.mem.free = NBMemMap_custom_free;
+    //use default for others
+    NixContextItf_fillMissingMembers(&ctxItf);
+    STNixContextRef ctx = NixContext_alloc(&ctxItf);
     //
-    if(nixInit(&ctx, &nix, 8)){
+    STNix_Engine nix;
+    if(nixInit(ctx, &nix, 8)){
         nixPrintCaps(&nix);
         //randomly select a wav from the list
         const char* strWavPath = _nixUtilFilesList[rand() % (sizeof(_nixUtilFilesList) / sizeof(_nixUtilFilesList[0]))];
@@ -104,15 +121,14 @@ int main(int argc, const char * argv[]){
         //
         if(iSourceOrg > 0){
             const NixUI32 msPerTick = 1000 / 30;
-            NixUI32 secsAccum = 0;
-            NixUI32 msAccum = 0;
-            while(1){
+            NixUI32 secsAccum = 0, msAccum = 0;
+            while(secsAccum < NIX_TEXT_CONVERSION_SECS_TO_EXIT){
                 nixTick(&nix);
                 DEMO_SLEEP_MILLISEC(msPerTick); //30 ticks per second for this demo
                 msAccum += msPerTick;
                 if(msAccum >= 1000){
                     secsAccum += (msAccum / 1000);
-                    //printf("%u secs playing\n", secsAccum);
+                    printf("%u/%u secs playing\n", secsAccum, NIX_TEXT_CONVERSION_SECS_TO_EXIT);
                     msAccum %= 1000;
                 }
                 //analyze converted playback
@@ -185,7 +201,7 @@ int main(int argc, const char * argv[]){
                                 }
                             }
                             if(audioDataConv != NULL){
-                                void* conv = nixFmtConverter_alloc();
+                                void* conv = nixFmtConverter_alloc(ctx);
                                 if(conv != NULL){
                                     const NixUI32 srcBlocks = (audioDataBytes / audioDesc.blockAlign);
                                     const NixUI32 dstBlocks = samplesReq;
@@ -267,5 +283,31 @@ int main(int argc, const char * argv[]){
         }
         nixFinalize(&nix);
     }
+    //
+    NixContext_release(&ctx);
+    NixContext_null(&ctx);
+    //Memory report
+    nbMemmapPrintFinalReport(&memmap);
+    nbMemmapFinalize(&memmap);
     return 0;
+}
+
+//custom memory allocation (for memory leaks detection)
+
+void* NBMemMap_custom_malloc(const NixUI32 newSz, const char* dbgHintStr){
+    void* r = malloc(newSz);
+    nbMemmapRegister(&memmap, r, newSz, dbgHintStr);
+    return r;
+}
+
+void* NBMemMap_custom_realloc(void* ptr, const NixUI32 newSz){
+    void* r = realloc(ptr, newSz);
+    nbMemmapUnregister(&memmap, ptr);
+    nbMemmapRegister(&memmap, r, newSz, "NBMemMap_custom_realloc");
+    return r;
+}
+
+void NBMemMap_custom_free(void* ptr){
+    nbMemmapUnregister(&memmap, ptr);
+    free(ptr);
 }

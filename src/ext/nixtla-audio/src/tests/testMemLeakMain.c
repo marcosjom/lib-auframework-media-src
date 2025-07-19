@@ -8,7 +8,8 @@
 
 #include <stdio.h>		//printf
 #include <stdlib.h>		//malloc, free
-#include "testMemMap.h"
+#include <string.h>     //memset
+#include <time.h>       //time
 
 #if defined(_WIN32) || defined(WIN32)
 	#include <windows.h> //Sleep
@@ -19,9 +20,20 @@
 	#define DEMO_SLEEP_MILLISEC(MS) usleep((MS) * 1000);
 #endif
 
+#include "nixtla-audio.h"
+#include "testMemMap.h"
+#include "../utils/utilFilesList.h"
+#include "../utils/utilLoadWav.h"
+
+#define NIX_TEXT_LEAK_SECS_TO_EXIT   15
+
 // Custom memory allocation for this test,
-// for detecting memory-leaks using a STNB_MemMap.
-STNB_MemMap memmap;
+// for detecting memory-leaks using a STNBMemMap.
+STNBMemMap memmap;
+void* NBMemMap_custom_malloc(const NixUI32 newSz, const char* dbgHintStr);
+void* NBMemMap_custom_realloc(void* ptr, const NixUI32 newSz);
+void NBMemMap_custom_free(void* ptr);
+
 #define NIX_MALLOC(POINTER_DEST, POINTER_TYPE, SIZE_BYTES, STR_HINT) \
 	{ \
 		POINTER_DEST = (POINTER_TYPE*)malloc(SIZE_BYTES); \
@@ -32,20 +44,12 @@ STNB_MemMap memmap;
 		free(POINTER); \
 		nbMemmapUnregister(&memmap, POINTER); \
 	}
-#include "nixtla-audio.h"
-#include "../nixtla-audio.c"
 
-//In this demo, we include the "source" file to implement customized memory allocation.
-//The "nixtla-audio.c" file is not part of the project tree.
-
-#include "../utils/utilFilesList.h"
-#include "../utils/utilLoadWav.h"
-
-void printMemReport();
 void loadAndPlayWav(STNix_Engine* nix, const char* strWavPath, NixUI16* iSourceWav, NixUI16* iBufferWav);
 void bufferCapturedCallback(STNix_Engine* nix, void* userdata, const STNixAudioDesc audioDesc, const NixUI8* audioData, const NixUI32 audioDataBytes, const NixUI32 audioDataSamples);
 
 int main(int argc, const char * argv[]) {
+    nbMemmapInit(&memmap);
     //
     srand((unsigned int)time(NULL));
     //
@@ -68,13 +72,18 @@ int main(int argc, const char * argv[]) {
         }
     }
     //
-    STNixContextItf ctx;
-    memset(&ctx, 0, sizeof(ctx));
-    NixContextItf_fillMissingMembers(&ctx);
+    STNixContextItf ctxItf;
+    memset(&ctxItf, 0, sizeof(ctxItf));
+    //custom memory allocation (for memory leaks dtection)
+    ctxItf.mem.malloc = NBMemMap_custom_malloc;
+    ctxItf.mem.realloc = NBMemMap_custom_realloc;
+    ctxItf.mem.free = NBMemMap_custom_free;
+    //use default for others
+    NixContextItf_fillMissingMembers(&ctxItf);
+    STNixContextRef ctx = NixContext_alloc(&ctxItf);
 	//
 	STNix_Engine nix;
-	nbMemmapInit(&memmap);
-	if(nixInit(&ctx, &nix, 8)){
+	if(nixInit(ctx, &nix, 8)){
 		STNixAudioDesc audioDesc; NixUI16 iSourceStrm;
 		nixPrintCaps(&nix);
 		//Load and play wav file
@@ -94,13 +103,19 @@ int main(int argc, const char * argv[]) {
 			audioDesc.blockAlign		= (audioDesc.bitsPerSample/8) * audioDesc.channels;
 			if(nixCaptureInit(&nix, &audioDesc, 15, audioDesc.samplerate/10, &bufferCapturedCallback, &iSourceStrm)){
 				if(nixCaptureStart(&nix)){
-					NixUI32 msSleep		= (1000 / 30);
-					NixUI32 msAcum		= 0;
+					const NixUI32 msPerTick = (1000 / 30);
+                    NixUI32 secsAccum = 0, msAccum = 0;
 					printf("Capturing and playing audio...\n");
-					while(msAcum < 5000){ //capture and play for 5 secodns
+					while(secsAccum < NIX_TEXT_LEAK_SECS_TO_EXIT){ //capture and play for 5 secodns
 						nixTick(&nix);
-						DEMO_SLEEP_MILLISEC(msSleep); //30 ticks per second for this demo
-						msAcum			+= msSleep;
+						DEMO_SLEEP_MILLISEC(msPerTick); //30 ticks per second for this demo
+                        msAccum += msPerTick;
+                        if(msAccum >= 1000){
+                            secsAccum += (msAccum / 1000);
+                            printf("%d/%d secs running.\n", secsAccum, NIX_TEXT_LEAK_SECS_TO_EXIT);
+                            msAccum %= 1000;
+                        }
+                        
 					}
 					nixCaptureStop(&nix);
 				}
@@ -110,9 +125,11 @@ int main(int argc, const char * argv[]) {
 		}
 		nixFinalize(&nix);
 	}
+    //
+    NixContext_release(&ctx);
+    NixContext_null(&ctx);
 	//Memory report
-	printMemReport();
-	//
+    nbMemmapPrintFinalReport(&memmap);
 	nbMemmapFinalize(&memmap);
 	//
 	{
@@ -121,17 +138,6 @@ int main(int argc, const char * argv[]) {
 		scanf("%c", &c);
 	}
     return 0;
-}
-
-void printMemReport(){
-	printf("-------------- MEM REPORT -----------\n");
-	if(memmap.currCountAllocationsActive == 0){
-		printf("Nixtla: no memory leaking detected :)\n");
-	} else {
-		printf("WARNING, NIXTLA MEMORY-LEAK DETECTED! :(\n");
-	}
-	nbMemmapPrintActive(&memmap);
-	printf("-------------------------------------\n");
 }
 
 void loadAndPlayWav(STNix_Engine* nix, const char* strWavPath, NixUI16* p_iSourceWav, NixUI16* p_iBufferWav){
@@ -182,4 +188,24 @@ void bufferCapturedCallback(STNix_Engine* nix, void* userdata, const STNixAudioD
 		}
 		nixBufferRelease(nix, iBuffer);
 	}
+}
+
+//custom memory allocation (for memory leaks detection)
+
+void* NBMemMap_custom_malloc(const NixUI32 newSz, const char* dbgHintStr){
+    void* r = malloc(newSz);
+    nbMemmapRegister(&memmap, r, newSz, dbgHintStr);
+    return r;
+}
+
+void* NBMemMap_custom_realloc(void* ptr, const NixUI32 newSz){
+    void* r = realloc(ptr, newSz);
+    nbMemmapUnregister(&memmap, ptr);
+    nbMemmapRegister(&memmap, r, newSz, "NBMemMap_custom_realloc");
+    return r;
+}
+
+void NBMemMap_custom_free(void* ptr){
+    nbMemmapUnregister(&memmap, ptr);
+    free(ptr);
 }

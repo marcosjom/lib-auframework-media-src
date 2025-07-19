@@ -15,8 +15,16 @@
 #include <android/log.h>    //for __android_log_print()
 
 #include "nixtla-audio.h"
+#include "testMemMap.h"
 #include "../utils/utilFilesList.h"
 #include "../utils/utilLoadWav.h"
+
+// Custom memory allocation for this test,
+// for detecting memory-leaks using a STNBMemMap.
+STNBMemMap memmap;
+void* NBMemMap_custom_malloc(const NixUI32 newSz, const char* dbgHintStr);
+void* NBMemMap_custom_realloc(void* ptr, const NixUI32 newSz);
+void NBMemMap_custom_free(void* ptr);
 
 #ifndef PRINTF_INFO
 #   define PRINTF_INFO(STR_FMT, ...)    __android_log_print(ANDROID_LOG_INFO, "Nixtla", "INFO, "STR_FMT, ##__VA_ARGS__)
@@ -46,13 +54,21 @@ JNIEXPORT jboolean JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_testStar
     jboolean r = 0;
     PRINTF_INFO("native-testStart\n");
     //
+    nbMemmapInit(&memmap);
+    //
     srand((unsigned int)time(NULL));
     //
-    STNixContextItf ctx;
-    memset(&ctx, 0, sizeof(ctx));
-    NixContextItf_fillMissingMembers(&ctx);
+    STNixContextItf ctxItf;
+    memset(&ctxItf, 0, sizeof(ctxItf));
+    //custom memory allocation (for memory leaks dtection)
+    ctxItf.mem.malloc = NBMemMap_custom_malloc;
+    ctxItf.mem.realloc = NBMemMap_custom_realloc;
+    ctxItf.mem.free = NBMemMap_custom_free;
+    //use default for others
+    NixContextItf_fillMissingMembers(&ctxItf);
+    STNixContextRef ctx = NixContext_alloc(&ctxItf);
     //
-    if(nixInit(&ctx, &nix, 8)){
+    if(nixInit(ctx, &nix, 8)){
         nixPrintCaps(&nix);
         //randomly select a wav from the list
         const char* strWavPath = _nixUtilFilesList[rand() % (sizeof(_nixUtilFilesList) / sizeof(_nixUtilFilesList[0]))];
@@ -91,6 +107,9 @@ JNIEXPORT jboolean JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_testStar
             }
         }
     }
+    //
+    NixContext_release(&ctx);
+    NixContext_null(&ctx);
     return r;
 }
 
@@ -113,6 +132,9 @@ JNIEXPORT void JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_testEnd(JNIE
         iSourceConv = 0;
     }
     nixFinalize(&nix);
+    //Memory report
+    nbMemmapPrintFinalReport(&memmap);
+    nbMemmapFinalize(&memmap);
 }
 
 JNIEXPORT void JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_testTick(JNIEnv* env, jobject obj){
@@ -257,4 +279,24 @@ JNIEXPORT void JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_testTick(JNI
             }
         }
     }
+}
+
+//custom memory allocation (for memory leaks detection)
+
+void* NBMemMap_custom_malloc(const NixUI32 newSz, const char* dbgHintStr){
+    void* r = malloc(newSz);
+    nbMemmapRegister(&memmap, r, newSz, dbgHintStr);
+    return r;
+}
+
+void* NBMemMap_custom_realloc(void* ptr, const NixUI32 newSz){
+    void* r = realloc(ptr, newSz);
+    nbMemmapUnregister(&memmap, ptr);
+    nbMemmapRegister(&memmap, r, newSz, "NBMemMap_custom_realloc");
+    return r;
+}
+
+void NBMemMap_custom_free(void* ptr){
+    nbMemmapUnregister(&memmap, ptr);
+    free(ptr);
 }

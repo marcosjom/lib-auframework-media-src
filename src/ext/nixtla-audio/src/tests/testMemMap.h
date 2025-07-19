@@ -21,7 +21,7 @@ typedef struct {
 	unsigned long	bytes;
 } STNB_MemBlock;
 
-//STNB_MemMap
+//STNBMemMap
 typedef struct {
 	//
 	unsigned long	currCountAllocationsActive;
@@ -41,13 +41,14 @@ typedef struct {
 	STNB_MemBlock*	blocksArr;
 	unsigned long	blocksArrUse;
 	unsigned long	blocksArrSize;
-} STNB_MemMap;
+} STNBMemMap;
 
-void nbMemmapInit(STNB_MemMap* map);
-void nbMemmapFinalize(STNB_MemMap* map);
-void nbMemmapRegister(STNB_MemMap* map, void* pointer, unsigned long bytes, const char* strHint);
-void nbMemmapUnregister(STNB_MemMap* map, void* pointer);
+void nbMemmapInit(STNBMemMap* map);
+void nbMemmapFinalize(STNBMemMap* map);
+void nbMemmapRegister(STNBMemMap* map, void* pointer, unsigned long bytes, const char* strHint);
+void nbMemmapUnregister(STNBMemMap* map, void* pointer);
 
-void nbMemmapPrintActive(STNB_MemMap* map);
+void nbMemmapPrintActive(STNBMemMap* map);
+void nbMemmapPrintFinalReport(STNBMemMap* map);
 
 #endif

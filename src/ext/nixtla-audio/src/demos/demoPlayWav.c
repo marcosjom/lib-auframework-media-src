@@ -21,19 +21,37 @@
 #endif
 
 #include "nixtla-audio.h"
+#include "testMemMap.h"
 #include "../utils/utilFilesList.h"
 #include "../utils/utilLoadWav.h"
 
+#define NIX_DEMO_PLAY_SECS_TO_EXIT    10    //stop the demo after this time
+
+// Custom memory allocation for this test,
+// for detecting memory-leaks using a STNBMemMap.
+STNBMemMap memmap;
+//
+void* NBMemMap_custom_malloc(const NixUI32 newSz, const char* dbgHintStr);
+void* NBMemMap_custom_realloc(void* ptr, const NixUI32 newSz);
+void NBMemMap_custom_free(void* ptr);
+
 int main(int argc, const char * argv[]){
-    STNix_Engine nix;
+    nbMemmapInit(&memmap);
     //
     srand((unsigned int)time(NULL));
     //
-    STNixContextItf ctx;
-    memset(&ctx, 0, sizeof(ctx));
-    NixContextItf_fillMissingMembers(&ctx);
+    STNixContextItf ctxItf;
+    memset(&ctxItf, 0, sizeof(ctxItf));
+    //custom memory allocation (for memory leaks dtection)
+    ctxItf.mem.malloc = NBMemMap_custom_malloc;
+    ctxItf.mem.realloc = NBMemMap_custom_realloc;
+    ctxItf.mem.free = NBMemMap_custom_free;
+    //use default for others
+    NixContextItf_fillMissingMembers(&ctxItf);
+    STNixContextRef ctx = NixContext_alloc(&ctxItf);
     //
-	if(nixInit(&ctx, &nix, 8)){
+    STNix_Engine nix;
+	if(nixInit(ctx, &nix, 8)){
         nixPrintCaps(&nix);
         NixUI16 iSourcePlay = 0;
         //randomly select a wav from the list
@@ -81,13 +99,13 @@ int main(int argc, const char * argv[]){
             const NixUI32 msPerTick = 1000 / 30;
             NixUI32 secsAccum = 0;
             NixUI32 msAccum = 0;
-            while(1){
+            while(secsAccum < NIX_DEMO_PLAY_SECS_TO_EXIT){
                 nixTick(&nix);
                 DEMO_SLEEP_MILLISEC(msPerTick); //30 ticks per second for this demo
                 msAccum += msPerTick;
                 if(msAccum >= 1000){
                     secsAccum += (msAccum / 1000);
-                    printf("%u secs playing\n", secsAccum);
+                    printf("%u/%u secs playing\n", secsAccum, NIX_DEMO_PLAY_SECS_TO_EXIT);
                     msAccum %= 1000;
                 }
             }
@@ -99,5 +117,32 @@ int main(int argc, const char * argv[]){
         }
 		nixFinalize(&nix);
 	}
+    //
+    NixContext_release(&ctx);
+    NixContext_null(&ctx);
+    //Memory report
+    nbMemmapPrintFinalReport(&memmap);
+    nbMemmapFinalize(&memmap);
+    //
     return 0;
+}
+
+//custom memory allocation (for memory leaks detection)
+
+void* NBMemMap_custom_malloc(const NixUI32 newSz, const char* dbgHintStr){
+    void* r = malloc(newSz);
+    nbMemmapRegister(&memmap, r, newSz, dbgHintStr);
+    return r;
+}
+
+void* NBMemMap_custom_realloc(void* ptr, const NixUI32 newSz){
+    void* r = realloc(ptr, newSz);
+    nbMemmapUnregister(&memmap, ptr);
+    nbMemmapRegister(&memmap, r, newSz, "NBMemMap_custom_realloc");
+    return r;
+}
+
+void NBMemMap_custom_free(void* ptr){
+    nbMemmapUnregister(&memmap, ptr);
+    free(ptr);
 }

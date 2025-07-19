@@ -16,12 +16,26 @@
 extern "C" {
 #endif
 
+#if defined(__ANDROID__) //Android
+#   define NIX_PRINTF_INFO(STR_FMT, ...)   __android_log_print(ANDROID_LOG_INFO, "Nixtla", STR_FMT, ##__VA_ARGS__)
+#   define NIX_PRINTF_ERROR(STR_FMT, ...)  __android_log_print(ANDROID_LOG_ERROR, "Nixtla", "ERROR, "STR_FMT, ##__VA_ARGS__)
+#   define NIX_PRINTF_WARNING(STR_FMT, ...) __android_log_print(ANDROID_LOG_WARN, "Nixtla", "WARNING, "STR_FMT, ##__VA_ARGS__)
+#elif defined(__QNX__) //BB10
+#   define NIX_PRINTF_INFO(STR_FMT, ...)   fprintf(stdout, "Nix, " STR_FMT, ##__VA_ARGS__); fflush(stdout)
+#   define NIX_PRINTF_ERROR(STR_FMT, ...)  fprintf(stderr, "Nix ERROR, " STR_FMT, ##__VA_ARGS__); fflush(stderr)
+#   define NIX_PRINTF_WARNING(STR_FMT, ...) fprintf(stdout, "Nix WARNING, " STR_FMT, ##__VA_ARGS__); fflush(stdout)
+#else
+#   define NIX_PRINTF_INFO(STR_FMT, ...)   printf("Nix, " STR_FMT, ##__VA_ARGS__)
+#   define NIX_PRINTF_ERROR(STR_FMT, ...)   printf("Nix ERROR, " STR_FMT, ##__VA_ARGS__)
+#   define NIX_PRINTF_WARNING(STR_FMT, ...) printf("Nix WARNING, " STR_FMT, ##__VA_ARGS__)
+#endif
+    
 //---------------------------------------------
 //-- Usefull implementation for memory leaking
 //-- detection and tracking.
 //---------------------------------------------
 
-void nbMemmapInit(STNB_MemMap* map){
+void nbMemmapInit(STNBMemMap* map){
     memset(map, 0, sizeof(*map));
 	//Strings (Hints)
 	map->strArr				= (char*)malloc(sizeof(char) * 2048);
@@ -30,13 +44,13 @@ void nbMemmapInit(STNB_MemMap* map){
 	map->strArrSize			= 2048;
 }
 
-void nbMemmapFinalize(STNB_MemMap* map){
+void nbMemmapFinalize(STNBMemMap* map){
 	if(map->strArr!=NULL) free(map->strArr); map->strArr = NULL;
 	if(map->strIndexsArr!=NULL) free(map->strIndexsArr); map->strIndexsArr = NULL;
 	if(map->blocksArr!=NULL) free(map->blocksArr); map->blocksArr = NULL;
 }
 
-void nbMemmapRegister(STNB_MemMap* map, void* pointer, unsigned long bytes, const char* strHint){
+void nbMemmapRegister(STNBMemMap* map, void* pointer, unsigned long bytes, const char* strHint){
 	unsigned long i, iStrHint = 0; const unsigned long strIndexsArrUse = map->strIndexsArrUse; const unsigned long blocksArrUse = map->blocksArrUse;
 	//Is this pointer already registered?
 	for(i=0; i<blocksArrUse; i++){
@@ -145,7 +159,7 @@ void nbMemmapRegister(STNB_MemMap* map, void* pointer, unsigned long bytes, cons
 	}
 }
 
-void nbMemmapUnregister(STNB_MemMap* map, void* pointer){
+void nbMemmapUnregister(STNBMemMap* map, void* pointer){
 	unsigned long i; const unsigned long blocksArrUse = map->blocksArrUse;
 	for(i=0; i<blocksArrUse; i++){
 		if(map->blocksArr[i].regUsed){
@@ -160,21 +174,31 @@ void nbMemmapUnregister(STNB_MemMap* map, void* pointer){
 	assert(0); //Pointer was not found
 }
 
-void nbMemmapPrintActive(STNB_MemMap* map){
+void nbMemmapPrintActive(STNBMemMap* map){
 	unsigned long i, countUsed = 0; const unsigned long blocksArrUse = map->blocksArrUse;
 	for(i=0; i<blocksArrUse; i++){
 		if(map->blocksArr[i].regUsed){
 			countUsed++;
-			printf("#%lu) %lu, %lu bytes, '%s'\n", countUsed, (unsigned long) map->blocksArr[i].pointer, map->blocksArr[i].bytes, &map->strArr[map->blocksArr[i].iStrHint]);
+            NIX_PRINTF_INFO("#%lu) %lu, %lu bytes, '%s'\n", countUsed, (unsigned long) map->blocksArr[i].pointer, map->blocksArr[i].bytes, &map->strArr[map->blocksArr[i].iStrHint]);
 		}
 	}
-	printf("\n");
-	printf("CURRENTLY USED   : %lu blocks (%lu bytes)\n", map->currCountAllocationsActive, map->currBytesAllocationsActive);
-	printf("MAX USED         : %lu blocks (%lu bytes)\n", map->maxCountAllocationsActive, map->maxBytesAllocationsActive);
-	printf("TOTAL ALLOCATIONS: %lu blocks (%lu bytes)\n", map->totalCountAllocations, map->totalBytesAllocations);
+    NIX_PRINTF_INFO("\n");
+    NIX_PRINTF_INFO("CURRENTLY USED   : %lu blocks (%lu bytes)\n", map->currCountAllocationsActive, map->currBytesAllocationsActive);
+    NIX_PRINTF_INFO("MAX USED         : %lu blocks (%lu bytes)\n", map->maxCountAllocationsActive, map->maxBytesAllocationsActive);
+    NIX_PRINTF_INFO("TOTAL ALLOCATIONS: %lu blocks (%lu bytes)\n", map->totalCountAllocations, map->totalBytesAllocations);
 	assert(map->currCountAllocationsActive==countUsed);
 }
 
+void nbMemmapPrintFinalReport(STNBMemMap* map){
+    NIX_PRINTF_INFO("-------------- MEM REPORT -----------\n");
+    if(map->currCountAllocationsActive == 0){
+        NIX_PRINTF_INFO("Nixtla: no memory leaking detected :)\n");
+    } else {
+        NIX_PRINTF_WARNING("WARNING, NIXTLA MEMORY-LEAK DETECTED! :(\n");
+    }
+    nbMemmapPrintActive(map);
+    NIX_PRINTF_INFO("-------------------------------------\n");
+}
 
 #ifdef __cplusplus
 } //extern "C" {

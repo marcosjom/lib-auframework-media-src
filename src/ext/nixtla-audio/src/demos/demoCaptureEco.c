@@ -20,9 +20,18 @@
 #endif
 
 #include "nixtla-audio.h"
+#include "testMemMap.h"
 
+#define NIX_DEMO_ECO_SECS_TO_EXIT   60
 #define NIX_DEMO_ECO_RECORD_SECS    5
 #define NIX_DEMO_ECO_BUFFS_PER_SEC  10
+
+// Custom memory allocation for this test,
+// for detecting memory-leaks using a STNBMemMap.
+STNBMemMap memmap;
+void* NBMemMap_custom_malloc(const NixUI32 newSz, const char* dbgHintStr);
+void* NBMemMap_custom_realloc(void* ptr, const NixUI32 newSz);
+void NBMemMap_custom_free(void* ptr);
 
 typedef struct STNixDemoEcoState_ {
     STNix_Engine    nix;
@@ -60,16 +69,24 @@ void bufferUnqueuedCallback(STNix_Engine* engAbs, void* userdata, const NixUI32 
 //main
 
 int main(int argc, const char * argv[]){
+    //
+    nbMemmapInit(&memmap);
 	//
     STNixDemoEcoState state;
     memset(&state, 0, sizeof(state));
     //
-    STNixContextItf ctx;
-    memset(&ctx, 0, sizeof(ctx));
-    NixContextItf_fillMissingMembers(&ctx);
+    STNixContextItf ctxItf;
+    memset(&ctxItf, 0, sizeof(ctxItf));
+    //custom memory allocation (for memory leaks dtection)
+    ctxItf.mem.malloc = NBMemMap_custom_malloc;
+    ctxItf.mem.realloc = NBMemMap_custom_realloc;
+    ctxItf.mem.free = NBMemMap_custom_free;
+    //use default for others
+    NixContextItf_fillMissingMembers(&ctxItf);
+    STNixContextRef ctx = NixContext_alloc(&ctxItf);
     //
     const NixUI16 ammPregeneratedSources = 0;
-	if(nixInit(&ctx, &state.nix, ammPregeneratedSources)){
+	if(nixInit(ctx, &state.nix, ammPregeneratedSources)){
 		nixPrintCaps(&state.nix);
 		//Source for stream eco (play the captured audio)
         const NixUI8 lookIntoReusable   = NIX_TRUE;
@@ -120,17 +137,18 @@ int main(int argc, const char * argv[]){
                         printf("nixCaptureStart failed.\n");
                     } else {
                         const NixUI32 msPerTick = 1000 / 30;
-                        NixUI32 msAccum = 0;
+                        NixUI32 secsAccum = 0, msAccum = 0;
                         printf("Capturing and playing audio... switching every %d seconds.\n", NIX_DEMO_ECO_RECORD_SECS);
-                        while(1){ //Infinite loop, usually sync with your program main loop, or in a independent thread
+                        while(secsAccum < NIX_DEMO_ECO_SECS_TO_EXIT){ //Infinite loop, usually sync with your program main loop, or in a independent thread
                             nixTick(&state.nix);
                             DEMO_SLEEP_MILLISEC(msPerTick); //30 ticks per second for this demo
                             msAccum += msPerTick;
                             if(msAccum >= 1000){
+                                secsAccum += (msAccum / 1000);
                                 if(state.stats.curSec.samplesRecordedCount > 0){
-                                    printf("%llu samples-recorded/sec, %llu buffs-played/sec (recorded avg-value: %d)\n", state.stats.curSec.samplesRecordedCount, state.stats.curSec.buffsPlayedCount, (NixSI32)(state.stats.curSec.samplesRecSum / state.stats.curSec.samplesRecordedCount));
+                                    printf("%u/%u secs running, %llu samples-recorded/sec, %llu buffs-played/sec (recorded avg-value: %d)\n", secsAccum, NIX_DEMO_ECO_SECS_TO_EXIT, state.stats.curSec.samplesRecordedCount, state.stats.curSec.buffsPlayedCount, (NixSI32)(state.stats.curSec.samplesRecSum / state.stats.curSec.samplesRecordedCount));
                                 } else {
-                                    printf("%llu samples-recorded/sec, %llu buffs-played/sec\n", state.stats.curSec.samplesRecordedCount, state.stats.curSec.buffsPlayedCount);
+                                    printf("%u/%u secs running, %llu samples-recorded/sec, %llu buffs-played/sec\n", secsAccum, NIX_DEMO_ECO_SECS_TO_EXIT, state.stats.curSec.samplesRecordedCount, state.stats.curSec.buffsPlayedCount);
                                 }
                                 state.stats.curSec.samplesRecordedCount = 0;
                                 state.stats.curSec.buffsPlayedCount = 0;
@@ -146,6 +164,13 @@ int main(int argc, const char * argv[]){
 		}
 		nixFinalize(&state.nix);
 	}
+    //
+    NixContext_release(&ctx);
+    NixContext_null(&ctx);
+    //Memory report
+    nbMemmapPrintFinalReport(&memmap);
+    nbMemmapFinalize(&memmap);
+    //
     return 0;
 }
 
@@ -215,4 +240,24 @@ void bufferUnqueuedCallback(STNix_Engine* engAbs, void* userdata, const NixUI32 
             printf("nixCaptureStart failed.\n");
         }
     }
+}
+
+//custom memory allocation (for memory leaks detection)
+
+void* NBMemMap_custom_malloc(const NixUI32 newSz, const char* dbgHintStr){
+    void* r = malloc(newSz);
+    nbMemmapRegister(&memmap, r, newSz, dbgHintStr);
+    return r;
+}
+
+void* NBMemMap_custom_realloc(void* ptr, const NixUI32 newSz){
+    void* r = realloc(ptr, newSz);
+    nbMemmapUnregister(&memmap, ptr);
+    nbMemmapRegister(&memmap, r, newSz, "NBMemMap_custom_realloc");
+    return r;
+}
+
+void NBMemMap_custom_free(void* ptr){
+    nbMemmapUnregister(&memmap, ptr);
+    free(ptr);
 }
