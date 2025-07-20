@@ -1,8 +1,8 @@
 //
-//  NixtlaDemo
+//  Nixtla
 //
-//  Created by Marcos Ortega on 11/02/14.
-//  Copyright (c) 2014 NIBSA. All rights reserved.
+//  Created by Marcos Ortega on 20/07/25.
+//  Copyright (c) 2014 Marcos Ortega. All rights reserved.
 //
 
 #include "utilLoadWav.h"
@@ -43,7 +43,7 @@
 #   endif
 #endif
 
-NixUI8 loadDataFromWavFile(
+NixUI8 nixUtilLoadDataFromWavFile(
 #                           ifdef __ANDROID__
                             JNIEnv *env, jobject assetManager,
 #                           endif

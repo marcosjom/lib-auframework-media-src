@@ -1,9 +1,8 @@
 //
-//  main.c
-//  NixtlaDemo
+//  Nixtla
 //
-//  Created by Marcos Ortega on 11/02/14.
-//  Copyright (c) 2014 NIBSA. All rights reserved.
+//  Created by Marcos Ortega on 20/07/25.
+//  Copyright (c) 2014 Marcos Ortega. All rights reserved.
 //
 
 #ifndef NIXTLA_UTIL_FILES_LIST_H

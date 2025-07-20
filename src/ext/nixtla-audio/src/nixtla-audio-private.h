@@ -17,7 +17,7 @@
 #ifndef NixtlaAudioLib_nixtla_private_h
 #define NixtlaAudioLib_nixtla_private_h
 
-#define NIX_ASSERTS_ACTIVATED
+#define NIX_DEBUG
 //#define NIX_SILENT_MODE
 //#define NIX_VERBOSE_MODE
 
@@ -28,6 +28,10 @@
 //++++++++++++++++++++
 //++++++++++++++++++++
 //++++++++++++++++++++
+
+#ifdef NIX_DEBUG
+#   define NIX_ASSERTS_ACTIVATED
+#endif
 
 #ifdef NIX_ASSERTS_ACTIVATED
     #include <assert.h>         //assert

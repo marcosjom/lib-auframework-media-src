@@ -54,9 +54,9 @@ NixBOOL         nixOpenALEngine_ctxActivate(STNixEngineRef ref);
 NixBOOL         nixOpenALEngine_ctxDeactivate(STNixEngineRef ref);
 void            nixOpenALEngine_tick(STNixEngineRef ref);
 //Factory
-STNixSourceRef  nixOpenALEngine_sourceAlloc(STNixEngineRef ref);
-STNixBufferRef  nixOpenALEngine_bufferAlloc(STNixEngineRef ref, const STNixAudioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes);
-STNixRecorderRef nixOpenALEngine_recorderAlloc(STNixEngineRef ref, const STNixAudioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer);
+STNixSourceRef  nixOpenALEngine_allocSource(STNixEngineRef ref);
+STNixBufferRef  nixOpenALEngine_allocBuffer(STNixEngineRef ref, const STNixAudioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes);
+STNixRecorderRef nixOpenALEngine_allocRecorder(STNixEngineRef ref, const STNixAudioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer);
 //Source
 STNixSourceRef  nixOpenALSource_alloc(STNixEngineRef eng);
 void            nixOpenALSource_free(STNixSourceRef ref);
@@ -89,9 +89,9 @@ NixBOOL nixOpenALEngine_getApiItf(STNixApiItf* dst){
         dst->engine.ctxDeactivate = nixOpenALEngine_ctxDeactivate;
         dst->engine.tick        = nixOpenALEngine_tick;
         //Factory
-        dst->engine.sourceAlloc = nixOpenALEngine_sourceAlloc;
-        dst->engine.bufferAlloc = nixOpenALEngine_bufferAlloc;
-        dst->engine.recorderAlloc = nixOpenALEngine_recorderAlloc;
+        dst->engine.allocSource = nixOpenALEngine_allocSource;
+        dst->engine.allocBuffer = nixOpenALEngine_allocBuffer;
+        dst->engine.allocRecorder = nixOpenALEngine_allocRecorder;
         //PCMBuffer
         NixPCMBuffer_getApiItf(&dst->buffer);
         //Source
@@ -165,6 +165,8 @@ typedef struct STNixOpenALQueuePair_ {
 
 void NixOpenALQueuePair_init(STNixOpenALQueuePair* obj);
 void NixOpenALQueuePair_destroy(STNixOpenALQueuePair* obj);
+void NixOpenALQueuePair_moveOrg(STNixOpenALQueuePair* obj, STNixOpenALQueuePair* to);
+void NixOpenALQueuePair_moveCnv(STNixOpenALQueuePair* obj, STNixOpenALQueuePair* to);
 
 //------
 //Queue (Buffers)
@@ -359,15 +361,8 @@ NixBOOL NixOpenALEngine_srcsAdd(STNixOpenALEngine* obj, struct STNixOpenALSource
             //resize array (if necesary)
             if(obj->srcs.use >= obj->srcs.sz){
                 const NixUI32 szN = obj->srcs.use + 4;
-                STNixOpenALSource** arrN = (STNixOpenALSource**)NixContext_malloc(obj->ctx, sizeof(STNixOpenALSource*) * szN, "STNixOpenALEngine::srcsN");
+                STNixOpenALSource** arrN = (STNixOpenALSource**)NixContext_mrealloc(obj->ctx, obj->srcs.arr, sizeof(STNixOpenALSource*) * szN, "STNixOpenALEngine::srcsN");
                 if(arrN != NULL){
-                    if(obj->srcs.arr != NULL){
-                        if(obj->srcs.use > 0){
-                            memcpy(arrN, obj->srcs.arr, sizeof(arrN[0]) * obj->srcs.use);
-                        }
-                        NixContext_mfree(obj->ctx, obj->srcs.arr);
-                        obj->srcs.arr = NULL;
-                    }
                     obj->srcs.arr = arrN;
                     obj->srcs.sz = szN;
                 }
@@ -509,12 +504,27 @@ void NixOpenALQueuePair_init(STNixOpenALQueuePair* obj){
 void NixOpenALQueuePair_destroy(STNixOpenALQueuePair* obj){
     {
         NixBuffer_release(&obj->org);
-        obj->org.ptr = NULL;
+        NixBuffer_null(&obj->org);
     }
     if(obj->idBufferAL != NIX_OPENAL_NULL){
         alDeleteBuffers(1, &obj->idBufferAL); NIX_OPENAL_ERR_VERIFY("alDeleteBuffers");
         obj->idBufferAL = NIX_OPENAL_NULL;
     }
+}
+
+void NixOpenALQueuePair_moveOrg(STNixOpenALQueuePair* obj, STNixOpenALQueuePair* to){
+    NixBuffer_set(&to->org, obj->org);
+    NixBuffer_release(&obj->org);
+    NixBuffer_null(&obj->org);
+}
+
+void NixOpenALQueuePair_moveCnv(STNixOpenALQueuePair* obj, STNixOpenALQueuePair* to){
+    if(to->idBufferAL != NIX_OPENAL_NULL){
+        alDeleteBuffers(1, &to->idBufferAL); NIX_OPENAL_ERR_VERIFY("alDeleteBuffers");
+        to->idBufferAL = NIX_OPENAL_NULL;
+    }
+    to->idBufferAL = obj->idBufferAL;
+    obj->idBufferAL = NIX_OPENAL_NULL;
 }
 
 //------
@@ -561,15 +571,8 @@ NixBOOL NixOpenALQueue_prepareForSz(STNixOpenALQueue* obj, const NixUI32 minSz){
         //resize array (if necesary)
         if(minSz > obj->sz){
             const NixUI32 szN = minSz;
-            STNixOpenALQueuePair* arrN = (STNixOpenALQueuePair*)NixContext_malloc(obj->ctx, sizeof(STNixOpenALQueuePair) * szN, "NixOpenALQueue_prepareForSz::arrN");
+            STNixOpenALQueuePair* arrN = (STNixOpenALQueuePair*)NixContext_mrealloc(obj->ctx, obj->arr, sizeof(STNixOpenALQueuePair) * szN, "NixOpenALQueue_prepareForSz::arrN");
             if(arrN != NULL){
-                if(obj->arr != NULL){
-                    if(obj->use > 0){
-                        memcpy(arrN, obj->arr, sizeof(arrN[0]) * obj->use);
-                    }
-                    NixContext_mfree(obj->ctx, obj->arr);
-                    obj->arr = NULL;
-                }
                 obj->arr = arrN;
                 obj->sz = szN;
             }
@@ -590,15 +593,8 @@ NixBOOL NixOpenALQueue_pushOwning(STNixOpenALQueue* obj, STNixOpenALQueuePair* p
         //resize array (if necesary)
         if(obj->use >= obj->sz){
             const NixUI32 szN = obj->use + 4;
-            STNixOpenALQueuePair* arrN = (STNixOpenALQueuePair*)NixContext_malloc(obj->ctx, sizeof(STNixOpenALQueuePair) * szN, "NixOpenALQueue_pushOwning::arrN");
+            STNixOpenALQueuePair* arrN = (STNixOpenALQueuePair*)NixContext_mrealloc(obj->ctx, obj->arr, sizeof(STNixOpenALQueuePair) * szN, "NixOpenALQueue_pushOwning::arrN");
             if(arrN != NULL){
-                if(obj->arr != NULL){
-                    if(obj->use > 0){
-                        memcpy(arrN, obj->arr, sizeof(arrN[0]) * obj->use);
-                    }
-                    NixContext_mfree(obj->ctx, obj->arr);
-                    obj->arr = NULL;
-                }
                 obj->arr = arrN;
                 obj->sz = szN;
             }
@@ -826,8 +822,6 @@ NixBOOL NixOpenALSource_queueBufferForOutput(STNixOpenALSource* obj, STNixBuffer
                         {
                             if(!NixOpenALQueue_pushOwning(&obj->queues.pend, &pair)){
                                 NIX_PRINTF_ERROR("NixOpenALSource_queueBufferForOutput::NixOpenALQueue_pushOwning failed.\n");
-                                NixBuffer_release(&pair.org);
-                                pair.org.ptr = NULL;
                                 r = NIX_FALSE;
                             } else {
                                 //added to queue
@@ -854,48 +848,43 @@ NixBOOL NixOpenALSource_queueBufferForOutput(STNixOpenALSource* obj, STNixBuffer
 
 NixBOOL NixOpenALSource_pendPopOldestBuffLocked_(STNixOpenALSource* obj){
     NixBOOL r = NIX_FALSE;
-    STNixOpenALQueuePair pair;
-    if(!NixOpenALQueue_popOrphaning(&obj->queues.pend, &pair)){
-        NIX_ASSERT(NIX_FALSE); //program logic error
-    } else {
-        //move "cnv" to reusable queue
-        if(pair.idBufferAL != NIX_OPENAL_NULL){
-            ALenum errorAL;
-            ALuint idBufferAL = pair.idBufferAL;
-            alSourceUnqueueBuffers(obj->idSourceAL, 1, &idBufferAL);
-            if(AL_NO_ERROR != (errorAL = alGetError())){
-                NIX_PRINTF_ERROR("alSourceUnqueueBuffers failed: #%d '%s' idBufferAL(%d)\n", errorAL, alGetString(errorAL), pair.idBufferAL);
-            } else {
-                STNixOpenALQueuePair reuse;
-                NixOpenALQueuePair_init(&reuse);
-                reuse.idBufferAL = pair.idBufferAL;
-                if(!NixOpenALQueue_pushOwning(&obj->queues.reuse, &reuse)){
-                    NIX_PRINTF_ERROR("NixOpenALSource_pendPopOldestBuffLocked_::NixOpenALQueue_pushOwning(reuse) failed.\n");
-                    reuse.idBufferAL = NIX_OPENAL_NULL;
-                    NixOpenALQueuePair_destroy(&reuse);
+    if(obj->queues.pend.use > 0){
+        STNixOpenALQueuePair pair;
+        if(!NixOpenALQueue_popOrphaning(&obj->queues.pend, &pair)){
+            NIX_ASSERT(NIX_FALSE); //program logic error
+        } else {
+            //move "cnv" to reusable queue
+            if(pair.idBufferAL != NIX_OPENAL_NULL){
+                ALenum errorAL;
+                ALuint idBufferAL = pair.idBufferAL;
+                alSourceUnqueueBuffers(obj->idSourceAL, 1, &idBufferAL);
+                if(AL_NO_ERROR != (errorAL = alGetError())){
+                    NIX_PRINTF_ERROR("alSourceUnqueueBuffers failed: #%d '%s' idBufferAL(%d)\n", errorAL, alGetString(errorAL), pair.idBufferAL);
                 } else {
-                    //now owned by reuse
-                    pair.idBufferAL = NIX_OPENAL_NULL;
+                    STNixOpenALQueuePair reuse;
+                    NixOpenALQueuePair_init(&reuse);
+                    NixOpenALQueuePair_moveCnv(&pair, &reuse);
+                    if(!NixOpenALQueue_pushOwning(&obj->queues.reuse, &reuse)){
+                        NIX_PRINTF_ERROR("NixOpenALSource_pendPopOldestBuffLocked_::NixOpenALQueue_pushOwning(reuse) failed.\n");
+                        NixOpenALQueuePair_destroy(&reuse);
+                    }
                 }
             }
-        }
-        //move "org" to notify queue
-        if(pair.org.ptr != NULL){
-            STNixOpenALQueuePair notif;
-            NixOpenALQueuePair_init(&notif);
-            notif.org = pair.org;
-            if(!NixOpenALQueue_pushOwning(&obj->queues.notify, &notif)){
-                NIX_PRINTF_ERROR("NixOpenALSource_pendPopOldestBuffLocked_::NixOpenALQueue_pushOwning(notify) failed.\n");
-                NixOpenALQueuePair_destroy(&notif);
-            } else {
-                //now owned by reuse
-                pair.org.ptr = NULL;
+            //move "org" to notify queue
+            if(!NixBuffer_isNull(pair.org)){
+                STNixOpenALQueuePair notif;
+                NixOpenALQueuePair_init(&notif);
+                NixOpenALQueuePair_moveOrg(&pair, &notif);
+                if(!NixOpenALQueue_pushOwning(&obj->queues.notify, &notif)){
+                    NIX_PRINTF_ERROR("NixOpenALSource_pendPopOldestBuffLocked_::NixOpenALQueue_pushOwning(notify) failed.\n");
+                    NixOpenALQueuePair_destroy(&notif);
+                }
             }
+            NIX_ASSERT(pair.org.ptr == NULL); //program logic error
+            NIX_ASSERT(pair.idBufferAL == NIX_OPENAL_NULL); //program logic error
+            NixOpenALQueuePair_destroy(&pair);
+            r = NIX_TRUE;
         }
-        NIX_ASSERT(pair.org.ptr == NULL); //program logic error
-        NIX_ASSERT(pair.idBufferAL == NIX_OPENAL_NULL); //program logic error
-        NixOpenALQueuePair_destroy(&pair);
-        r = NIX_TRUE;
     }
     return r;
 }
@@ -905,19 +894,15 @@ NixBOOL NixOpenALSource_pendMoveAllBuffsToNotifyWithoutPoppingLocked_(STNixOpenA
     NixUI32 i; for(i = 0; i < obj->queues.pend.use; i++){
         STNixOpenALQueuePair* pair = &obj->queues.pend.arr[i];
         //move "org" to notify queue
-        if(pair->org.ptr != NULL){
+        if(!NixBuffer_isNull(pair->org)){
             STNixOpenALQueuePair notif;
             NixOpenALQueuePair_init(&notif);
-            notif.org = pair->org;
+            NixOpenALQueuePair_moveOrg(pair, &notif);
             if(!NixOpenALQueue_pushOwning(&obj->queues.notify, &notif)){
                 NIX_PRINTF_ERROR("NixOpenALSource_pendPopOldestBuffLocked_::NixOpenALQueue_pushOwning(notify) failed.\n");
                 NixOpenALQueuePair_destroy(&notif);
-            } else {
-                //now owned by reuse
-                pair->org.ptr = NULL;
             }
         }
-        NIX_ASSERT(pair->org.ptr == NULL); //program logic error
     }
     return r;
 }
@@ -1163,7 +1148,7 @@ NixBOOL NixOpenALRecorder_flush(STNixOpenALRecorder* obj){
     NixMutex_lock(obj->queues.mutex);
     if(obj->queues.reuse.use > 0){
         STNixOpenALQueuePair* pair = &obj->queues.reuse.arr[0];
-        if(pair->org.ptr != NULL && ((STNixPCMBuffer*)NixSharedPtr_getOpq(pair->org.ptr))->use > 0){
+        if(!NixBuffer_isNull(pair->org) && ((STNixPCMBuffer*)NixSharedPtr_getOpq(pair->org.ptr))->use > 0){
             obj->queues.filling.iCurSample = 0;
             if(!NixOpenALQueue_popMovingTo(&obj->queues.reuse, &obj->queues.notify)){
                 //program logic error
@@ -1216,7 +1201,7 @@ void NixOpenALRecorder_consumeInputBuffer(STNixOpenALRecorder* obj){
                     }
                 } else {
                     STNixOpenALQueuePair* pair = &obj->queues.reuse.arr[0];
-                    if(pair->org.ptr == NULL || ((STNixPCMBuffer*)NixSharedPtr_getOpq(pair->org.ptr))->desc.blockAlign <= 0){
+                    if(NixBuffer_isNull(pair->org) || ((STNixPCMBuffer*)NixSharedPtr_getOpq(pair->org.ptr))->desc.blockAlign <= 0){
                         //just remove
                         STNixOpenALQueuePair pair;
                         if(!NixOpenALQueue_popOrphaning(&obj->queues.reuse, &pair)){
@@ -1279,7 +1264,7 @@ void NixOpenALRecorder_notifyBuffers(STNixOpenALRecorder* obj){
                 break;
             } else {
                 //notify (unlocked)
-                if(pair.org.ptr != NULL && ((STNixPCMBuffer*)NixSharedPtr_getOpq(pair.org.ptr))->desc.blockAlign > 0 && obj->callback.func != NULL){
+                if(!NixBuffer_isNull(pair.org) && ((STNixPCMBuffer*)NixSharedPtr_getOpq(pair.org.ptr))->desc.blockAlign > 0 && obj->callback.func != NULL){
                     STNixPCMBuffer* org = (STNixPCMBuffer*)NixSharedPtr_getOpq(pair.org.ptr);
                     NixMutex_unlock(obj->queues.mutex);
                     {
@@ -1322,7 +1307,7 @@ STNixEngineRef nixOpenALEngine_alloc(STNixContextRef ctx){
             } else {
                 if(alcMakeContextCurrent(obj->contextAL) == AL_FALSE){
                     NIX_PRINTF_ERROR("OpenAL::alcMakeContextCurrent failed\n");
-                } else if(NULL == (r.ptr = NixSharedPtr_alloc(ctx.itf, obj))){
+                } else if(NULL == (r.ptr = NixSharedPtr_alloc(ctx.itf, obj, "nixOpenALEngine_alloc"))){
                     NIX_PRINTF_ERROR("nixAAudioEngine_create::NixSharedPtr_alloc failed.\n");
                 } else {
                     obj->contextALIsCurrent = NIX_TRUE;
@@ -1349,14 +1334,18 @@ STNixEngineRef nixOpenALEngine_alloc(STNixContextRef ctx){
 void nixOpenALEngine_free(STNixEngineRef pObj){
     if(pObj.ptr != NULL){
         STNixOpenALEngine* obj = (STNixOpenALEngine*)NixSharedPtr_getOpq(pObj.ptr);
+        NixSharedPtr_free(pObj.ptr);
         if(obj != NULL){
-            NixOpenALEngine_destroy(obj);
-            NixContext_mfree(obj->ctx, obj);
+            STNixMemoryItf memItf = obj->ctx.itf->mem; //use a copy, in case the Context get destroyed
+            {
+                NixOpenALEngine_destroy(obj);
+            }
+            if(memItf.free != NULL){
+                (*memItf.free)(obj);
+            }
             obj = NULL;
         }
-        NixSharedPtr_free(pObj.ptr);
     }
-    //itf belongs to Engine
 }
 
 void nixOpenALEngine_printCaps(STNixEngineRef pObj){
@@ -1464,7 +1453,7 @@ void nixOpenALEngine_tick(STNixEngineRef pObj){
 
 //Factory
 
-STNixSourceRef nixOpenALEngine_sourceAlloc(STNixEngineRef ref){
+STNixSourceRef nixOpenALEngine_allocSource(STNixEngineRef ref){
     STNixSourceRef r = STNixSourceRef_Zero;
     STNixOpenALEngine* obj = (STNixOpenALEngine*)NixSharedPtr_getOpq(ref.ptr);
     if(obj != NULL && obj->apiItf.source.alloc != NULL){
@@ -1473,7 +1462,7 @@ STNixSourceRef nixOpenALEngine_sourceAlloc(STNixEngineRef ref){
     return r;
 }
 
-STNixBufferRef nixOpenALEngine_bufferAlloc(STNixEngineRef ref, const STNixAudioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes){
+STNixBufferRef nixOpenALEngine_allocBuffer(STNixEngineRef ref, const STNixAudioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes){
     STNixBufferRef r = STNixBufferRef_Zero;
     STNixOpenALEngine* obj = (STNixOpenALEngine*)NixSharedPtr_getOpq(ref.ptr);
     if(obj != NULL && obj->apiItf.buffer.alloc != NULL){
@@ -1482,7 +1471,7 @@ STNixBufferRef nixOpenALEngine_bufferAlloc(STNixEngineRef ref, const STNixAudioD
     return r;
 }
 
-STNixRecorderRef nixOpenALEngine_recorderAlloc(STNixEngineRef ref, const STNixAudioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer){
+STNixRecorderRef nixOpenALEngine_allocRecorder(STNixEngineRef ref, const STNixAudioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer){
     STNixRecorderRef r = STNixRecorderRef_Zero;
     STNixOpenALEngine* obj = (STNixOpenALEngine*)NixSharedPtr_getOpq(ref.ptr);
     if(obj != NULL && obj->apiItf.recorder.alloc != NULL){
@@ -1514,7 +1503,7 @@ STNixSourceRef nixOpenALSource_alloc(STNixEngineRef pEng){
                 //add to engine
                 if(!NixOpenALEngine_srcsAdd(eng, obj)){
                     NIX_PRINTF_ERROR("nixOpenALSource_create::NixOpenALEngine_srcsAdd failed.\n");
-                } else if(NULL == (r.ptr = NixSharedPtr_alloc(eng->ctx.itf, obj))){
+                } else if(NULL == (r.ptr = NixSharedPtr_alloc(eng->ctx.itf, obj, "nixOpenALSource_alloc"))){
                     NIX_PRINTF_ERROR("nixAAudioEngine_create::NixSharedPtr_alloc failed.\n");
                 } else {
                     r.itf = &eng->apiItf.source;
@@ -1554,11 +1543,13 @@ void nixOpenALSource_removeAllBuffersAndNotify_(STNixOpenALSource* obj){
             }
         }
     }
+    NixNotifQueue_destroy(&notifs);
 }
 
 void nixOpenALSource_free(STNixSourceRef pObj){ //orphans the source, will automatically be destroyed after internal cleanup
     if(pObj.ptr != NULL){
         STNixOpenALSource* obj = (STNixOpenALSource*)NixSharedPtr_getOpq(pObj.ptr);
+        NixSharedPtr_free(pObj.ptr);
         if(obj != NULL){
             //close
             if(obj->idSourceAL != NIX_OPENAL_NULL){
@@ -1568,13 +1559,14 @@ void nixOpenALSource_free(STNixSourceRef pObj){ //orphans the source, will autom
             NixOpenALSource_setIsPlaying(obj, NIX_FALSE);
             NixOpenALSource_setIsPaused(obj, NIX_FALSE);
             //flush all pending buffers
-            nixOpenALSource_removeAllBuffersAndNotify_(obj);
-            //source orphaned, will be removed inside the "tick" method
-            NixSource_null(&obj->self);
+            {
+                //nullify self-reference before notifying
+                //to avoid reviving this object during final notification.
+                NixSource_null(&obj->self);
+                nixOpenALSource_removeAllBuffersAndNotify_(obj);
+            }
         }
-        NixSharedPtr_free(pObj.ptr);
     }
-    //itf belongs to Engine
 }
 
 void nixOpenALSource_setCallback(STNixSourceRef pObj, NixSourceCallbackFnc callback, void* callbackData){
@@ -1824,7 +1816,7 @@ STNixRecorderRef nixOpenALRecorder_alloc(STNixEngineRef pEng, const STNixAudioDe
             NixOpenALRecorder_init(eng->ctx, obj);
             if(!NixOpenALRecorder_prepare(obj, eng, audioDesc, buffersCount, samplesPerBuffer)){
                 NIX_PRINTF_ERROR("NixOpenALRecorder_create, NixOpenALRecorder_prepare failed.\n");
-            } else if(NULL == (r.ptr = NixSharedPtr_alloc(eng->ctx.itf, obj))){
+            } else if(NULL == (r.ptr = NixSharedPtr_alloc(eng->ctx.itf, obj, "nixOpenALRecorder_alloc"))){
                 NIX_PRINTF_ERROR("nixAAudioEngine_create::NixSharedPtr_alloc failed.\n");
             } else {
                 r.itf           = &eng->apiItf.recorder;
@@ -1846,14 +1838,18 @@ STNixRecorderRef nixOpenALRecorder_alloc(STNixEngineRef pEng, const STNixAudioDe
 void nixOpenALRecorder_free(STNixRecorderRef pObj){
     if(pObj.ptr != NULL){
         STNixOpenALRecorder* obj = (STNixOpenALRecorder*)NixSharedPtr_getOpq(pObj.ptr);
+        NixSharedPtr_free(pObj.ptr);
         if(obj != NULL){
-            NixOpenALRecorder_destroy(obj);
-            NixContext_mfree(obj->ctx, obj);
+            STNixMemoryItf memItf = obj->ctx.itf->mem; //use a copy, in case the Context get destroyed
+            {
+                NixOpenALRecorder_destroy(obj);
+            }
+            if(memItf.free != NULL){
+                (*memItf.free)(obj);
+            }
             obj = NULL;
         }
-        NixSharedPtr_free(pObj.ptr);
     }
-    //itf belongs to Engine
 }
 
 NixBOOL nixOpenALRecorder_setCallback(STNixRecorderRef pObj, NixRecorderCallbackFnc callback, void* callbackData){

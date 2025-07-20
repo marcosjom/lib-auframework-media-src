@@ -44,9 +44,9 @@ NixBOOL         nixAVAudioEngine_ctxActivate(STNixEngineRef ref);
 NixBOOL         nixAVAudioEngine_ctxDeactivate(STNixEngineRef ref);
 void            nixAVAudioEngine_tick(STNixEngineRef ref);
 //Factory
-STNixSourceRef  nixAVAudioEngine_sourceAlloc(STNixEngineRef ref);
-STNixBufferRef  nixAVAudioEngine_bufferAlloc(STNixEngineRef ref, const STNixAudioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes);
-STNixRecorderRef nixAVAudioEngine_recorderAlloc(STNixEngineRef ref, const STNixAudioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer);
+STNixSourceRef  nixAVAudioEngine_allocSource(STNixEngineRef ref);
+STNixBufferRef  nixAVAudioEngine_allocBuffer(STNixEngineRef ref, const STNixAudioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes);
+STNixRecorderRef nixAVAudioEngine_allocRecorder(STNixEngineRef ref, const STNixAudioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer);
 //Source
 STNixSourceRef  nixAVAudioSource_alloc(STNixEngineRef eng);
 void            nixAVAudioSource_free(STNixSourceRef ref);
@@ -79,9 +79,9 @@ NixBOOL nixAVAudioEngine_getApiItf(STNixApiItf* dst){
         dst->engine.ctxDeactivate = nixAVAudioEngine_ctxDeactivate;
         dst->engine.tick        = nixAVAudioEngine_tick;
         //Factory
-        dst->engine.sourceAlloc = nixAVAudioEngine_sourceAlloc;
-        dst->engine.bufferAlloc = nixAVAudioEngine_bufferAlloc;
-        dst->engine.recorderAlloc = nixAVAudioEngine_recorderAlloc;
+        dst->engine.allocSource = nixAVAudioEngine_allocSource;
+        dst->engine.allocBuffer = nixAVAudioEngine_allocBuffer;
+        dst->engine.allocRecorder = nixAVAudioEngine_allocRecorder;
         //PCMBuffer
         NixPCMBuffer_getApiItf(&dst->buffer);
         //Source
@@ -152,6 +152,9 @@ typedef struct STNixAVAudioQueuePair_ {
 
 void NixAVAudioQueuePair_init(STNixAVAudioQueuePair* obj);
 void NixAVAudioQueuePair_destroy(STNixAVAudioQueuePair* obj);
+void NixAVAudioQueuePair_moveOrg(STNixAVAudioQueuePair* obj, STNixAVAudioQueuePair* to);
+void NixAVAudioQueuePair_moveCnv(STNixAVAudioQueuePair* obj, STNixAVAudioQueuePair* to);
+
 
 //------
 //Queue (Buffers)
@@ -326,15 +329,8 @@ NixBOOL NixAVAudioEngine_srcsAdd(STNixAVAudioEngine* obj, struct STNixAVAudioSou
             //resize array (if necesary)
             if(obj->srcs.use >= obj->srcs.sz){
                 const NixUI32 szN = obj->srcs.use + 4;
-                STNixAVAudioSource** arrN = (STNixAVAudioSource**)NixContext_malloc(obj->ctx, sizeof(STNixAVAudioSource*) * szN, "STNixAVAudioEngine::srcsN");
+                STNixAVAudioSource** arrN = (STNixAVAudioSource**)NixContext_mrealloc(obj->ctx, obj->srcs.arr, sizeof(STNixAVAudioSource*) * szN, "STNixAVAudioEngine::srcsN");
                 if(arrN != NULL){
-                    if(obj->srcs.arr != NULL){
-                        if(obj->srcs.use > 0){
-                            memcpy(arrN, obj->srcs.arr, sizeof(arrN[0]) * obj->srcs.use);
-                        }
-                        NixContext_mfree(obj->ctx, obj->srcs.arr);
-                        obj->srcs.arr = NULL;
-                    }
                     obj->srcs.arr = arrN;
                     obj->srcs.sz = szN;
                 }
@@ -472,6 +468,21 @@ void NixAVAudioQueuePair_destroy(STNixAVAudioQueuePair* obj){
     }
 }
 
+void NixAVAudioQueuePair_moveOrg(STNixAVAudioQueuePair* obj, STNixAVAudioQueuePair* to){
+    NixBuffer_set(&to->org, obj->org);
+    NixBuffer_release(&obj->org);
+    NixBuffer_null(&obj->org);
+}
+
+void NixAVAudioQueuePair_moveCnv(STNixAVAudioQueuePair* obj, STNixAVAudioQueuePair* to){
+    if(to->cnv != nil){
+        [to->cnv release];
+        to->cnv = nil;
+    }
+    to->cnv = obj->cnv;
+    obj->cnv = nil;
+}
+
 //------
 //Queue (Buffers)
 //------
@@ -516,15 +527,8 @@ NixBOOL NixAVAudioQueue_prepareForSz(STNixAVAudioQueue* obj, const NixUI32 minSz
         //resize array (if necesary)
         if(minSz > obj->sz){
             const NixUI32 szN = minSz;
-            STNixAVAudioQueuePair* arrN = (STNixAVAudioQueuePair*)NixContext_malloc(obj->ctx, sizeof(STNixAVAudioQueuePair) * szN, "NixAVAudioQueue_prepareForSz::arrN");
+            STNixAVAudioQueuePair* arrN = (STNixAVAudioQueuePair*)NixContext_mrealloc(obj->ctx, obj->arr, sizeof(STNixAVAudioQueuePair) * szN, "NixAVAudioQueue_prepareForSz::arrN");
             if(arrN != NULL){
-                if(obj->arr != NULL){
-                    if(obj->use > 0){
-                        memcpy(arrN, obj->arr, sizeof(arrN[0]) * obj->use);
-                    }
-                    NixContext_mfree(obj->ctx, obj->arr);
-                    obj->arr = NULL;
-                }
                 obj->arr = arrN;
                 obj->sz = szN;
             }
@@ -545,15 +549,8 @@ NixBOOL NixAVAudioQueue_pushOwning(STNixAVAudioQueue* obj, STNixAVAudioQueuePair
         //resize array (if necesary)
         if(obj->use >= obj->sz){
             const NixUI32 szN = obj->use + 4;
-            STNixAVAudioQueuePair* arrN = (STNixAVAudioQueuePair*)NixContext_malloc(obj->ctx, sizeof(STNixAVAudioQueuePair) * szN, "NixAVAudioQueue_pushOwning::arrN");
+            STNixAVAudioQueuePair* arrN = (STNixAVAudioQueuePair*)NixContext_mrealloc(obj->ctx, obj->arr, sizeof(STNixAVAudioQueuePair) * szN, "NixAVAudioQueue_pushOwning::arrN");
             if(arrN != NULL){
-                if(obj->arr != NULL){
-                    if(obj->use > 0){
-                        memcpy(arrN, obj->arr, sizeof(arrN[0]) * obj->use);
-                    }
-                    NixContext_mfree(obj->ctx, obj->arr);
-                    obj->arr = NULL;
-                }
                 obj->arr = arrN;
                 obj->sz = szN;
             }
@@ -875,41 +872,36 @@ NixBOOL NixAVAudioSource_queueBufferForOutput(STNixAVAudioSource* obj, STNixBuff
 
 NixBOOL NixAVAudioSource_pendPopOldestBuffLocked_(STNixAVAudioSource* obj){
     NixBOOL r = NIX_FALSE;
-    STNixAVAudioQueuePair pair;
-    if(!NixAVAudioQueue_popOrphaning(&obj->queues.pend, &pair)){
-        NIX_ASSERT(NIX_FALSE); //program logic error
-    } else {
-        //move "cnv" to reusable queue
-        if(pair.cnv != NULL){
-            STNixAVAudioQueuePair reuse;
-            NixAVAudioQueuePair_init(&reuse);
-            reuse.cnv = pair.cnv;
-            if(!NixAVAudioQueue_pushOwning(&obj->queues.reuse, &reuse)){
-                NIX_PRINTF_ERROR("NixAVAudioSource_pendPopOldestBuffLocked_::NixAVAudioQueue_pushOwning(reuse) failed.\n");
-                reuse.cnv = NULL;
-                NixAVAudioQueuePair_destroy(&reuse);
-            } else {
-                //now owned by reuse
-                pair.cnv = NULL;
+    if(obj->queues.pend.use > 0){
+        STNixAVAudioQueuePair pair;
+        if(!NixAVAudioQueue_popOrphaning(&obj->queues.pend, &pair)){
+            NIX_ASSERT(NIX_FALSE); //program logic error
+        } else {
+            //move "cnv" to reusable queue
+            if(pair.cnv != NULL){
+                STNixAVAudioQueuePair reuse;
+                NixAVAudioQueuePair_init(&reuse);
+                NixAVAudioQueuePair_moveCnv(&pair, &reuse);
+                if(!NixAVAudioQueue_pushOwning(&obj->queues.reuse, &reuse)){
+                    NIX_PRINTF_ERROR("NixAVAudioSource_pendPopOldestBuffLocked_::NixAVAudioQueue_pushOwning(reuse) failed.\n");
+                    NixAVAudioQueuePair_destroy(&reuse);
+                }
             }
-        }
-        //move "org" to notify queue
-        if(pair.org.ptr != NULL){
-            STNixAVAudioQueuePair notif;
-            NixAVAudioQueuePair_init(&notif);
-            notif.org = pair.org;
-            if(!NixAVAudioQueue_pushOwning(&obj->queues.notify, &notif)){
-                NIX_PRINTF_ERROR("NixAVAudioSource_pendPopOldestBuffLocked_::NixAVAudioQueue_pushOwning(notify) failed.\n");
-                NixAVAudioQueuePair_destroy(&notif);
-            } else {
-                //now owned by reuse
-                pair.org.ptr = NULL;
+            //move "org" to notify queue
+            if(!NixBuffer_isNull(pair.org)){
+                STNixAVAudioQueuePair notif;
+                NixAVAudioQueuePair_init(&notif);
+                NixAVAudioQueuePair_moveOrg(&pair, &notif);
+                if(!NixAVAudioQueue_pushOwning(&obj->queues.notify, &notif)){
+                    NIX_PRINTF_ERROR("NixAVAudioSource_pendPopOldestBuffLocked_::NixAVAudioQueue_pushOwning(notify) failed.\n");
+                    NixAVAudioQueuePair_destroy(&notif);
+                }
             }
+            NIX_ASSERT(pair.org.ptr == NULL); //program logic error
+            NIX_ASSERT(pair.cnv == NULL); //program logic error
+            NixAVAudioQueuePair_destroy(&pair);
+            r = NIX_TRUE;
         }
-        NIX_ASSERT(pair.org.ptr == NULL); //program logic error
-        NIX_ASSERT(pair.cnv == NULL); //program logic error
-        NixAVAudioQueuePair_destroy(&pair);
-        r = NIX_TRUE;
     }
     return r;
 }
@@ -1182,7 +1174,7 @@ NixBOOL NixAVAudioRecorder_flush(STNixAVAudioRecorder* obj){
     NixMutex_lock(obj->queues.mutex);
     if(obj->queues.reuse.use > 0){
         STNixAVAudioQueuePair* pair = &obj->queues.reuse.arr[0];
-        if(pair->org.ptr != NULL && ((STNixPCMBuffer*)NixSharedPtr_getOpq(pair->org.ptr))->use > 0){
+        if(!NixBuffer_isNull(pair->org) && ((STNixPCMBuffer*)NixSharedPtr_getOpq(pair->org.ptr))->use > 0){
             obj->queues.filling.iCurSample = 0;
             if(!NixAVAudioQueue_popMovingTo(&obj->queues.reuse, &obj->queues.notify)){
                 //program logic error
@@ -1207,7 +1199,7 @@ void NixAVAudioRecorder_notifyBuffers(STNixAVAudioRecorder* obj){
                 break;
             } else {
                 //notify (unlocked)
-                if(pair.org.ptr != NULL && ((STNixPCMBuffer*)NixSharedPtr_getOpq(pair.org.ptr))->desc.blockAlign > 0 && obj->callback.func != NULL){
+                if(!NixBuffer_isNull(pair.org) && ((STNixPCMBuffer*)NixSharedPtr_getOpq(pair.org.ptr))->desc.blockAlign > 0 && obj->callback.func != NULL){
                     STNixPCMBuffer* org = (STNixPCMBuffer*)NixSharedPtr_getOpq(pair.org.ptr);
                     NixMutex_unlock(obj->queues.mutex);
                     {
@@ -1238,7 +1230,7 @@ STNixEngineRef nixAVAudioEngine_alloc(STNixContextRef ctx){
     STNixAVAudioEngine* obj = (STNixAVAudioEngine*)NixContext_malloc(ctx, sizeof(STNixAVAudioEngine), "STNixAVAudioEngine");
     if(obj != NULL){
         NixAVAudioEngine_init(ctx, obj);
-        if(NULL == (r.ptr = NixSharedPtr_alloc(ctx.itf, obj))){
+        if(NULL == (r.ptr = NixSharedPtr_alloc(ctx.itf, obj, "nixAVAudioEngine_alloc"))){
             NIX_PRINTF_ERROR("nixAVAudioEngine_create::NixSharedPtr_alloc failed.\n");
         } else {
             r.itf = &obj->apiItf.engine;
@@ -1257,21 +1249,21 @@ STNixEngineRef nixAVAudioEngine_alloc(STNixContextRef ctx){
 void nixAVAudioEngine_free(STNixEngineRef pObj){
     if(pObj.ptr != NULL){
         STNixAVAudioEngine* obj = (STNixAVAudioEngine*)NixSharedPtr_getOpq(pObj.ptr);
+        NixSharedPtr_free(pObj.ptr);
         if(obj != NULL){
-            STNixContextRef ctxCpy = obj->ctx;
+            STNixMemoryItf memItf = obj->ctx.itf->mem; //use a copy, in case the Context get destroyed
             {
                 NixAVAudioEngine_destroy(obj);
             }
-            NixContext_mfree(ctxCpy, obj);
+            if(memItf.free != NULL){
+                (*memItf.free)(obj);
+            }
             obj = NULL;
         }
-        NixSharedPtr_free(pObj.ptr);
     }
-    //itf belongs to Engine
 }
 
 void nixAVAudioEngine_printCaps(STNixEngineRef pObj){
-    //
 }
 
 NixBOOL nixAVAudioEngine_ctxIsActive(STNixEngineRef pObj){
@@ -1310,7 +1302,7 @@ void nixAVAudioEngine_tick(STNixEngineRef pObj){
 
 //Factory
 
-STNixSourceRef nixAVAudioEngine_sourceAlloc(STNixEngineRef ref){
+STNixSourceRef nixAVAudioEngine_allocSource(STNixEngineRef ref){
     STNixSourceRef r = STNixSourceRef_Zero;
     STNixAVAudioEngine* obj = (STNixAVAudioEngine*)NixSharedPtr_getOpq(ref.ptr);
     if(obj != NULL && obj->apiItf.source.alloc != NULL){
@@ -1319,7 +1311,7 @@ STNixSourceRef nixAVAudioEngine_sourceAlloc(STNixEngineRef ref){
     return r;
 }
 
-STNixBufferRef nixAVAudioEngine_bufferAlloc(STNixEngineRef ref, const STNixAudioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes){
+STNixBufferRef nixAVAudioEngine_allocBuffer(STNixEngineRef ref, const STNixAudioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes){
     STNixBufferRef r = STNixBufferRef_Zero;
     STNixAVAudioEngine* obj = (STNixAVAudioEngine*)NixSharedPtr_getOpq(ref.ptr);
     if(obj != NULL && obj->apiItf.buffer.alloc != NULL){
@@ -1328,7 +1320,7 @@ STNixBufferRef nixAVAudioEngine_bufferAlloc(STNixEngineRef ref, const STNixAudio
     return r;
 }
 
-STNixRecorderRef nixAVAudioEngine_recorderAlloc(STNixEngineRef ref, const STNixAudioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer){
+STNixRecorderRef nixAVAudioEngine_allocRecorder(STNixEngineRef ref, const STNixAudioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer){
     STNixRecorderRef r = STNixRecorderRef_Zero;
     STNixAVAudioEngine* obj = (STNixAVAudioEngine*)NixSharedPtr_getOpq(ref.ptr);
     if(obj != NULL && obj->apiItf.recorder.alloc != NULL){
@@ -1341,6 +1333,8 @@ STNixRecorderRef nixAVAudioEngine_recorderAlloc(STNixEngineRef ref, const STNixA
 //Source API
 //------
   
+void nixAVAudioSource_removeAllBuffersAndNotify_(STNixAVAudioSource* obj);
+
 STNixSourceRef nixAVAudioSource_alloc(STNixEngineRef pEng){
     STNixSourceRef r = STNixSourceRef_Zero;
     STNixAVAudioEngine* eng = (STNixAVAudioEngine*)NixSharedPtr_getOpq(pEng.ptr);
@@ -1377,7 +1371,7 @@ STNixSourceRef nixAVAudioSource_alloc(STNixEngineRef pEng){
         //add to engine
         if(!NixAVAudioEngine_srcsAdd(eng, obj)){
             NIX_PRINTF_ERROR("nixAVAudioSource_create::NixAVAudioEngine_srcsAdd failed.\n");
-        } else if(NULL == (r.ptr = NixSharedPtr_alloc(eng->ctx.itf, obj))){
+        } else if(NULL == (r.ptr = NixSharedPtr_alloc(eng->ctx.itf, obj, "NixAVAudioEngine_srcsAdd"))){
             NIX_PRINTF_ERROR("nixAAudioEngine_create::NixSharedPtr_alloc failed.\n");
         } else {
             r.itf = &eng->apiItf.source;
@@ -1392,6 +1386,24 @@ STNixSourceRef nixAVAudioSource_alloc(STNixEngineRef pEng){
         }
     }
     return r;
+}
+
+void nixAVAudioSource_free(STNixSourceRef pObj){
+    if(pObj.ptr != NULL){
+        STNixAVAudioSource* obj = (STNixAVAudioSource*)NixSharedPtr_getOpq(pObj.ptr);
+        NixSharedPtr_free(pObj.ptr);
+        if(obj != NULL){
+            //Flag as orphan, for cleanup inside 'tick'
+            NixAVAudioSource_setIsOrphan(obj);
+            //flush all pending buffers
+            {
+                //nullify self-reference before notifying
+                //to avoid reviving this object during final notification.
+                NixSource_null(&obj->self);
+                nixAVAudioSource_removeAllBuffersAndNotify_(obj);
+            }
+        }
+    }
 }
 
 void nixAVAudioSource_removeAllBuffersAndNotify_(STNixAVAudioSource* obj){
@@ -1415,21 +1427,7 @@ void nixAVAudioSource_removeAllBuffersAndNotify_(STNixAVAudioSource* obj){
             }
         }
     }
-}
-
-void nixAVAudioSource_free(STNixSourceRef pObj){
-    if(pObj.ptr != NULL){
-        STNixAVAudioSource* obj = (STNixAVAudioSource*)NixSharedPtr_getOpq(pObj.ptr);
-        if(obj != NULL){
-            //flush all pending buffers
-            nixAVAudioSource_removeAllBuffersAndNotify_(obj);
-            //Flag as orphan, for cleanup inside 'tick'
-            NixAVAudioSource_setIsOrphan(obj);
-            //
-            NixSource_null(&obj->self);
-        }
-        NixSharedPtr_free(pObj.ptr);
-    }
+    NixNotifQueue_destroy(&notifs);
 }
 
 void nixAVAudioSource_setCallback(STNixSourceRef pObj, NixSourceCallbackFnc callback, void* callbackData){
@@ -1660,7 +1658,7 @@ STNixRecorderRef nixAVAudioRecorder_alloc(STNixEngineRef pEng, const STNixAudioD
             NixAVAudioRecorder_init(eng->ctx, obj);
             if(!NixAVAudioRecorder_prepare(obj, eng, audioDesc, buffersCount, samplesPerBuffer)){
                 NIX_PRINTF_ERROR("nixAVAudioRecorder_create, NixAVAudioRecorder_prepare failed.\n");
-            } else if(NULL == (r.ptr = NixSharedPtr_alloc(eng->ctx.itf, obj))){
+            } else if(NULL == (r.ptr = NixSharedPtr_alloc(eng->ctx.itf, obj, "nixAVAudioRecorder_alloc"))){
                 NIX_PRINTF_ERROR("nixAVAudioRecorder_create::NixSharedPtr_alloc failed.\n");
             } else {
                 r.itf           = &eng->apiItf.recorder;
@@ -1682,14 +1680,18 @@ STNixRecorderRef nixAVAudioRecorder_alloc(STNixEngineRef pEng, const STNixAudioD
 void nixAVAudioRecorder_free(STNixRecorderRef pObj){
     if(pObj.ptr != NULL){
         STNixAVAudioRecorder* obj = (STNixAVAudioRecorder*)NixSharedPtr_getOpq(pObj.ptr);
+        NixSharedPtr_free(pObj.ptr);
         if(obj != NULL){
-            NixAVAudioRecorder_destroy(obj);
-            NixContext_mfree(obj->ctx, obj);
+            STNixMemoryItf memItf = obj->ctx.itf->mem; //use a copy, in case the Context get destroyed
+            {
+                NixAVAudioRecorder_destroy(obj);
+            }
+            if(memItf.free != NULL){
+                (*memItf.free)(obj);
+            }
             obj = NULL;
         }
-        NixSharedPtr_free(pObj.ptr);
     }
-    //itf belongs to Engine
 }
 
 NixBOOL nixAVAudioRecorder_setCallback(STNixRecorderRef pObj, NixRecorderCallbackFnc callback, void* callbackData){
