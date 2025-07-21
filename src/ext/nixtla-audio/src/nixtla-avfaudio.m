@@ -395,12 +395,15 @@ void NixAVAudioEngine_tick(STNixAVAudioEngine* obj, const NixBOOL isFinalCleanup
                     //NIX_PRINTF_INFO("NixAVAudioEngine_tick::source(#%d/%d).\n", i + 1, obj->srcs.use);
                     //release orphan
                     if(NixAVAudioSource_isOrphan(src) || isFinalCleanup){
-                        if(src->src != nil){
-                            if([src->src isPlaying]){
-                                [src->src stop];
-                            } else {
-                                [src->src release];
-                                src->src = nil;
+                        if(src->eng != nil){
+                            if([src->eng isRunning]){
+                                [src->eng stop];
+                            }
+                            if(![src->eng isRunning]){
+                                if(src->src != nil){
+                                    [src->src release];
+                                    src->src = nil;
+                                }
                             }
                         }
                     }
@@ -1236,12 +1239,12 @@ STNixEngineRef nixAVAudioEngine_alloc(STNixContextRef ctx){
             r.itf = &obj->apiItf.engine;
             obj = NULL; //consume
         }
-    }
-    //release (if not consumed)
-    if(obj != NULL){
-        NixAVAudioEngine_destroy(obj);
-        NixContext_mfree(ctx, obj);
-        obj = NULL;
+        //release (if not consumed)
+        if(obj != NULL){
+            NixAVAudioEngine_destroy(obj);
+            NixContext_mfree(ctx, obj);
+            obj = NULL;
+        }
     }
     return r;
 }
@@ -1393,13 +1396,22 @@ void nixAVAudioSource_free(STNixSourceRef pObj){
         STNixAVAudioSource* obj = (STNixAVAudioSource*)NixSharedPtr_getOpq(pObj.ptr);
         NixSharedPtr_free(pObj.ptr);
         if(obj != NULL){
-            //Flag as orphan, for cleanup inside 'tick'
-            NixAVAudioSource_setIsOrphan(obj);
-            //flush all pending buffers
+            //set final state
             {
                 //nullify self-reference before notifying
                 //to avoid reviving this object during final notification.
                 NixSource_null(&obj->self);
+                //Flag as orphan, for cleanup inside 'tick'
+                NixAVAudioSource_setIsOrphan(obj);
+            }
+            //stop engine
+            {
+                if(obj->eng != nil && [obj->eng isRunning]){
+                    [obj->eng stop];
+                }
+            }
+            //flush all pending buffers
+            {
                 nixAVAudioSource_removeAllBuffersAndNotify_(obj);
             }
         }
@@ -1493,7 +1505,7 @@ NixBOOL nixAVAudioSource_isPlaying(STNixSourceRef pObj){
     NixBOOL r = NIX_FALSE;
     if(pObj.ptr != NULL){
         STNixAVAudioSource* obj = (STNixAVAudioSource*)NixSharedPtr_getOpq(pObj.ptr);
-        r = (obj->src != nil && [obj->src isPlaying] && obj->queues.pendScheduledCount > 0) ? NIX_TRUE : NIX_FALSE;
+        r = (obj->eng != nil && obj->src != nil && [obj->eng isRunning] && [obj->src isPlaying] && obj->queues.pendScheduledCount > 0) ? NIX_TRUE : NIX_FALSE;
     }
     return r;
 }
