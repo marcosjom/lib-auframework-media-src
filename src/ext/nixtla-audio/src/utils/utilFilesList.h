@@ -8,6 +8,10 @@
 #ifndef NIXTLA_UTIL_FILES_LIST_H
 #define NIXTLA_UTIL_FILES_LIST_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 static const char* _nixUtilFilesList[] = {
     "res/beat_mono_08_08000.wav"
     , "res/beat_mono_08_11025.wav"
@@ -42,5 +46,9 @@ static const char* _nixUtilFilesList[] = {
     , "res/beat_stereo_32_22050.wav"
     , "res/beat_stereo_32_44100.wav"
 };
+
+#ifdef __cplusplus
+} //extern "C"
+#endif
 
 #endif

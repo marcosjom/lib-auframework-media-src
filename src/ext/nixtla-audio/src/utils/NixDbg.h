@@ -8,6 +8,10 @@
 #ifndef NIX_UTILS_MEM_MAP_H
 #define NIX_UTILS_MEM_MAP_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //STNixDbgStr
 
 typedef struct STNixDbgStr_ {
@@ -45,5 +49,9 @@ typedef struct STNixDbgThreadState_ {
 STNixDbgThreadState* NixDbgThreadState_get(void);
 void NixDbgThreadState_push(const char* className);
 void NixDbgThreadState_pop(void);
+
+#ifdef __cplusplus
+} //extern "C"
+#endif
 
 #endif

@@ -36,7 +36,7 @@ typedef	unsigned long long	NixUI64;	//NixUI64[n], Unsigned 64-bit array—n is t
 typedef float				NixFLOAT;	//float
 typedef double              NixDOUBLE;  //double
 
-#define NIXINLINE           static inline
+#define NX_INLN             static inline
 
 #define NIX_FALSE			0
 #define NIX_TRUE			1
@@ -144,14 +144,15 @@ typedef struct STNixContextRef_ {
 } STNixContextRef;
 
 STNixContextRef NixContext_alloc(struct STNixContextItf_* ctx);
-void NixContext_retain(STNixContextRef ref);
-void NixContext_release(STNixContextRef* ref);
-void NixContext_set(STNixContextRef* ref, STNixContextRef other);
-void NixContext_null(STNixContextRef* ref);
+void            NixContext_retain(STNixContextRef ref);
+void            NixContext_release(STNixContextRef* ref);
+void            NixContext_set(STNixContextRef* ref, STNixContextRef other);
+NX_INLN NixBOOL NixContext_isNull(STNixContextRef ref) { return (ref.ptr == NULL); }
+void            NixContext_null(STNixContextRef* ref);
 //context (memory)
-void* NixContext_malloc(STNixContextRef ref, const NixUI32 newSz, const char* dbgHintStr);
-void* NixContext_mrealloc(STNixContextRef ref, void* ptr, const NixUI32 newSz, const char* dbgHintStr);
-void NixContext_mfree(STNixContextRef ref, void* ptr);
+void*           NixContext_malloc(STNixContextRef ref, const NixUI32 newSz, const char* dbgHintStr);
+void*           NixContext_mrealloc(STNixContextRef ref, void* ptr, const NixUI32 newSz, const char* dbgHintStr);
+void            NixContext_mfree(STNixContextRef ref, void* ptr);
 //context (mutex)
 STNixMutexRef NixContext_mutex_alloc(STNixContextRef ref);
 
@@ -199,10 +200,10 @@ typedef struct STNixBufferRef_ {
 
 void            NixBuffer_retain(STNixBufferRef obj);
 void            NixBuffer_release(STNixBufferRef* obj);
-NIXINLINE NixBOOL NixBuffer_isSame(STNixBufferRef ref, STNixBufferRef other) { return (ref.ptr == other.ptr); }
-NIXINLINE NixBOOL NixBuffer_isNull(STNixBufferRef ref) { return (ref.ptr == NULL); }
-NIXINLINE void  NixBuffer_null(STNixBufferRef* ref){ if(ref != NULL) ref->ptr = NULL; }
-NIXINLINE void  NixBuffer_set(STNixBufferRef* ref, STNixBufferRef other){ if(!NixBuffer_isNull(other)){ NixBuffer_retain(other); } if(!NixBuffer_isNull(*ref)){ NixBuffer_release(ref); } *ref = other; }
+NX_INLN NixBOOL NixBuffer_isSame(STNixBufferRef ref, STNixBufferRef other) { return (ref.ptr == other.ptr); }
+NX_INLN NixBOOL NixBuffer_isNull(STNixBufferRef ref) { return (ref.ptr == NULL); }
+NX_INLN void    NixBuffer_null(STNixBufferRef* ref){ if(ref != NULL) ref->ptr = NULL; }
+NX_INLN void    NixBuffer_set(STNixBufferRef* ref, STNixBufferRef other){ if(!NixBuffer_isNull(other)){ NixBuffer_retain(other); } if(!NixBuffer_isNull(*ref)){ NixBuffer_release(ref); } *ref = other; }
 NixBOOL         NixBuffer_setData(STNixBufferRef ref, const STNixAudioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes);
 NixBOOL         NixBuffer_fillWithZeroes(STNixBufferRef ref);
 
@@ -217,10 +218,10 @@ typedef struct STNixSourceRef_ {
 
 void            NixSource_retain(STNixSourceRef obj);
 void            NixSource_release(STNixSourceRef* obj);
-NIXINLINE NixBOOL NixSource_isSame(STNixSourceRef ref, STNixSourceRef other) { return (ref.ptr == other.ptr); }
-NIXINLINE NixBOOL NixSource_isNull(STNixSourceRef ref) { return (ref.ptr == NULL); }
-NIXINLINE void  NixSource_null(STNixSourceRef* ref){ if(ref != NULL) ref->ptr = NULL; }
-NIXINLINE void  NixSource_set(STNixSourceRef* ref, STNixSourceRef other){ if(!NixSource_isNull(other)){ NixSource_retain(other); } if(!NixSource_isNull(*ref)){ NixSource_release(ref); } *ref = other; }
+NX_INLN NixBOOL NixSource_isSame(STNixSourceRef ref, STNixSourceRef other) { return (ref.ptr == other.ptr); }
+NX_INLN NixBOOL NixSource_isNull(STNixSourceRef ref) { return (ref.ptr == NULL); }
+NX_INLN void    NixSource_null(STNixSourceRef* ref){ if(ref != NULL) ref->ptr = NULL; }
+NX_INLN void    NixSource_set(STNixSourceRef* ref, STNixSourceRef other){ if(!NixSource_isNull(other)){ NixSource_retain(other); } if(!NixSource_isNull(*ref)){ NixSource_release(ref); } *ref = other; }
 void            NixSource_setCallback(STNixSourceRef ref, NixSourceCallbackFnc callback, void* callbackData);
 NixBOOL         NixSource_setVolume(STNixSourceRef ref, const float vol);
 NixBOOL         NixSource_setRepeat(STNixSourceRef ref, const NixBOOL isRepeat);
@@ -244,10 +245,10 @@ typedef struct STNixRecorderRef_ {
 
 void            NixRecorder_retain(STNixRecorderRef obj);
 void            NixRecorder_release(STNixRecorderRef* obj);
-NIXINLINE NixBOOL NixRecorder_isSame(STNixRecorderRef ref, STNixRecorderRef other) { return (ref.ptr == other.ptr); }
-NIXINLINE NixBOOL NixRecorder_isNull(STNixRecorderRef ref) { return (ref.ptr == NULL); }
-NIXINLINE void  NixRecorder_null(STNixRecorderRef* ref){ if(ref != NULL) ref->ptr = NULL; }
-NIXINLINE void  NixRecorder_set(STNixRecorderRef* ref, STNixRecorderRef other){ if(!NixRecorder_isNull(other)){ NixRecorder_retain(other); } if(!NixRecorder_isNull(*ref)){ NixRecorder_release(ref); } *ref = other; }
+NX_INLN NixBOOL NixRecorder_isSame(STNixRecorderRef ref, STNixRecorderRef other) { return (ref.ptr == other.ptr); }
+NX_INLN NixBOOL NixRecorder_isNull(STNixRecorderRef ref) { return (ref.ptr == NULL); }
+NX_INLN void    NixRecorder_null(STNixRecorderRef* ref){ if(ref != NULL) ref->ptr = NULL; }
+NX_INLN void    NixRecorder_set(STNixRecorderRef* ref, STNixRecorderRef other){ if(!NixRecorder_isNull(other)){ NixRecorder_retain(other); } if(!NixRecorder_isNull(*ref)){ NixRecorder_release(ref); } *ref = other; }
 NixBOOL         NixRecorder_setCallback(STNixRecorderRef ref, NixRecorderCallbackFnc callback, void* callbackData);
 NixBOOL         NixRecorder_start(STNixRecorderRef ref);
 NixBOOL         NixRecorder_stop(STNixRecorderRef ref);
@@ -264,10 +265,10 @@ typedef struct STNixEngineRef_ {
 STNixEngineRef  NixEngine_alloc(STNixContextRef ctx, struct STNixApiItf_* apiItf);
 void            NixEngine_retain(STNixEngineRef obj);
 void            NixEngine_release(STNixEngineRef* obj);
-NIXINLINE NixBOOL NixEngine_isSame(STNixEngineRef ref, STNixEngineRef other) { return (ref.ptr == other.ptr); }
-NIXINLINE NixBOOL NixEngine_isNull(STNixEngineRef ref) { return (ref.ptr == NULL); }
-NIXINLINE void  NixEngine_null(STNixEngineRef* ref){ if(ref != NULL) ref->ptr = NULL; }
-NIXINLINE void  NixEngine_set(STNixEngineRef* ref, STNixEngineRef other){ if(!NixEngine_isNull(other)){ NixEngine_retain(other); } if(!NixEngine_isNull(*ref)){ NixEngine_release(ref); } *ref = other; }
+NX_INLN NixBOOL NixEngine_isSame(STNixEngineRef ref, STNixEngineRef other) { return (ref.ptr == other.ptr); }
+NX_INLN NixBOOL NixEngine_isNull(STNixEngineRef ref) { return (ref.ptr == NULL); }
+NX_INLN void    NixEngine_null(STNixEngineRef* ref){ if(ref != NULL) ref->ptr = NULL; }
+NX_INLN void    NixEngine_set(STNixEngineRef* ref, STNixEngineRef other){ if(!NixEngine_isNull(other)){ NixEngine_retain(other); } if(!NixEngine_isNull(*ref)){ NixEngine_release(ref); } *ref = other; }
 //
 void            NixEngine_printCaps(STNixEngineRef ref);
 NixBOOL         NixEngine_ctxIsActive(STNixEngineRef ref);
@@ -447,7 +448,7 @@ NixUI32 NixFmtConverter_samplesForNewFrequency(const NixUI32 ammSampesOrg, const
 
 //Default API
 
-NixBOOL NixApiItf_getDefaultForCurrentOS(STNixApiItf* dst);
+NixBOOL NixApiItf_getDefaultApiForCurrentOS(STNixApiItf* dst);
 
 
 /*

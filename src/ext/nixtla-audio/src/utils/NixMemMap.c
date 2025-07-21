@@ -13,6 +13,8 @@
 #include "../utils/NixMemMap.h"
 
 #if defined(__ANDROID__) //Android
+#   include <jni.h>            //for JNIEnv, jobject
+#   include <android/log.h>    //for __android_log_print()
 #   define NIX_PRINTF_INFO(STR_FMT, ...)   __android_log_print(ANDROID_LOG_INFO, "Nixtla", STR_FMT, ##__VA_ARGS__)
 #   define NIX_PRINTF_ERROR(STR_FMT, ...)  __android_log_print(ANDROID_LOG_ERROR, "Nixtla", "ERROR, "STR_FMT, ##__VA_ARGS__)
 #   define NIX_PRINTF_WARNING(STR_FMT, ...) __android_log_print(ANDROID_LOG_WARN, "Nixtla", "WARNING, "STR_FMT, ##__VA_ARGS__)
@@ -386,8 +388,8 @@ void NixMemMap_printAlivePtrs(STNixMemMap* obj){
     }
     NIX_PRINTF_INFO("\n");
     NIX_PRINTF_INFO("CURRENTLY USED   : %lu blocks (%lu bytes)\n", obj->stats.alive.count, obj->stats.alive.bytes);
-    NIX_PRINTF_INFO("MAX USED         : %lu blocks (%lu bytes)\n", obj->stats.max.count, obj->stats.max.count);
-    NIX_PRINTF_INFO("TOTAL ALLOCATIONS: %lu blocks (%lu bytes)\n", obj->stats.total.count, obj->stats.total.count);
+    NIX_PRINTF_INFO("MAX USED         : %lu blocks (%lu bytes)\n", obj->stats.max.count, obj->stats.max.bytes);
+    NIX_PRINTF_INFO("TOTAL ALLOCATIONS: %lu blocks (%lu bytes)\n", obj->stats.total.count, obj->stats.total.bytes);
     assert(obj->stats.alive.count == countUsed); //program logic error
     assert(obj->stats.alive.bytes == bytesUsed); //program logic error
 }

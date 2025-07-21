@@ -8,6 +8,10 @@
 #ifndef NIX_UTILS_MEM_MAP_H
 #define NIX_UTILS_MEM_MAP_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //---------------------------------------------
 //-- Usefull implementation for memory leaking
 //-- detection and tracking.
@@ -116,5 +120,9 @@ void NixMemMap_ptrReleasedBy(STNixMemMap* obj, void* pointer, const char* by);
 //report
 void NixMemMap_printAlivePtrs(STNixMemMap* obj);
 void NixMemMap_printFinalReport(STNixMemMap* obj);
+
+#ifdef __cplusplus
+} //extern "C"
+#endif
 
 #endif

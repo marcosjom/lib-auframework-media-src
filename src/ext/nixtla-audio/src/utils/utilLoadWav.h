@@ -20,13 +20,13 @@ extern "C" {
 
 NixUI8 nixUtilLoadDataFromWavFile(
 #                           ifdef __ANDROID__
-                            JNIEnv *env, jobject assetManager,
+                                  JNIEnv *env, jobject assetManager,
 #                           endif
-                            const char* pathToWav, STNixAudioDesc* audioDesc, NixUI8** audioData, NixUI32* audioDataBytes
-                           );
+                                  const char* pathToWav, STNixAudioDesc* audioDesc, NixUI8** audioData, NixUI32* audioDataBytes
+                                  );
 
 #ifdef __cplusplus
-}
+} //extern "C"
 #endif
 
 #endif
