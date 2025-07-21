@@ -424,12 +424,20 @@ void NixOpenALEngine_tick(STNixOpenALEngine* obj, const NixBOOL isFinalCleanup){
                 NixSI32 i; for(i = 0; i < (NixSI32)obj->srcs.use; ++i){
                     STNixOpenALSource* src = obj->srcs.arr[i];
                     //NIX_PRINTF_INFO("NixOpenALEngine_tick::source(#%d/%d).\n", i + 1, obj->srcs.use);
+                    if(NixOpenALSource_isOrphan(src)){
+                        //src
+                        if(src->idSourceAL != NIX_OPENAL_NULL){
+                            alSourceStop(src->idSourceAL); NIX_OPENAL_ERR_VERIFY("alSourceStop");
+                            alDeleteSources(1, &src->idSourceAL); NIX_OPENAL_ERR_VERIFY("alDeleteSources");
+                            src->idSourceAL = NIX_OPENAL_NULL;
+                        }
+                    }
                     if(src->idSourceAL == NIX_OPENAL_NULL){
                         //remove
                         //NIX_PRINTF_INFO("NixOpenALEngine_tick::source(#%d/%d); remove-NULL.\n", i + 1, obj->srcs.use);
                         NixOpenALEngine_removeSrcRecordLocked_(obj, &i);
                         src = NULL;
-                    } else {
+                    } else if(!NixOpenALSource_isOrphan(src)){
                         //remove processed buffers
                         if(src != NULL && !NixOpenALSource_isStatic(src)){
                             ALint csmdAmm = 0;
@@ -1487,9 +1495,13 @@ STNixRecorderRef nixOpenALEngine_allocRecorder(STNixEngineRef ref, const STNixAu
 STNixSourceRef nixOpenALSource_alloc(STNixEngineRef pEng){
     STNixSourceRef r = STNixSourceRef_Zero;
     STNixOpenALEngine* eng = (STNixOpenALEngine*)NixSharedPtr_getOpq(pEng.ptr);
-    if(eng != NULL){
+    if(eng == NULL){
+        NIX_PRINTF_ERROR("nixOpenALSource_alloc::NixSharedPtr_getOpq returned NULL\n");
+    } else {
         STNixOpenALSource* obj = (STNixOpenALSource*)NixContext_malloc(eng->ctx, sizeof(STNixOpenALSource), "STNixOpenALSource");
-        if(obj != NULL){
+        if(obj == NULL){
+            NIX_PRINTF_ERROR("nixOpenALSource_alloc::NixContext_malloc returned NULL\n");
+        } else {
             NixOpenALSource_init(eng->ctx, obj);
             obj->eng = eng;
             //
@@ -1551,18 +1563,22 @@ void nixOpenALSource_free(STNixSourceRef pObj){ //orphans the source, will autom
         STNixOpenALSource* obj = (STNixOpenALSource*)NixSharedPtr_getOpq(pObj.ptr);
         NixSharedPtr_free(pObj.ptr);
         if(obj != NULL){
-            //close
-            if(obj->idSourceAL != NIX_OPENAL_NULL){
-                alSourceStop(obj->idSourceAL); NIX_OPENAL_ERR_VERIFY("alSourceStop");
-            }
-            NixOpenALSource_setIsOrphan(obj); //source is waiting for close(), wait for the change of state and NixOpenALSource_release + free.
-            NixOpenALSource_setIsPlaying(obj, NIX_FALSE);
-            NixOpenALSource_setIsPaused(obj, NIX_FALSE);
-            //flush all pending buffers
+            //set final state
             {
                 //nullify self-reference before notifying
                 //to avoid reviving this object during final notification.
                 NixSource_null(&obj->self);
+                //Flag as orphan, for cleanup inside 'tick'
+                NixOpenALSource_setIsOrphan(obj); //source is waiting for close(), wait for the change of state and NixOpenALSource_release + free.
+                NixOpenALSource_setIsPlaying(obj, NIX_FALSE);
+                NixOpenALSource_setIsPaused(obj, NIX_FALSE);
+            }
+            //flush all pending buffers
+            {
+                //close
+                if(obj->idSourceAL != NIX_OPENAL_NULL){
+                    alSourceStop(obj->idSourceAL); NIX_OPENAL_ERR_VERIFY("alSourceStop");
+                }
                 nixOpenALSource_removeAllBuffersAndNotify_(obj);
             }
         }
