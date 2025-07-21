@@ -781,8 +781,10 @@ void NixAAudioSource_destroy(STNixAAudioSource* obj){
     //src
     if(obj->src != NULL){
 #       ifdef NIX_ASSERTS_ACTIVATED
-        aaudio_stream_state_t state = AAudioStream_getState(obj->src);
-        NIX_ASSERT(state == AAUDIO_STREAM_STATE_CLOSED || state == AAUDIO_STREAM_STATE_UNINITIALIZED)
+        {
+            aaudio_stream_state_t state = AAudioStream_getState(obj->src);
+            NIX_ASSERT(state == AAUDIO_STREAM_STATE_CLOSED || state == AAUDIO_STREAM_STATE_UNINITIALIZED)
+        }
 #       endif
         obj->src = NULL;
     }
@@ -1475,10 +1477,14 @@ STNixRecorderRef nixAAudioEngine_allocRecorder(STNixEngineRef ref, const STNixAu
 
 STNixSourceRef nixAAudioSource_alloc(STNixEngineRef pEng){
     STNixSourceRef r = STNixSourceRef_Zero;
-    STNixAAudioEngine* eng = (STNixAAudioEngine*)pEng.ptr;
-    if(eng != NULL){
+    STNixAAudioEngine* eng = (STNixAAudioEngine*)NixSharedPtr_getOpq(pEng.ptr);
+    if(eng == NULL){
+        NIX_PRINTF_ERROR("nixAAudioSource_alloc::eng is NULL.\n");
+    } else {
         STNixAAudioSource* obj = (STNixAAudioSource*)NixContext_malloc(eng->ctx, sizeof(STNixAAudioSource), "STNixAAudioSource");
-        if(obj != NULL){
+        if(obj == NULL){
+            NIX_PRINTF_ERROR("nixAAudioSource_alloc::NixContext_malloc failed.\n");
+        } else {
             NixAAudioSource_init(eng->ctx, obj);
             obj->eng = eng;
             //add to engine
@@ -1529,15 +1535,19 @@ void nixAAudioSource_free(STNixSourceRef pObj){ //orphans the source, will autom
         STNixAAudioSource* obj = (STNixAAudioSource*)NixSharedPtr_getOpq(pObj.ptr);
         NixSharedPtr_free(pObj.ptr);
         if(obj != NULL){
-            NixAAudioSource_setIsOrphan(obj); //source is waiting for close(), wait for the change of state and NixAAudioSource_release + free.
-            NixAAudioSource_setIsPlaying(obj, NIX_FALSE);
-            NixAAudioSource_setIsPaused(obj, NIX_FALSE);
-            ++obj->eng->srcs.changingStateCountHint;
-            //flush all pending buffers
+            //set final state
             {
                 //nullify self-reference before notifying
                 //to avoid reviving this object during final notification.
                 NixSource_null(&obj->self);
+                //Flag as orphan, for cleanup inside 'tick'
+                NixAAudioSource_setIsOrphan(obj); //source is waiting for close(), wait for the change of state and NixAAudioSource_release + free.
+                NixAAudioSource_setIsPlaying(obj, NIX_FALSE);
+                NixAAudioSource_setIsPaused(obj, NIX_FALSE);
+                ++obj->eng->srcs.changingStateCountHint;
+            }
+            //flush all pending buffers
+            {
                 nixAAudioSource_removeAllBuffersAndNotify_(obj);
             }
         }
