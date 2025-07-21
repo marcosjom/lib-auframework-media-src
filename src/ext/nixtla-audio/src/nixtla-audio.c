@@ -58,10 +58,9 @@
 #   define NIX_DEFAULT_API_AVFAUDIO
 #endif
 
-
 //Default API
 
-NixBOOL NixApiItf_getDefaultForCurrentOS(STNixApiItf* dst){
+NixBOOL NixApiItf_getDefaultApiForCurrentOS(STNixApiItf* dst){
     NixBOOL r = NIX_FALSE;
     if(dst != NULL){
         //API
