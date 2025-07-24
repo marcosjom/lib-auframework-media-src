@@ -49,7 +49,7 @@ typedef struct STNixDemoCaptureEco_ {
         NixUI32     iFilled;
         NixUI32     iPlayed;
         NixUI32     bytesPerBuffer;
-        NixUI32     samplesPerBuffer;
+        NixUI32     blocksPerBuffer;
         STNixBufferRef arr[NIX_DEMO_ECO_RECORD_SECS * NIX_DEMO_ECO_BUFFS_PER_SEC];
     } buffs;
 } STNixDemoCaptureEco;

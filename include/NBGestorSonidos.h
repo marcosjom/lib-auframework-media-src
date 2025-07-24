@@ -18,6 +18,7 @@
 #include "AUSonido.h"
 #include "AUSonidoStream.h"
 #include "AUSonidoMutable.h"
+#include "../src/ext/nixtla-audio/include/nixtla-audio.h"
 
 enum ENAudioTipo {
 	ENAudioTipo_Sonidos = 0,
@@ -73,17 +74,24 @@ enum ENBufferALEstado {
 	ENBufferALEstado_Cargado		//el buffer cuenta con datos para reproducir
 };
 
+struct STDatosSndGroup {
+    bool                isDisabled;
+    float               volume;
+};
+
 struct STDatosFuentesAL {
 	bool				regOcupado;
-	UI16				fuenteAL;
+    UI8                 iGroup; //ENAudioGrupo
+    STNixSourceRef      source;
+    float               volume;
 	UI32				conteoRetenciones;
 	IUsuarioFuentesAL*	actualUsuario;
 	//
 	bool operator==(const STDatosFuentesAL &otro) const {
-		return (fuenteAL==otro.fuenteAL && actualUsuario==otro.actualUsuario);
+		return (NixSource_isSame(source, otro.source) && actualUsuario==otro.actualUsuario);
 	}
 	bool operator!=(const STDatosFuentesAL &otro) const {
-		return !(fuenteAL==otro.fuenteAL && actualUsuario==otro.actualUsuario);
+		return !(NixSource_isSame(source, otro.source) && actualUsuario==otro.actualUsuario);
 	}
 };
 
@@ -91,27 +99,29 @@ struct STDatosBufferAL {
 	bool				regOcupado;
 	UI8					tipoAudio;	//ENAudioTipo
 	UI8					formatoArchivo; //ENAudioFormato
-	UI16				bufferAL;	//Si es cero, los datos aun no se han cargado
+    STNixBufferRef      buffer;
+    STNixAudioDesc      desc;
+    UI32                dataUse;
 	UI32				conteoRetenciones;
 	AUCadenaMutable8*	nombreRecurso;
 	//
 	bool operator==(const STDatosBufferAL &otro) const {
-		return (bufferAL==otro.bufferAL && nombreRecurso==otro.nombreRecurso);
+		return (NixBuffer_isSame(buffer, otro.buffer) && nombreRecurso==otro.nombreRecurso);
 	}
 	bool operator!=(const STDatosBufferAL &otro) const {
-		return !(bufferAL==otro.bufferAL && nombreRecurso==otro.nombreRecurso);
+		return !(NixBuffer_isSame(buffer, otro.buffer) && nombreRecurso==otro.nombreRecurso);
 	}
 };
 
 struct STDatosBufferStream {
-	UI16				stream;
-	UI16				buffer;
+    STNixSourceRef      stream;
+    STNixBufferRef      buffer;
 	//
 	bool operator==(const STDatosBufferStream &otro) const {
-		return (stream==otro.stream && buffer==otro.buffer);
+		return (NixSource_isSame(stream, otro.stream) && NixBuffer_isSame(buffer, otro.buffer));
 	}
 	bool operator!=(const STDatosBufferStream &otro) const {
-		return !(stream==otro.stream && buffer==otro.buffer);
+		return !(NixSource_isSame(stream, otro.stream) && NixBuffer_isSame(buffer, otro.buffer));
 	}
 };
 
@@ -186,7 +196,7 @@ class NBGestorSonidos {
 		static void					bufferRetener(const UI16 buffer);
 		static void					bufferLiberar(const UI16 buffer);
 		static UI16					bufferFrecuencia(const UI16 buffer);
-		static ENBufferALEstado		bufferEstado(const UI16 buffer);
+		static ENBufferALEstado     bufferEstado(const UI16 buffer);
 		static float				bufferSegundos(const UI16 buffer);
 		//Fuentes (general)
 		static UI16					fuenteAsignarEstatica(IUsuarioFuentesAL* asignarA, bool buscarEntreRecicables, ENAudioGrupo grupoAudio);
@@ -212,7 +222,7 @@ class NBGestorSonidos {
 		static float				fuenteTotalSegundos(const UI16 fuenteAL);
 		static bool					fuenteTieneBufferEnCola(const UI16 fuente, const UI16 buffer);
 		//
-		static void					streamBufferUnqueuedCallback(const UI32 sourceIndex, const UI16 buffersUnqueuedCount);
+		static void					streamBufferUnqueuedCallback(STNixSourceRef src, const UI16 buffersUnqueuedCount);
 		//Bloqueo
 		static void					bloquear();
 		static void					desbloquear();
@@ -240,9 +250,11 @@ class NBGestorSonidos {
 		//Consultas
 		static const char*			nombreSonido(const UI16 indBuffer);
 		static const char*			nombreSonido(const AUSonidoStream* stream);
-		static void					estadoSonidos(UI32* guardarBytesReservadosEn, UI32* guardarBytesUsadosEn, UI32* guardarConteoBufferesEn);
+        //2025-07-24: removed
+		//static void				estadoSonidos(UI32* guardarBytesReservadosEn, UI32* guardarBytesUsadosEn, UI32* guardarConteoBufferesEn);
 		//
-		static void					debugPrintSourcesState();
+        //2025-07-24: removed
+		//static void				debugPrintSourcesState();
 		#ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTION_MEMORIA
 		static UI32					debugBytesTotalBufferes(SI32* guardarConteoFuentesEnUsoEn, SI32* guardarConteoBufferesEn, SI32* guardarConteoBufferesStreamEn, SI32* guardarConteoStreamsEn);
 		#endif
@@ -259,6 +271,7 @@ class NBGestorSonidos {
 		static UI8											_ciclosPorSegundoEnStreams;
 		static AUCadenaMutable8*							_prefijoRutas[ENAudioTipo_Conteo];			//prefijo de rutas para sonidos
 		static AUCadenaMutable8*							_prefijoRutasCache[ENAudioTipo_Conteo];		//prefijo de rutas para cache sonidos
+        static STDatosSndGroup                              _grps[ENAudioTipo_Conteo];
 		static AUArregloNativoMutableP<STDatosFuentesAL>*	_fuentesAL;				//fuentes AL creados (general, ningun otro objeto deberia crear)
 		static AUArregloNativoMutableP<STDatosBufferAL>*	_bufferesAL;			//bufferes AL cargado y precargados
 		static AUArregloNativoMutableP<STDatosStream>*		_streamsAL;				//streams para la carga de bufferes
@@ -267,7 +280,7 @@ class NBGestorSonidos {
 		static UI32											_bufferesPendCargar;	//Cantidad de bufferes pendientes de cargar
 		static bool											_bloqueado;
 		//
-		static UI16											privFuenteAsignar(UI16 nixFuente, IUsuarioFuentesAL* asignarA, bool buscarEntreRecicables, ENAudioGrupo grupoAudio);
+		static UI16											privFuenteAsignar(STNixSourceRef src, IUsuarioFuentesAL* asignarA, bool buscarEntreRecicables, ENAudioGrupo grupoAudio);
 		static UI16											privBufferDesdeSonido(AUSonido* sonido, const ENAudioFormato formatoArchAudio, const ENAudioTipo tipoAudio, const char* enlistarConNombre, bool cargarDatosInmediatamente);
 		static UI16											privBufferDesdeDatos(const STSonidoDescriptor* propiedadesSonido, const UI8* datosSonido, const UI32 conteoBytesDatos, const ENAudioFormato formatoArchAudio, const ENAudioTipo tipoAudio, const char* enlistarConNombre);
 };

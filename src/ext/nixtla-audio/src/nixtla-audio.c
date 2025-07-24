@@ -165,6 +165,11 @@ void TYPE ## _ ## METHOD PARAMS_DEFS { \
         return (ref.itf != NULL && ref.itf->METHOD != NULL ? (*ref.itf->METHOD)PARAMS_NAMES : NIX_FALSE); \
     }
 
+#define NIX_REF_METHOD_DEFINITION_FLOAT(TYPE, METHOD, PARAMS_DEFS, PARAMS_NAMES)   \
+    NixFLOAT TYPE ## _ ## METHOD PARAMS_DEFS{ \
+        return (ref.itf != NULL && ref.itf->METHOD != NULL ? (*ref.itf->METHOD)PARAMS_NAMES : 0.f); \
+    }
+
 
 //STNixEngineRef (shared pointer)
 
@@ -204,8 +209,8 @@ STNixBufferRef NixEngine_allocBuffer(STNixEngineRef ref, const STNixAudioDesc* a
     return (ref.itf != NULL && ref.itf->allocBuffer != NULL ? (*ref.itf->allocBuffer)(ref, audioDesc, audioDataPCM, audioDataPCMBytes) : (STNixBufferRef)STNixBufferRef_Zero);
 }
 
-STNixRecorderRef NixEngine_allocRecorder(STNixEngineRef ref, const STNixAudioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer){
-    return (ref.itf != NULL && ref.itf->allocRecorder != NULL ? (*ref.itf->allocRecorder)(ref, audioDesc, buffersCount, samplesPerBuffer) : (STNixRecorderRef)STNixRecorderRef_Zero);
+STNixRecorderRef NixEngine_allocRecorder(STNixEngineRef ref, const STNixAudioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 blocksPerBuffer){
+    return (ref.itf != NULL && ref.itf->allocRecorder != NULL ? (*ref.itf->allocRecorder)(ref, audioDesc, buffersCount, blocksPerBuffer) : (STNixRecorderRef)STNixRecorderRef_Zero);
 }
 
 //STNixBufferRef (shared pointer)
@@ -257,8 +262,30 @@ NIX_REF_METHOD_DEFINITION_VOID(NixSource, pause, (STNixSourceRef ref), (ref))
 NIX_REF_METHOD_DEFINITION_VOID(NixSource, stop, (STNixSourceRef ref), (ref))
 NIX_REF_METHOD_DEFINITION_BOOL(NixSource, isPlaying, (STNixSourceRef ref), (ref))
 NIX_REF_METHOD_DEFINITION_BOOL(NixSource, isPaused, (STNixSourceRef ref), (ref))
+NIX_REF_METHOD_DEFINITION_BOOL(NixSource, isRepeat, (STNixSourceRef ref), (ref))
+NIX_REF_METHOD_DEFINITION_FLOAT(NixSource, getVolume, (STNixSourceRef ref), (ref))
 NIX_REF_METHOD_DEFINITION_BOOL(NixSource, setBuffer, (STNixSourceRef ref, STNixBufferRef buff), (ref, buff))
 NIX_REF_METHOD_DEFINITION_BOOL(NixSource, queueBuffer, (STNixSourceRef ref, STNixBufferRef buff), (ref, buff))
+NIX_REF_METHOD_DEFINITION_BOOL(NixSource, setBufferOffset, (STNixSourceRef ref, const ENNixOffsetType type, const NixUI32 offset), (ref,  type, offset))
+NixUI32 NixSource_getBuffersCount(STNixSourceRef ref, NixUI32* optDstBytesCount, NixUI32* optDstBlocksCount, NixUI32* optDstMsecsCount){   //all buffer queue
+    if(ref.itf != NULL && ref.itf->getBuffersCount != NULL){
+        return (*ref.itf->getBuffersCount)(ref, optDstBytesCount, optDstBlocksCount, optDstMsecsCount);
+    }
+    if(optDstBytesCount != NULL) *optDstBytesCount = 0;
+    if(optDstBlocksCount != NULL) *optDstBlocksCount = 0;
+    if(optDstMsecsCount != NULL) *optDstMsecsCount = 0;
+    return 0;
+}
+
+NixUI32 NixSource_getBlocksOffset(STNixSourceRef ref, NixUI32* optDstBytesCount, NixUI32* optDstBlocksCount, NixUI32* optDstMsecsCount){  //relative to first buffer in queue
+    if(ref.itf != NULL && ref.itf->getBlocksOffset != NULL){
+        return (*ref.itf->getBlocksOffset)(ref, optDstBytesCount, optDstBlocksCount, optDstMsecsCount);
+    }
+    if(optDstBytesCount != NULL) *optDstBytesCount = 0;
+    if(optDstBlocksCount != NULL) *optDstBlocksCount = 0;
+    if(optDstMsecsCount != NULL) *optDstMsecsCount = 0;
+    return 0;
+}
 
 //STNixRecorderRef (shared pointer)
 
@@ -281,6 +308,17 @@ void NixRecorder_release(STNixRecorderRef* ref){
 NIX_REF_METHOD_DEFINITION_BOOL(NixRecorder, setCallback, (STNixRecorderRef ref, NixRecorderCallbackFnc callback, void* callbackData), (ref, callback, callbackData))
 NIX_REF_METHOD_DEFINITION_BOOL(NixRecorder, start, (STNixRecorderRef ref), (ref))
 NIX_REF_METHOD_DEFINITION_BOOL(NixRecorder, stop, (STNixRecorderRef ref), (ref))
+NIX_REF_METHOD_DEFINITION_BOOL(NixRecorder, flush, (STNixRecorderRef ref, const NixBOOL includeCurrentPartialBuff, const NixBOOL discardWithoutNotifying), (ref, includeCurrentPartialBuff, discardWithoutNotifying))
+NIX_REF_METHOD_DEFINITION_BOOL(NixRecorder, isCapturing, (STNixRecorderRef ref), (ref))
+NixUI32 NixRecorder_getBuffersFilledCount(STNixRecorderRef ref, NixUI32* optDstBytesCount, NixUI32* optDstBlocksCount, NixUI32* optDstMsecsCount){  //relative to first buffer in queue
+    if(ref.itf != NULL && ref.itf->getBuffersFilledCount != NULL){
+        return (*ref.itf->getBuffersFilledCount)(ref, optDstBytesCount, optDstBlocksCount, optDstMsecsCount);
+    }
+    if(optDstBytesCount != NULL) *optDstBytesCount = 0;
+    if(optDstBlocksCount != NULL) *optDstBlocksCount = 0;
+    if(optDstMsecsCount != NULL) *optDstMsecsCount = 0;
+    return 0;
+}
 
 // STNixMutexRef
 
@@ -571,7 +609,7 @@ void            NixEngineItf_nop_tick(STNixEngineRef ref) { }
 //Factory
 STNixSourceRef  NixEngineItf_nop_allocSource(STNixEngineRef ref) { return (STNixSourceRef)STNixSourceRef_Zero; }
 STNixBufferRef  NixEngineItf_nop_allocBuffer(STNixEngineRef ref, const STNixAudioDesc* audioDesc, const NixUI8* audioDataPCM, const NixUI32 audioDataPCMBytes) { return (STNixBufferRef)STNixBufferRef_Zero; }
-STNixRecorderRef NixEngineItf_nop_allocRecorder(STNixEngineRef ref, const STNixAudioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer) { return (STNixRecorderRef)STNixRecorderRef_Zero; }
+STNixRecorderRef NixEngineItf_nop_allocRecorder(STNixEngineRef ref, const STNixAudioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 blocksPerBuffer) { return (STNixRecorderRef)STNixRecorderRef_Zero; }
 
 //Links NULL methods to a NOP implementation,
 //this reduces the need to check for functions NULL pointers.
@@ -642,8 +680,14 @@ void            NixSourceItf_nop_pause(STNixSourceRef ref) { }
 void            NixSourceItf_nop_stop(STNixSourceRef ref) { }
 NixBOOL         NixSourceItf_nop_isPlaying(STNixSourceRef ref) { return NIX_FALSE; }
 NixBOOL         NixSourceItf_nop_isPaused(STNixSourceRef ref) { return NIX_FALSE; }
+NixBOOL         NixSourceItf_nop_isRepeat(STNixSourceRef ref) { return NIX_FALSE; }
+NixFLOAT        NixSourceItf_nop_getVolume(STNixSourceRef ref) { return 0.f; }
 NixBOOL         NixSourceItf_nop_setBuffer(STNixSourceRef ref, STNixBufferRef buff) { return NIX_FALSE; }
 NixBOOL         NixSourceItf_nop_queueBuffer(STNixSourceRef ref, STNixBufferRef buff) { return NIX_FALSE; }
+NixBOOL         NixSourceItf_nop_setBufferOffset(STNixSourceRef ref, const ENNixOffsetType type, const NixUI32 offset){ return NIX_FALSE; } //relative to first buffer in queue
+NixUI32         NixSourceItf_nop_getBuffersCount(STNixSourceRef ref, NixUI32* optDstBytesCount, NixUI32* optDstBlocksCount, NixUI32* optDstMsecsCount) { if(optDstBytesCount != NULL) *optDstBytesCount = 0; if(optDstBlocksCount != NULL) *optDstBlocksCount = 0; if(optDstMsecsCount != NULL) *optDstMsecsCount = 0; return 0; }
+NixUI32         NixSourceItf_nop_getBlocksOffset(STNixSourceRef ref, NixUI32* optDstBytesCount, NixUI32* optDstBlocksCount, NixUI32* optDstMsecsCount) { if(optDstBytesCount != NULL) *optDstBytesCount = 0; if(optDstBlocksCount != NULL) *optDstBlocksCount = 0; if(optDstMsecsCount != NULL) *optDstMsecsCount = 0; return 0; }
+
 
 //Links NULL methods to a NOP implementation,
 //this reduces the need to check for functions NULL pointers.
@@ -659,8 +703,13 @@ void NixSourceItf_fillMissingMembers(STNixSourceItf* itf){
     NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixSourceItf, stop);
     NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixSourceItf, isPlaying);
     NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixSourceItf, isPaused);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixSourceItf, isRepeat);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixSourceItf, getVolume);
     NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixSourceItf, setBuffer);
     NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixSourceItf, queueBuffer);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixSourceItf, setBufferOffset);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixSourceItf, getBuffersCount);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixSourceItf, getBlocksOffset);
     //validate missing implementations
 #   ifdef NIX_ASSERTS_ACTIVATED
     {
@@ -676,12 +725,14 @@ void NixSourceItf_fillMissingMembers(STNixSourceItf* itf){
 
 //STNixRecorderItf
 
-STNixRecorderRef NixRecorderItf_nop_alloc(STNixEngineRef eng, const STNixAudioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 samplesPerBuffer) { return (STNixRecorderRef)STNixRecorderRef_Zero; }
+STNixRecorderRef NixRecorderItf_nop_alloc(STNixEngineRef eng, const STNixAudioDesc* audioDesc, const NixUI16 buffersCount, const NixUI16 blocksPerBuffer) { return (STNixRecorderRef)STNixRecorderRef_Zero; }
 void            NixRecorderItf_nop_free(STNixRecorderRef ref) { }
 NixBOOL         NixRecorderItf_nop_setCallback(STNixRecorderRef ref, NixRecorderCallbackFnc callback, void* callbackData) { return NIX_FALSE; }
 NixBOOL         NixRecorderItf_nop_start(STNixRecorderRef ref) { return NIX_FALSE; }
 NixBOOL         NixRecorderItf_nop_stop(STNixRecorderRef ref) { return NIX_FALSE; }
-
+NixBOOL         NixRecorderItf_nop_flush(STNixRecorderRef ref, const NixBOOL includeCurrentPartialBuff, const NixBOOL discardWithoutNotifying) { return NIX_FALSE; }
+NixBOOL         NixRecorderItf_nop_isCapturing(STNixRecorderRef ref) { return NIX_FALSE; }
+NixUI32         NixRecorderItf_nop_getBuffersFilledCount(STNixRecorderRef ref, NixUI32* optDstBytesCount, NixUI32* optDstBlocksCount, NixUI32* optDstMsecsCount) { if(optDstBytesCount != NULL) *optDstBytesCount = 0; if(optDstBlocksCount != NULL) *optDstBlocksCount = 0; if(optDstMsecsCount != NULL) *optDstMsecsCount = 0; return 0; }
 
 //Links NULL methods to a NOP implementation,
 //this reduces the need to check for functions NULL pointers.
@@ -692,6 +743,9 @@ void NixRecorderItf_fillMissingMembers(STNixRecorderItf* itf){
     NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixRecorderItf, setCallback);
     NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixRecorderItf, start);
     NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixRecorderItf, stop);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixRecorderItf, flush);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixRecorderItf, isCapturing);
+    NIX_ITF_SET_MISSING_METHOD_TO_NOP(itf, NixRecorderItf, getBuffersFilledCount);
     //validate missing implementations
 #   ifdef NIX_ASSERTS_ACTIVATED
     {
@@ -1779,20 +1833,20 @@ NixUI32 NixFmtConverter_maxChannels(void){
     return NIX_FMT_CONVERTER_CHANNELS_MAX;
 }
 
-NixUI32 NixFmtConverter_samplesForNewFrequency(const NixUI32 ammSampesOrg, const NixUI32 freqOrg, const NixUI32 freqNew){   //ammount of output samples from one frequeny to another, +1 for safety
-    NixUI32 r = ammSampesOrg;
+NixUI32 NixFmtConverter_blocksForNewFrequency(const NixUI32 ammBlocksOrg, const NixUI32 freqOrg, const NixUI32 freqNew){   //ammount of output samples from one frequeny to another, +1 for safety
+    NixUI32 r = ammBlocksOrg;
     if(freqOrg < freqNew){
         //increasing freq
         const NixUI32 delta = (freqNew - freqOrg);
         const NixUI32 repeatPerOrgSample = delta * NIX_FMT_CONVERTER_FREQ_PRECISION / freqOrg;
-        r = ammSampesOrg + ( ammSampesOrg * repeatPerOrgSample / NIX_FMT_CONVERTER_FREQ_PRECISION ) + 1;
+        r = ammBlocksOrg + ( ammBlocksOrg * repeatPerOrgSample / NIX_FMT_CONVERTER_FREQ_PRECISION ) + 1;
     } else if(freqOrg > freqNew){
         //decreasing freq
         const NixUI32 accumPerOrgSample = freqNew * NIX_FMT_CONVERTER_FREQ_PRECISION / freqOrg;
         if(accumPerOrgSample > 0){
-            r = ( ammSampesOrg * accumPerOrgSample / NIX_FMT_CONVERTER_FREQ_PRECISION) + 1;
+            r = ( ammBlocksOrg * accumPerOrgSample / NIX_FMT_CONVERTER_FREQ_PRECISION) + 1;
         } else {
-            r = ammSampesOrg + 1;
+            r = ammBlocksOrg + 1;
         }
     }
     return r;

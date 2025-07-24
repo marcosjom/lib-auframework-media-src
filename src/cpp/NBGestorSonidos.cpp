@@ -41,8 +41,6 @@
 
 //NIXTLA config -- end
 
-#include "nixtla-audio.c"
-
 //
 
 bool											NBGestorSonidos::_gestorInicializado = false;
@@ -51,6 +49,7 @@ UI8												NBGestorSonidos::_maximasFuentesGenerar = 0;	//cantidad maxima de
 UI8												NBGestorSonidos::_ciclosPorSegundoEnStreams = 0;//cantidad de segmentos por segundo para los streamings de audio
 AUCadenaMutable8*								NBGestorSonidos::_prefijoRutas[ENAudioTipo_Conteo];			//prefijo de rutas para sonidos
 AUCadenaMutable8*								NBGestorSonidos::_prefijoRutasCache[ENAudioTipo_Conteo];	//prefijo de rutas para cache sonidos
+STDatosSndGroup                                 NBGestorSonidos::_grps[ENAudioTipo_Conteo];
 
 AUArregloNativoMutableP<IEscuchadorGestionSonidos*>* NBGestorSonidos::_escuchadores = NULL;
 
@@ -63,7 +62,8 @@ AUArregloNativoMutableP<STDatosStream>*			NBGestorSonidos::_streamsAL = NULL;			
 ENGestorSonidoModo								NBGestorSonidos::_modoDeCarga = ENGestorSonidoModo_cargaInmediata;
 
 //Nixtla-audio
-static STNix_Engine								nbGestorSonidos_nixtlaMotor;
+static STNixContextRef                          gNBGestorSonidos_nixCtx = STNixContextRef_Zero;
+static STNixEngineRef                           gNBGestorSonidos_nixEng = STNixEngineRef_Zero;
 
 //Capacidades
 bool											NBGestorSonidos::_soportaCapturaSonido = false;
@@ -80,8 +80,8 @@ bool											NBGestorSonidos::_bloqueado = false;
 			STDatosFuentesAL* NOMVAR_PTRSTRUCT = &(_fuentesAL->elemento[NOMVAR_INDICE]); \
 			NBASSERT(NOMVAR_PTRSTRUCT->regOcupado) \
 			if(NOMVAR_PTRSTRUCT->regOcupado){ \
-				NBASSERT(NOMVAR_PTRSTRUCT->fuenteAL!=0) \
-				if(NOMVAR_PTRSTRUCT->fuenteAL!=0){
+				NBASSERT(!NixSource_isNull(NOMVAR_PTRSTRUCT->source)) \
+				if(!NixSource_isNull(NOMVAR_PTRSTRUCT->source)){
 					
 #define NBGSONIDOS_GET_NIXFUENTE_FIN \
 				} \
@@ -97,14 +97,72 @@ bool											NBGestorSonidos::_bloqueado = false;
 			STDatosBufferAL* NOMVAR_PTRSTRUCT = &(_bufferesAL->elemento[NOMVAR_INDICE]); \
 			NBASSERT(NOMVAR_PTRSTRUCT->regOcupado) \
 			if(NOMVAR_PTRSTRUCT->regOcupado){ \
-				NBASSERT(NOMVAR_PTRSTRUCT->bufferAL!=0) \
-				if(NOMVAR_PTRSTRUCT->bufferAL!=0){
+				NBASSERT(!NixBuffer_isNull(NOMVAR_PTRSTRUCT->buffer)) \
+				if(!NixBuffer_isNull(NOMVAR_PTRSTRUCT->buffer)){
 
 #define NBGSONIDOS_GET_NIXBUFFER_FIN \
 				} \
 			} \
 		} \
 	} \
+
+//STNixMemoryItf
+
+void* NBGestorSonidos_mem_malloc(const NixUI32 newSz, const char* dbgHintStr){
+    return NBMemory_alloc(newSz);
+}
+
+void* NBGestorSonidos_mem_realloc(void* ptr, const NixUI32 newSz, const char* dbgHintStr){
+    return NBMemory_realloc(ptr, newSz);
+}
+
+void NBGestorSonidos_mem_free(void* ptr){
+    NBMemory_free(ptr);
+}
+
+//STNixMutexItf
+
+typedef struct STNBGestorSonidosMutexOpq_ {
+    STNBThreadMutex         mutex;
+    struct STNixContextItf_ ctx;
+} STNBGestorSonidosMutexOpq;
+
+STNixMutexRef NBGestorSonidos_mutex_alloc(struct STNixContextItf_* ctx){
+    STNixMutexRef r = STNixMutexRef_Zero;
+    STNBGestorSonidosMutexOpq* obj = (STNBGestorSonidosMutexOpq*)(*ctx->mem.malloc)(sizeof(STNBGestorSonidosMutexOpq), "NBGestorSonidos_mutex_alloc");
+    if(obj != NULL){
+        NBThreadMutex_init(&obj->mutex);
+        obj->ctx = *ctx;
+        r.opq = obj;
+        r.itf = &obj->ctx.mutex;
+    }
+    return r;
+}
+void NBGestorSonidos_mutex_free(STNixMutexRef* pObj){
+    if(pObj != NULL){
+        STNBGestorSonidosMutexOpq* obj = (STNBGestorSonidosMutexOpq*)pObj->opq;
+        if(obj != NULL){
+            NBThreadMutex_release(&obj->mutex);
+            (*obj->ctx.mem.free)(obj);
+        }
+        pObj->opq = NULL;
+        pObj->itf = NULL;
+    }
+}
+void NBGestorSonidos_mutex_lock(STNixMutexRef pObj){
+    if(pObj.opq != NULL){
+        STNBGestorSonidosMutexOpq* obj = (STNBGestorSonidosMutexOpq*)pObj.opq;
+        NBThreadMutex_lock(&obj->mutex);
+    }
+}
+void NBGestorSonidos_mutex_unlock(STNixMutexRef pObj){
+    if(pObj.opq != NULL){
+        STNBGestorSonidosMutexOpq* obj = (STNBGestorSonidosMutexOpq*)pObj.opq;
+        NBThreadMutex_unlock(&obj->mutex);
+    }
+}
+
+//
 
 bool NBGestorSonidos::inicializar(UI8 maximasFuentesEstaticasGenerar, UI8 ciclosPorSegundoEnStreams){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::inicializar")
@@ -124,10 +182,33 @@ bool NBGestorSonidos::inicializar(UI8 maximasFuentesEstaticasGenerar, UI8 ciclos
 	_bufferesStream					= new(ENMemoriaTipo_General) AUArregloNativoMutableP<STDatosBufferStream>(); NB_DEFINE_NOMBRE_PUNTERO(_bufferesStream, "NBGestorSonidos::_bufferesStream");
 	_escuchadores					= new(ENMemoriaTipo_General) AUArregloNativoMutableP<IEscuchadorGestionSonidos*>(); NB_DEFINE_NOMBRE_PUNTERO(_escuchadores, "NBGestorSonidos::_escuchadores");
 	_bufferesPendCargar				= 0;
-	STDatosFuentesAL fuenteCero;	_fuentesAL->agregarElemento(fuenteCero);		//El indice cero esta reservado
-	STDatosBufferAL bufferCero;		_bufferesAL->agregarElemento(bufferCero);		//El indice cero esta reservado
-	STDatosBufferStream buffStCero;	_bufferesStream->agregarElemento(buffStCero);	//El indice cero esta reservado
-	STDatosStream streamCero;		_streamsAL->agregarElemento(streamCero);		//El indice cero esta reservado
+    {
+        memset(_grps, 0, sizeof(_grps));
+        UI32 i; for(i = 0; i < sizeof(_grps) / sizeof(_grps[0]); ++i){
+            STDatosSndGroup* grp = &_grps[i];
+            grp->volume = 1.0f;
+        }
+    }
+    {
+        STDatosFuentesAL fuenteCero;
+        memset(&fuenteCero, 0, sizeof(fuenteCero));
+        _fuentesAL->agregarElemento(fuenteCero);        //El indice cero esta reservado
+    }
+    {
+        STDatosBufferAL bufferCero;
+        memset(&bufferCero, 0, sizeof(bufferCero));
+        _bufferesAL->agregarElemento(bufferCero);        //El indice cero esta reservado
+    }
+    {
+        STDatosBufferStream buffStCero;
+        memset(&buffStCero, 0, sizeof(buffStCero));
+        _bufferesStream->agregarElemento(buffStCero);    //El indice cero esta reservado
+    }
+    {
+        STDatosStream streamCero;
+        memset(&streamCero, 0, sizeof(streamCero));
+        _streamsAL->agregarElemento(streamCero);        //El indice cero esta reservado
+    }
 	//
 	_soportaCapturaSonido			= false;
 	_soportaBufferEstaticos			= false;
@@ -135,17 +216,70 @@ bool NBGestorSonidos::inicializar(UI8 maximasFuentesEstaticasGenerar, UI8 ciclos
 	//
 	_bloqueado						= false;
 	//
-	if(!nixInit(&nbGestorSonidos_nixtlaMotor, _maximasFuentesGenerar)){
+    //Init engine
+    {
+        STNixContextItf ctxItf;
+        memset(&ctxItf, 0, sizeof(ctxItf));
+        //define context interface
+        {
+            //custom memory allocation (for memory leaks dtection)
+            {
+                //mem
+                ctxItf.mem.malloc   = NBGestorSonidos_mem_malloc;
+                ctxItf.mem.realloc  = NBGestorSonidos_mem_realloc;
+                ctxItf.mem.free     = NBGestorSonidos_mem_free;
+                //mutex
+                ctxItf.mutex.alloc  = NBGestorSonidos_mutex_alloc;
+                ctxItf.mutex.free   = NBGestorSonidos_mutex_free;
+                ctxItf.mutex.lock   = NBGestorSonidos_mutex_lock;
+                ctxItf.mutex.unlock = NBGestorSonidos_mutex_unlock;
+            }
+            //use default for others
+            NixContextItf_fillMissingMembers(&ctxItf);
+        }
+        //allocate a context
+        STNixContextRef ctx = NixContext_alloc(&ctxItf);
+        STNixEngineRef eng = STNixEngineRef_Zero;
+        if(ctx.itf == NULL){
+            PRINTF_ERROR("NixDemosCommon_init::ctx.itf == NULL.\n");
+        } else if(ctx.itf->mem.malloc == NULL){
+            PRINTF_ERROR("NixDemosCommon_init::ctx.itf->mem.malloc == NULL.\n");
+        }
+        {
+            //get the API interface
+            STNixApiItf apiItf;
+            if(!NixApiItf_getDefaultApiForCurrentOS(&apiItf)){
+                PRINTF_ERROR("ERROR, NixApiItf_getDefaultApiForCurrentOS failed.\n");
+            } else {
+                //create engine
+                eng = NixEngine_alloc(ctx, &apiItf);
+                if(NixEngine_isNull(eng)){
+                    PRINTF_ERROR("ERROR, NixEngine_alloc failed.\n");
+                } else {
+                    NixEngine_set(&gNBGestorSonidos_nixEng, eng);
+                    NixContext_set(&gNBGestorSonidos_nixCtx, ctx);
+                }
+            }
+        }
+        //context is retained by the engine
+        NixEngine_release(&eng);
+        NixEngine_null(&eng);
+        //
+        NixContext_release(&ctx);
+        NixContext_null(&ctx);
+    }
+    
+	if(NixEngine_isNull(gNBGestorSonidos_nixEng)){
 		PRINTF_ERROR("no se pudo inicializar nixtla-audio.\n");
 	} else {
-		UI32 mascaraCaps				= nixCapabilities(&nbGestorSonidos_nixtlaMotor);
+		UI32 mascaraCaps				= NIX_CAP_AUDIO_CAPTURE | NIX_CAP_AUDIO_STATIC_BUFFERS | NIX_CAP_AUDIO_SOURCE_OFFSETS;
 		_soportaCapturaSonido			= ((mascaraCaps & NIX_CAP_AUDIO_CAPTURE) != 0);
 		_soportaBufferEstaticos			= ((mascaraCaps & NIX_CAP_AUDIO_STATIC_BUFFERS) != 0);
 		_soportaDesplazamientoEnFuentes	= ((mascaraCaps & NIX_CAP_AUDIO_SOURCE_OFFSETS) != 0);
-		//nixSrcGroupSetEnabled(&nbGestorSonidos_nixtlaMotor, ENAudioGrupo_Efectos, NIX_TRUE);
-		//nixSrcGroupSetEnabled(&nbGestorSonidos_nixtlaMotor, ENAudioGrupo_Musica, NIX_TRUE);
-		//nixSrcGroupSetVolume(&nbGestorSonidos_nixtlaMotor, ENAudioGrupo_Efectos, 0.5f);
-		//nixSrcGroupSetVolume(&nbGestorSonidos_nixtlaMotor, ENAudioGrupo_Musica, 0.9f);
+		//nixSrcGroupSetEnabled(&gNBGestorSonidos_nixEng, ENAudioGrupo_Efectos, NIX_TRUE);
+		//nixSrcGroupSetEnabled(&gNBGestorSonidos_nixEng, ENAudioGrupo_Musica, NIX_TRUE);
+		//nixSrcGroupSetVolume(&gNBGestorSonidos_nixEng, ENAudioGrupo_Efectos, 0.5f);
+		//nixSrcGroupSetVolume(&gNBGestorSonidos_nixEng, ENAudioGrupo_Musica, 0.9f);
 		exito							= true;
 		_gestorInicializado				= true;
 	}
@@ -167,11 +301,14 @@ void NBGestorSonidos::finalizar(){
 			if(datos->regOcupado){
 				//Notificar al usuario
 				if(datos->actualUsuario != NULL){
-					datos->actualUsuario->sndLiberarFuente(datos->fuenteAL);
+					datos->actualUsuario->sndLiberarFuente(i);
 					datos->actualUsuario = NULL;
 				}
 				//Liberar la fuente
-				nixSourceRelease(&nbGestorSonidos_nixtlaMotor, datos->fuenteAL);
+                if(NixSource_isNull(datos->source)){
+                    NixSource_release(&datos->source);
+                    NixSource_null(&datos->source);
+                }
 				datos->regOcupado = false;
 			}
 		}
@@ -184,8 +321,9 @@ void NBGestorSonidos::finalizar(){
 		for(i=1; i<uso; i++){ //Indice cero esta reservado
 			STDatosBufferAL* datos = &(_bufferesAL->elemento[i]);
 			if(datos->regOcupado){
-				if(datos->bufferAL != 0){
-					nixBufferRelease(&nbGestorSonidos_nixtlaMotor, datos->bufferAL);
+				if(!NixBuffer_isNull(datos->buffer)){
+                    NixBuffer_release(&datos->buffer);
+                    NixBuffer_null(&datos->buffer);
 				} else {
 					NBASSERT(_bufferesPendCargar!=0); //Si falla, hay un problema con el manejor de este contador cache
 					_bufferesPendCargar--;
@@ -202,7 +340,14 @@ void NBGestorSonidos::finalizar(){
 		UI32 i; const UI32 uso = _bufferesStream->conteo;
 		for(i=1; i<uso; i++){
 			STDatosBufferStream* datos = &(_bufferesStream->elemento[i]);
-			nixBufferRelease(&nbGestorSonidos_nixtlaMotor, datos->buffer);
+            if(!NixSource_isNull(datos->stream)){
+                NixSource_release(&datos->stream);
+                NixSource_null(&datos->stream);
+            }
+            if(!NixBuffer_isNull(datos->buffer)){
+                NixBuffer_release(&datos->buffer);
+                NixBuffer_null(&datos->buffer);
+            }
 		}
 		_bufferesStream->vaciar();
 		_bufferesStream->liberar(NB_RETENEDOR_NULL);
@@ -223,7 +368,13 @@ void NBGestorSonidos::finalizar(){
 	}
 	if(_escuchadores != NULL) _escuchadores->liberar(NB_RETENEDOR_NULL); _escuchadores = NULL;
 	NBASSERT(_bufferesPendCargar==0) //Si falla, hay un problema con el manejor de este contador cache
-	nixFinalize(&nbGestorSonidos_nixtlaMotor);
+    //
+    NixEngine_release(&gNBGestorSonidos_nixEng);
+    NixEngine_null(&gNBGestorSonidos_nixEng);
+    //
+    NixContext_release(&gNBGestorSonidos_nixCtx);
+    NixContext_null(&gNBGestorSonidos_nixCtx);
+    //
 	_gestorInicializado = false;
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 }
@@ -240,7 +391,7 @@ bool NBGestorSonidos::contextIsActive(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::contextIsActive")
 	NBASSERT(_gestorInicializado)
 	bool r = false;
-	r = (nixContextIsActive(&nbGestorSonidos_nixtlaMotor) == NIX_TRUE);
+	r = (NixEngine_ctxIsActive(gNBGestorSonidos_nixEng) == NIX_TRUE);
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 	return r;
 }
@@ -249,7 +400,7 @@ bool NBGestorSonidos::contextActivate(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::contextActivate")
 	NBASSERT(_gestorInicializado)
 	bool r = false;
-	r = (nixContextActivate(&nbGestorSonidos_nixtlaMotor) == NIX_TRUE);
+	r = (NixEngine_ctxActivate(gNBGestorSonidos_nixEng) == NIX_TRUE);
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 	return r;
 }
@@ -258,7 +409,7 @@ bool NBGestorSonidos::contextDeactivate(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::contextDeactivate")
 	NBASSERT(_gestorInicializado)
 	bool r = false;
-	r = (nixContextDeactivate(&nbGestorSonidos_nixtlaMotor) == NIX_TRUE);
+	r = (NixEngine_ctxDeactivate(gNBGestorSonidos_nixEng) == NIX_TRUE);
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 	return r;
 }
@@ -266,7 +417,7 @@ bool NBGestorSonidos::contextDeactivate(){
 /*void NBGestorSonidos::dameContexto(void* destino){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::dameContexto")
 	NBASSERT(_gestorInicializado)
-	nixGetContext(&nbGestorSonidos_nixtlaMotor, destino);
+	nixGetContext(&gNBGestorSonidos_nixEng, destino);
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 }*/
 
@@ -276,37 +427,67 @@ bool NBGestorSonidos::grupoAudioHabilitado(ENAudioGrupo grupoAudio){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::grupoAudioHabilitado")
 	NBASSERT(_gestorInicializado)
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
-	return nixSrcGroupIsEnabled(&nbGestorSonidos_nixtlaMotor, grupoAudio);
+	return (grupoAudio >= 0 && grupoAudio < ENAudioGrupo_Conteo ? !(_grps[grupoAudio].isDisabled) : false);
 }
 
 float NBGestorSonidos::grupoAudioMultiplicadorVolumen(ENAudioGrupo grupoAudio){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::grupoAudioMultiplicadorVolumen")
 	NBASSERT(_gestorInicializado)
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
-	return nixSrcGroupGetVolume(&nbGestorSonidos_nixtlaMotor, grupoAudio);
+    return (grupoAudio >= 0 && grupoAudio < ENAudioGrupo_Conteo ? _grps[grupoAudio].volume : 0.f);
 }
 
 void NBGestorSonidos::establecerGrupoAudioHabilitado(ENAudioGrupo grupoAudio, bool habilitado){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::establecerGrupoAudioHabilitado")
 	NBASSERT(_gestorInicializado)
-	const bool habilitadoAnt = nixSrcGroupIsEnabled(&nbGestorSonidos_nixtlaMotor, grupoAudio);
-	if(habilitadoAnt != habilitado){
-		nixSrcGroupSetEnabled(&nbGestorSonidos_nixtlaMotor, grupoAudio, habilitado ? NIX_TRUE : NIX_FALSE);
-		const bool habilitadoNvo = nixSrcGroupIsEnabled(&nbGestorSonidos_nixtlaMotor, grupoAudio);
-		if(habilitadoAnt != habilitadoNvo){
-			UI16 i; const UI16 uso = _escuchadores->conteo;
-			for(i=0; i<uso; i++){
-				_escuchadores->elemento[i]->sndGrupoCambioHabilitado(grupoAudio, habilitadoNvo);
-			}
-		}
-	}
+    if(grupoAudio >= 0 && grupoAudio < ENAudioGrupo_Conteo){
+        const bool habilitadoAnt = (_grps[grupoAudio].isDisabled ? false : true);
+        if(habilitadoAnt != habilitado){
+            STDatosSndGroup* grp = &_grps[grupoAudio];
+            grp->isDisabled = !habilitado;
+            //apply
+            if(_fuentesAL != NULL){
+                UI32 i; const UI32 uso = _fuentesAL->conteo;
+                for(i=1; i<uso; i++){ //Indice cero esta reservado
+                    STDatosFuentesAL* datos = &(_fuentesAL->elemento[i]);
+                    if(datos->regOcupado && datos->iGroup == grupoAudio){
+                        if(NixSource_isNull(datos->source)){
+                            NixSource_setVolume(datos->source, grp->isDisabled ? 0.0f : grp->volume * datos->volume);
+                        }
+                    }
+                }
+            }
+            //notify
+            {
+                UI16 i; const UI16 uso = _escuchadores->conteo;
+                for(i=0; i<uso; i++){
+                    _escuchadores->elemento[i]->sndGrupoCambioHabilitado(grupoAudio, habilitado);
+                }
+            }
+        }
+    }
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 }
 
 void NBGestorSonidos::establecerGrupoAudioMultiplicadorVolumen(ENAudioGrupo grupoAudio, float multiplicadorVolumen){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::establecerGrupoAudioMultiplicadorVolumen")
 	NBASSERT(_gestorInicializado)
-	nixSrcGroupSetVolume(&nbGestorSonidos_nixtlaMotor, grupoAudio, multiplicadorVolumen);
+    if(grupoAudio >= 0 && grupoAudio < ENAudioGrupo_Conteo){
+        STDatosSndGroup* grp = &_grps[grupoAudio];
+        grp->volume = (multiplicadorVolumen < 0.f ? 0.f : multiplicadorVolumen > 1.f ? 1.f : multiplicadorVolumen);
+        //apply
+        if(_fuentesAL != NULL){
+            UI32 i; const UI32 uso = _fuentesAL->conteo;
+            for(i=1; i<uso; i++){ //Indice cero esta reservado
+                STDatosFuentesAL* datos = &(_fuentesAL->elemento[i]);
+                if(datos->regOcupado && datos->iGroup == grupoAudio){
+                    if(NixSource_isNull(datos->source)){
+                        NixSource_setVolume(datos->source, grp->isDisabled ? 0.0f : grp->volume * datos->volume);
+                    }
+                }
+            }
+        }
+    }
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 }
 
@@ -328,7 +509,8 @@ STGestorSonidosEstado NBGestorSonidos::estadoGestor(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::tickSonido")
 	NBASSERT(_gestorInicializado)
 	STGestorSonidosEstado estado;
-	STNix_StatusDesc nixEstado; nixGetStatusDesc(&nbGestorSonidos_nixtlaMotor, &nixEstado);
+    memset(&estado, 0, sizeof(estado));
+	/*STNix_StatusDesc nixEstado; nixGetStatusDesc(&gNBGestorSonidos_nixEng, &nixEstado);
 	//Sources
 	estado.countSources = nixEstado.countSources;
 	estado.countSourcesReusable = nixEstado.countSourcesReusable;
@@ -342,7 +524,7 @@ STGestorSonidosEstado NBGestorSonidos::estadoGestor(){
 	//Record buffers
 	estado.countRecBuffers = nixEstado.countRecBuffers;
 	estado.sizeRecBuffers = nixEstado.sizeRecBuffers;
-	estado.sizeRecBuffersAtSW = nixEstado.sizeRecBuffersAtSW;
+	estado.sizeRecBuffersAtSW = nixEstado.sizeRecBuffersAtSW;*/
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 	return estado;
 }
@@ -350,8 +532,8 @@ STGestorSonidosEstado NBGestorSonidos::estadoGestor(){
 void NBGestorSonidos::tickSonido(float segsTranscurridos){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::tickSonido")
 	NBASSERT(_gestorInicializado)
-	if(nixContextIsActive(&nbGestorSonidos_nixtlaMotor) == NIX_TRUE){
-		nixTick(&nbGestorSonidos_nixtlaMotor);
+	if(NixEngine_ctxIsActive(gNBGestorSonidos_nixEng)){
+        NixEngine_tick(gNBGestorSonidos_nixEng);
 	}
 	NBGestorSonidos::liberarBufferesSinReferencias();
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
@@ -365,12 +547,12 @@ UI16 NBGestorSonidos::liberarBufferesSinReferencias(){
 	SI32 iBufferAL, iBufferALConteo = _bufferesAL->conteo;
 	for(iBufferAL=1; iBufferAL<iBufferALConteo; iBufferAL++){ //El indice cero esta reservado
 		STDatosBufferAL* datosBufferAL = &(_bufferesAL->elemento[iBufferAL]);
-		if(datosBufferAL->regOcupado && datosBufferAL->bufferAL!=0){
+		if(datosBufferAL->regOcupado && !NixBuffer_isNull(datosBufferAL->buffer)){
 			if(datosBufferAL->conteoRetenciones == 0){
-				nixBufferRelease(&nbGestorSonidos_nixtlaMotor, datosBufferAL->bufferAL);
+                NixBuffer_release(&datosBufferAL->buffer);
+                NixBuffer_null(&datosBufferAL->buffer);
 				datosBufferAL->nombreRecurso->liberar(NB_RETENEDOR_NULL);
 				datosBufferAL->nombreRecurso	= NULL;
-				datosBufferAL->bufferAL			= 0;
 				datosBufferAL->regOcupado		= false;
 				conteoLiberados++;
 			}
@@ -424,7 +606,7 @@ void NBGestorSonidos::cargarBufferesPendientesDeCargar(SI32 cantidadCargar){
 		SI32 iBufferAL, conteoCargados = 0;
 		for(iBufferAL = 1; iBufferAL < _bufferesAL->conteo; iBufferAL++){
 			STDatosBufferAL* datosBuffer = &(_bufferesAL->elemento[iBufferAL]);
-			if(datosBuffer->regOcupado && datosBuffer->bufferAL==0){
+			if(datosBuffer->regOcupado && NixBuffer_isNull(datosBuffer->buffer)){
 				//Cargar contenido desde archivo
 				AUCadenaMutable8* rutaCompleta = new(ENMemoriaTipo_Temporal) AUCadenaMutable8(); NB_DEFINE_NOMBRE_PUNTERO(rutaCompleta, "NBGestorSonidos::rutaCompleta")
 				if(datosBuffer->tipoAudio < ENAudioTipo_Conteo){
@@ -450,15 +632,16 @@ void NBGestorSonidos::cargarBufferesPendientesDeCargar(SI32 cantidadCargar){
 				//Cargar hacia buffer
 				if(contenidoAudioCargado){
 					STSonidoDescriptor propiedadesSonido = sonido->propiedades();
-					STNix_audioDesc audioDes;
-					audioDes.samplesFormat	= ENNix_sampleFormat_int;
+					STNixAudioDesc audioDes;
+					audioDes.samplesFormat	= ENNixSampleFmt_Int;
 					audioDes.channels		= propiedadesSonido.canales;
 					audioDes.samplerate		= propiedadesSonido.muestrasPorSegundo;
 					audioDes.bitsPerSample	= propiedadesSonido.bitsPorMuestra;
 					audioDes.blockAlign		= propiedadesSonido.alineacionBloques;
-					const NixUI16 idBuffer		= nixBufferWithData(&nbGestorSonidos_nixtlaMotor, &audioDes, sonido->datos(), propiedadesSonido.bytesDatosPCM);
-					if(idBuffer!=0){
-						datosBuffer->bufferAL	= idBuffer;
+                    STNixBufferRef buff     = NixEngine_allocBuffer(gNBGestorSonidos_nixEng, &audioDes, sonido->datos(), propiedadesSonido.bytesDatosPCM);
+					if(!NixBuffer_isNull(buff)){
+                        datosBuffer->desc   = audioDes;
+						datosBuffer->buffer	= buff;
 						_bufferesPendCargar--;
 						conteoCargados++;
 						//PRINTF_INFO("Sonido precargado ha sido cargado\n");
@@ -477,41 +660,55 @@ UI16 NBGestorSonidos::fuenteAsignarEstatica(IUsuarioFuentesAL* asignarA, bool bu
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::fuenteAsignarEstatica")
 	NBASSERT(_gestorInicializado)
 	UI16 iFuenteAsig = 0;
-	UI16 idFuente = nixSourceAssignStatic(&nbGestorSonidos_nixtlaMotor, buscarEntreRecicables?NIX_TRUE:NIX_FALSE, grupoAudio, NULL /*PTRNIX_SourceReleaseCallback*/, NULL/*void *releaseCallBackUserData*/);
-	if(idFuente!=0){
-		iFuenteAsig = NBGestorSonidos::privFuenteAsignar(idFuente, asignarA, buscarEntreRecicables, grupoAudio);
+    STNixSourceRef source = NixEngine_allocSource(gNBGestorSonidos_nixEng);
+	if(!NixSource_isNull(source)){
+		iFuenteAsig = NBGestorSonidos::privFuenteAsignar(source, asignarA, buscarEntreRecicables, grupoAudio);
+        NixSource_release(&source);
+        NixSource_null(&source);
 	}
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 	return iFuenteAsig;
 }
 
-static void NBGestorSonidos_privStreamBufferUnqueuedCallback(STNix_Engine* engAbs, void* userdata, const NixUI32 sourceIndex, const NixUI16 buffersUnqueuedCount){
-	NBGestorSonidos::streamBufferUnqueuedCallback(sourceIndex, buffersUnqueuedCount);
+static void NBGestorSonidos_privStreamBufferUnqueuedCallback(STNixSourceRef* src, struct STNixBufferRef_* buffs, const NixUI32 buffsSz, void* userdata){
+    NBGestorSonidos::streamBufferUnqueuedCallback(*src, buffsSz);
 }
 
-void NBGestorSonidos::streamBufferUnqueuedCallback(const UI32 sourceIndex, const UI16 buffersUnqueuedCount){
+void NBGestorSonidos::streamBufferUnqueuedCallback(STNixSourceRef src, const UI16 buffersUnqueuedCount){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::privStreamBufferUnqueuedCallback")
 	NBASSERT(_gestorInicializado)
 	SI32 i;
 	//Liberar buferres
 	SI32 conteoQuitados = 0; SI32 usoB = _bufferesStream->conteo;
+    //PRINTF_INFO("_bufferesStream->conteo: %d (before): %d unqueued.\n", _bufferesStream->conteo, buffersUnqueuedCount);
 	for(i=1; i<usoB; i++){
 		STDatosBufferStream* datbuff = &_bufferesStream->elemento[i];
-		if(datbuff->stream==sourceIndex){
-			nixBufferRelease(&nbGestorSonidos_nixtlaMotor, datbuff->buffer);
+		if(NixSource_isSame(src, datbuff->stream)){
+            //PRINTF_INFO("#%d/%d, removing src(%lld) buff(%lld).\n", i + 1, usoB, (SI64)datbuff->stream.ptr, (SI64)datbuff->buffer.ptr);
+            //
+            if(!NixSource_isNull(datbuff->stream)){
+                NixSource_release(&datbuff->stream);
+                NixSource_null(&datbuff->stream);
+            }
+            if(!NixBuffer_isNull(datbuff->buffer)){
+                NixBuffer_release(&datbuff->buffer);
+                NixBuffer_null(&datbuff->buffer);
+            }
+            //
 			_bufferesStream->quitarElementoEnIndice(i--); usoB--;
 			//
 			conteoQuitados++;
 			if(conteoQuitados==buffersUnqueuedCount) break;
 		}
 	}
+    //PRINTF_INFO("_bufferesStream->conteo: %d (after).\n", _bufferesStream->conteo);
 	NBASSERT(conteoQuitados == buffersUnqueuedCount) //Si falla, no fue encontrado.
 	//Notificar a usuario
 	const SI32 usoF = _fuentesAL->conteo;
 	for(i=1; i<usoF; i++){
 		STDatosFuentesAL* fuente = &_fuentesAL->elemento[i];
-		if(fuente->regOcupado && fuente->fuenteAL==sourceIndex){
-			//nixBufferRelease(&nbGestorSonidos_nixtlaMotor, idBuffer);
+		if(fuente->regOcupado && NixSource_isSame(src, fuente->source)){
+			//nixBufferRelease(&gNBGestorSonidos_nixEng, idBuffer);
 			if(fuente->actualUsuario != NULL){
 				fuente->actualUsuario->sndStreamBufferQuitadoDeCola(buffersUnqueuedCount);
 			}
@@ -524,22 +721,28 @@ UI16 NBGestorSonidos::fuenteAsignarStream(IUsuarioFuentesAL* asignarA, bool busc
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::fuenteAsignarStream")
 	NBASSERT(_gestorInicializado)
 	NBASSERT(tamColaBuffers>0)
-	UI16 iFuenteAsig = 0;
-	UI16 idFuente = nixSourceAssignStream(&nbGestorSonidos_nixtlaMotor, buscarEntreRecicables?NIX_TRUE:NIX_FALSE, grupoAudio, NULL /*PTRNIX_SourceReleaseCallback*/, NULL/*void *releaseCallBackUserData*/, tamColaBuffers, NBGestorSonidos_privStreamBufferUnqueuedCallback /*PTRNIX_StreamBufferUnqueuedCallback bufferUnqueueCallback*/, NULL /*void* bufferUnqueueCallbackData*/);
-	if(idFuente!=0){
-		iFuenteAsig = NBGestorSonidos::privFuenteAsignar(idFuente, asignarA, buscarEntreRecicables, grupoAudio);
-	}
+    UI16 iFuenteAsig = 0;
+    STNixSourceRef source = NixEngine_allocSource(gNBGestorSonidos_nixEng);
+    if(!NixSource_isNull(source)){
+        NixSource_setCallback(source, NBGestorSonidos_privStreamBufferUnqueuedCallback, NULL);
+        iFuenteAsig = NBGestorSonidos::privFuenteAsignar(source, asignarA, buscarEntreRecicables, grupoAudio);
+        NixSource_release(&source);
+        NixSource_null(&source);
+    }
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 	return iFuenteAsig;
 }
 
-UI16 NBGestorSonidos::privFuenteAsignar(UI16 nixFuente, IUsuarioFuentesAL* asignarA, bool buscarEntreRecicables, ENAudioGrupo grupoAudio){
+UI16 NBGestorSonidos::privFuenteAsignar(STNixSourceRef src, IUsuarioFuentesAL* asignarA, bool buscarEntreRecicables, ENAudioGrupo grupoAudio){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::privFuenteAsignar")
 	NBASSERT(_gestorInicializado)
 	UI16 iFuenteAsig = 0;
 	STDatosFuentesAL datosFuente;
+    memset(&datosFuente, 0, sizeof(datosFuente));
 	datosFuente.regOcupado			= true;
-	datosFuente.fuenteAL			= nixFuente;
+    datosFuente.iGroup              = grupoAudio;
+    NixSource_set(&datosFuente.source, src);
+    datosFuente.volume              = 1.f;
 	datosFuente.conteoRetenciones	= 0;
 	datosFuente.actualUsuario		= asignarA;
 	//Reutilizar registro libre
@@ -584,8 +787,10 @@ void NBGestorSonidos::fuenteLiberar(const UI16 fuenteAL){
 				datosFuenteAL->actualUsuario = NULL;
 			}
 			//Liberar fuente
-			nixSourceRelease(&nbGestorSonidos_nixtlaMotor, datosFuenteAL->fuenteAL);
-			datosFuenteAL->fuenteAL		= 0;
+            if(!NixSource_isNull(datosFuenteAL->source)){
+                NixSource_release(&datosFuenteAL->source);
+                NixSource_null(&datosFuenteAL->source);
+            }
 			datosFuenteAL->regOcupado	= false;
 		}
 	}
@@ -617,23 +822,24 @@ bool NBGestorSonidos::cargarBufferStreamALEnFuente(const UI16 fuenteAL, const ST
 		NBASSERT(false /*Propiedades sonido no validas: cargarBufferStreamALEnFuente*/)
 	} else {
 		NBGSONIDOS_GET_NIXFUENTE_INI(fuenteAL, datosFuenteAL)
-		STNix_audioDesc audioDesc;
-		audioDesc.samplesFormat	= ENNix_sampleFormat_int;
+		STNixAudioDesc audioDesc;
+		audioDesc.samplesFormat	= ENNixSampleFmt_Int;
 		audioDesc.channels		= propiedadesSonido.canales;
 		audioDesc.samplerate	= propiedadesSonido.muestrasPorSegundo;
 		audioDesc.bitsPerSample	= propiedadesSonido.bitsPorMuestra;
 		audioDesc.blockAlign	= propiedadesSonido.alineacionBloques;
-		const NixUI16 idBuffer	= nixBufferWithData(&nbGestorSonidos_nixtlaMotor, &audioDesc, datosSonido, conteoBytesDatos);
-		if(idBuffer!=0){
-			if(!nixSourceStreamAppendBuffer(&nbGestorSonidos_nixtlaMotor, datosFuenteAL->fuenteAL, idBuffer)){
-				nixBufferRelease(&nbGestorSonidos_nixtlaMotor, idBuffer);
-			} else {
+        STNixBufferRef buff     = NixEngine_allocBuffer(gNBGestorSonidos_nixEng, &audioDesc, datosSonido, conteoBytesDatos);
+		if(!NixBuffer_isNull(buff)){
+			if(NixSource_queueBuffer(datosFuenteAL->source, buff)){
 				STDatosBufferStream datStream;
-				datStream.stream		= datosFuenteAL->fuenteAL;
-				datStream.buffer		= idBuffer;
+                memset(&datStream, 0, sizeof(datStream));
+                NixSource_set(&datStream.stream, datosFuenteAL->source);
+                NixBuffer_set(&datStream.buffer, buff);
 				_bufferesStream->agregarElemento(datStream);
 				exito = true;
 			}
+            NixBuffer_release(&buff);
+            NixBuffer_null(&buff);
 		}
 		NBGSONIDOS_GET_NIXFUENTE_FIN
 	}
@@ -647,10 +853,11 @@ bool NBGestorSonidos::cargarBufferStreamALEnFuente(const UI16 fuenteAL, const UI
 	bool exito = false;
 	NBGSONIDOS_GET_NIXFUENTE_INI(fuenteAL, datosFuenteAL)
 	NBGSONIDOS_GET_NIXBUFFER_INI(bufferAL, datosBufferAL)
-	if(nixSourceStreamAppendBuffer(&nbGestorSonidos_nixtlaMotor, datosFuenteAL->fuenteAL, datosBufferAL->bufferAL)){
+	if(NixSource_queueBuffer(datosFuenteAL->source, datosBufferAL->buffer)){
 		STDatosBufferStream datStream;
-		datStream.stream		= datosFuenteAL->fuenteAL;
-		datStream.buffer		= datosBufferAL->bufferAL; nixBufferRetain(&nbGestorSonidos_nixtlaMotor, datosBufferAL->bufferAL);
+        memset(&datStream, 0, sizeof(datStream));
+        NixSource_set(&datStream.stream, datosFuenteAL->source);
+        NixBuffer_set(&datStream.buffer, datosBufferAL->buffer);
 		_bufferesStream->agregarElemento(datStream);
 		exito = true;
 	}
@@ -664,11 +871,11 @@ void NBGestorSonidos::fuenteEstablecerBuffer(const UI16 fuenteAL, const UI16 buf
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::fuenteEstablecerBuffer")
 	NBASSERT(_gestorInicializado)
 	NBGSONIDOS_GET_NIXFUENTE_INI(fuenteAL, datosFuenteAL)
-	if(bufferAL==0){
-		nixSourceSetBuffer(&nbGestorSonidos_nixtlaMotor, datosFuenteAL->fuenteAL, 0);
+	if(bufferAL == 0){
+        NixSource_setBuffer(datosFuenteAL->source, (STNixBufferRef)STNixBufferRef_Zero);
 	} else {
 		NBGSONIDOS_GET_NIXBUFFER_INI(bufferAL, datosBufferAL)
-		nixSourceSetBuffer(&nbGestorSonidos_nixtlaMotor, datosFuenteAL->fuenteAL, datosBufferAL->bufferAL);
+        NixSource_setBuffer(datosFuenteAL->source, datosBufferAL->buffer);
 		NBGSONIDOS_GET_NIXBUFFER_FIN
 	}
 	NBGSONIDOS_GET_NIXFUENTE_FIN
@@ -679,7 +886,7 @@ void NBGestorSonidos::fuenteEstablecerRepetir(const UI16 fuenteAL, bool repetir)
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::fuenteEstablecerRepetir")
 	NBASSERT(_gestorInicializado)
 	NBGSONIDOS_GET_NIXFUENTE_INI(fuenteAL, datosFuenteAL)
-	nixSourceSetRepeat(&nbGestorSonidos_nixtlaMotor, datosFuenteAL->fuenteAL, repetir ? NIX_TRUE : NIX_FALSE);
+    NixSource_setRepeat(datosFuenteAL->source, repetir ? NIX_TRUE : NIX_FALSE);
 	NBGSONIDOS_GET_NIXFUENTE_FIN
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 }
@@ -688,7 +895,7 @@ void NBGestorSonidos::fuenteEstablecerVolumen(const UI16 fuenteAL, float volumen
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::fuenteEstablecerVolumen")
 	NBASSERT(_gestorInicializado)
 	NBGSONIDOS_GET_NIXFUENTE_INI(fuenteAL, datosFuenteAL)
-	nixSourceSetVolume(&nbGestorSonidos_nixtlaMotor, datosFuenteAL->fuenteAL, volumen);
+    NixSource_setVolume(datosFuenteAL->source, volumen);
 	NBGSONIDOS_GET_NIXFUENTE_FIN
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 }
@@ -697,7 +904,7 @@ void NBGestorSonidos::fuenteReproducir(const UI16 fuenteAL){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::fuenteReproducir")
 	NBASSERT(_gestorInicializado)
 	NBGSONIDOS_GET_NIXFUENTE_INI(fuenteAL, datosFuenteAL)
-	nixSourcePlay(&nbGestorSonidos_nixtlaMotor, datosFuenteAL->fuenteAL);
+    NixSource_play(datosFuenteAL->source);
 	NBGSONIDOS_GET_NIXFUENTE_FIN
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 }
@@ -706,7 +913,7 @@ void NBGestorSonidos::fuentePausar(const UI16 fuenteAL){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::fuentePausar")
 	NBASSERT(_gestorInicializado)
 	NBGSONIDOS_GET_NIXFUENTE_INI(fuenteAL, datosFuenteAL)
-	nixSourcePause(&nbGestorSonidos_nixtlaMotor, datosFuenteAL->fuenteAL);
+    NixSource_pause(datosFuenteAL->source);
 	NBGSONIDOS_GET_NIXFUENTE_FIN
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 }
@@ -715,7 +922,7 @@ void NBGestorSonidos::fuenteDetener(const UI16 fuenteAL){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::fuenteDetener")
 	NBASSERT(_gestorInicializado)
 	NBGSONIDOS_GET_NIXFUENTE_INI(fuenteAL, datosFuenteAL)
-	nixSourceStop(&nbGestorSonidos_nixtlaMotor, datosFuenteAL->fuenteAL);
+    NixSource_stop(datosFuenteAL->source);
 	NBGSONIDOS_GET_NIXFUENTE_FIN
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 }
@@ -724,7 +931,8 @@ void NBGestorSonidos::fuenteVaciarCola(const UI16 fuenteAL){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::fuenteVaciarCola")
 	NBASSERT(_gestorInicializado)
 	NBGSONIDOS_GET_NIXFUENTE_INI(fuenteAL, datosFuenteAL)
-	nixSourceEmptyQueue(&nbGestorSonidos_nixtlaMotor, datosFuenteAL->fuenteAL);
+    NBASSERT(FALSE) //ToDo: implement
+    //NixSource_flush(datosFuenteAL->source);
 	NBGSONIDOS_GET_NIXFUENTE_FIN
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 }
@@ -733,7 +941,7 @@ void NBGestorSonidos::fuenteRebobinar(const UI16 fuenteAL){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::fuenteRebobinar")
 	NBASSERT(_gestorInicializado)
 	NBGSONIDOS_GET_NIXFUENTE_INI(fuenteAL, datosFuenteAL)
-	nixSourceRewind(&nbGestorSonidos_nixtlaMotor, datosFuenteAL->fuenteAL);
+    NixSource_setBufferOffset(datosFuenteAL->source, ENNixOffsetType_Blocks, 0);
 	NBGSONIDOS_GET_NIXFUENTE_FIN
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 }
@@ -743,7 +951,7 @@ float NBGestorSonidos::fuenteVolumen(const UI16 fuenteAL){
 	NBASSERT(_gestorInicializado)
 	float r = 0.0f;
 	NBGSONIDOS_GET_NIXFUENTE_INI(fuenteAL, datosFuenteAL)
-	r = nixSourceGetVoume(&nbGestorSonidos_nixtlaMotor, datosFuenteAL->fuenteAL);
+	r = NixSource_getVolume(datosFuenteAL->source);
 	NBGSONIDOS_GET_NIXFUENTE_FIN
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 	return r;
@@ -754,7 +962,7 @@ bool NBGestorSonidos::fuenteReproduciendo(const UI16 fuenteAL){
 	NBASSERT(_gestorInicializado)
 	NixBOOL r = NIX_FALSE;
 	NBGSONIDOS_GET_NIXFUENTE_INI(fuenteAL, datosFuenteAL)
-	r = nixSourceIsPlaying(&nbGestorSonidos_nixtlaMotor, datosFuenteAL->fuenteAL);
+	r = NixSource_isPlaying(datosFuenteAL->source);
 	NBGSONIDOS_GET_NIXFUENTE_FIN
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 	return r;
@@ -765,7 +973,8 @@ UI32 NBGestorSonidos::fuenteOffsetMuestras(const UI16 fuenteAL){
 	NBASSERT(_gestorInicializado)
 	UI32 r = 0;
 	NBGSONIDOS_GET_NIXFUENTE_INI(fuenteAL, datosFuenteAL)
-	r = nixSourceGetOffsetSamples(&nbGestorSonidos_nixtlaMotor, datosFuenteAL->fuenteAL);
+    NixUI32 bytes = 0, blocks = 0, msecs = 0;
+    r = NixSource_getBlocksOffset(datosFuenteAL->source, &bytes, &blocks, &msecs);
 	NBGSONIDOS_GET_NIXFUENTE_FIN
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 	return r;
@@ -776,7 +985,9 @@ UI32 NBGestorSonidos::fuenteOffsetBytes(const UI16 fuenteAL){
 	NBASSERT(_gestorInicializado)
 	UI32 r = 0;
 	NBGSONIDOS_GET_NIXFUENTE_INI(fuenteAL, datosFuenteAL)
-	r = nixSourceGetOffsetBytes(&nbGestorSonidos_nixtlaMotor, datosFuenteAL->fuenteAL);
+    NixUI32 bytes = 0, blocks = 0, msecs = 0;
+    r = NixSource_getBlocksOffset(datosFuenteAL->source, &bytes, &blocks, &msecs);
+	r = bytes;
 	NBGSONIDOS_GET_NIXFUENTE_FIN
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 	return r;
@@ -786,7 +997,7 @@ void NBGestorSonidos::fuenteEstablecerOffsetMuestra(const UI16 fuenteAL, const U
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::fuenteEstablecerOffsetMuestra")
 	NBASSERT(_gestorInicializado)
 	NBGSONIDOS_GET_NIXFUENTE_INI(fuenteAL, datosFuenteAL)
-	nixSourceSetOffsetSamples(&nbGestorSonidos_nixtlaMotor, datosFuenteAL->fuenteAL, offsetMuestra);
+    NixSource_setBufferOffset(datosFuenteAL->source, ENNixOffsetType_Blocks, offsetMuestra);
 	NBGSONIDOS_GET_NIXFUENTE_FIN
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 }
@@ -796,7 +1007,13 @@ UI16 NBGestorSonidos::fuenteTotalBuffers(const UI16 fuenteAL){
 	NBASSERT(_gestorInicializado)
 	UI16 r = 0;
 	NBGSONIDOS_GET_NIXFUENTE_INI(fuenteAL, datosFuenteAL)
-	r = nixSourceGetBuffersCount(&nbGestorSonidos_nixtlaMotor, datosFuenteAL->fuenteAL);
+    SI32 i; SI32 usoB = _bufferesStream->conteo;
+    for(i = 1; i < usoB; i++){
+        STDatosBufferStream* datbuff = &_bufferesStream->elemento[i];
+        if(NixSource_isSame(datosFuenteAL->source, datbuff->stream)){
+            r++;
+        }
+    }
 	NBGSONIDOS_GET_NIXFUENTE_FIN
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 	return r;
@@ -808,7 +1025,9 @@ UI32 NBGestorSonidos::fuenteTotalBytes(const UI16 fuenteAL){
 	NBASSERT(_gestorInicializado)
 	UI32 r = 0;
 	NBGSONIDOS_GET_NIXFUENTE_INI(fuenteAL, datosFuenteAL)
-	r = nixSourceGetBytes(&nbGestorSonidos_nixtlaMotor, datosFuenteAL->fuenteAL);
+    NixUI32 bytes = 0, blocks = 0, msecs = 0;
+    r = NixSource_getBuffersCount(datosFuenteAL->source, &bytes, &blocks, &msecs);
+	r = bytes;
 	NBGSONIDOS_GET_NIXFUENTE_FIN
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 	return r;
@@ -819,7 +1038,9 @@ UI32 NBGestorSonidos::fuenteTotalMuestras(const UI16 fuenteAL){
 	NBASSERT(_gestorInicializado)
 	UI32 r = 0;
 	NBGSONIDOS_GET_NIXFUENTE_INI(fuenteAL, datosFuenteAL)
-	r = nixSourceGetSamples(&nbGestorSonidos_nixtlaMotor, datosFuenteAL->fuenteAL);
+    NixUI32 bytes = 0, blocks = 0, msecs = 0;
+    r = NixSource_getBuffersCount(datosFuenteAL->source, &bytes, &blocks, &msecs);
+    r = blocks;
 	NBGSONIDOS_GET_NIXFUENTE_FIN
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 	return r;
@@ -830,7 +1051,9 @@ float NBGestorSonidos::fuenteTotalSegundos(const UI16 fuenteAL){
 	NBASSERT(_gestorInicializado)
 	float r = 0.0f;
 	NBGSONIDOS_GET_NIXFUENTE_INI(fuenteAL, datosFuenteAL)
-	r = nixSourceGetSeconds(&nbGestorSonidos_nixtlaMotor, datosFuenteAL->fuenteAL);
+    NixUI32 bytes = 0, blocks = 0, msecs = 0;
+    r = NixSource_getBuffersCount(datosFuenteAL->source, &bytes, &blocks, &msecs);
+	r = (float)msecs / 1000.f;
 	NBGSONIDOS_GET_NIXFUENTE_FIN
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 	return r;
@@ -842,7 +1065,18 @@ bool NBGestorSonidos::fuenteTieneBufferEnCola(const UI16 fuente, const UI16 buff
 	bool r = false;
 	NBGSONIDOS_GET_NIXFUENTE_INI(fuente, datosFuente)
 	NBGSONIDOS_GET_NIXBUFFER_INI(buffer, datosBuffer)
-	r = (nixSourceHaveBuffer(&nbGestorSonidos_nixtlaMotor, datosFuente->fuenteAL, datosBuffer->bufferAL) == NIX_TRUE);
+    {
+        SI32 i; SI32 usoB = _bufferesStream->conteo;
+        //PRINTF_INFO("Searching...\n");
+        for(i = 1; i < usoB; i++){
+            STDatosBufferStream* datbuff = &_bufferesStream->elemento[i];
+            //PRINTF_INFO("#%d/%d, src(%lld vs %lld) buff(%lld vs %lld).\n", i + 1, usoB, (SI64)datosFuente->source.ptr, (SI64)datbuff->stream.ptr, (SI64)datosBuffer->buffer.ptr, (SI64)datbuff->buffer.ptr);
+            if(NixSource_isSame(datosFuente->source, datbuff->stream) && NixBuffer_isSame(datosBuffer->buffer, datbuff->buffer)){
+                r = true;
+                break;
+            }
+        }
+    }
 	NBGSONIDOS_GET_NIXBUFFER_FIN
 	NBGSONIDOS_GET_NIXFUENTE_FIN
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
@@ -912,13 +1146,13 @@ bool NBGestorSonidos::soportaCapturaSonido(){
 bool NBGestorSonidos::abrirDispositivoCapturaSonido(ENSonidoFrecuencia frecuencia, float segundosEnBuffer, const char* opcionalNombreDispositivo){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::abrirDispositivoCapturaSonido")
 	NBASSERT(_gestorInicializado)
-	STNix_audioDesc audioDesc;
+	STNixAudioDesc audioDesc;
 	audioDesc.channels			= 1;
 	audioDesc.samplerate		= frecuencia;
 	audioDesc.bitsPerSample		= 16;
 	audioDesc.blockAlign		= (audioDesc.bitsPerSample / 8) * audioDesc.channels;
-	audioDesc.samplesFormat		= ENNix_sampleFormat_int;
-	NixBOOL	exito				= nixCaptureInit(&nbGestorSonidos_nixtlaMotor, &audioDesc, 2, audioDesc.samplerate / 2, NULL /*PTRNIX_CaptureBufferFilledCallback*/, NULL /*bufferCaptureCallbackUserData*/);
+	audioDesc.samplesFormat		= ENNixSampleFmt_Int;
+    NixBOOL	exito				= false; //nixCaptureInit(&gNBGestorSonidos_nixEng, &audioDesc, 2, audioDesc.samplerate / 2, NULL /*PTRNIX_CaptureBufferFilledCallback*/, NULL /*bufferCaptureCallbackUserData*/);
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 	return exito;
 }
@@ -926,7 +1160,7 @@ bool NBGestorSonidos::abrirDispositivoCapturaSonido(ENSonidoFrecuencia frecuenci
 void NBGestorSonidos::cerrarDispositivoCapturaSonido(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::cerrarDispositivoCapturaSonido")
 	NBASSERT(_gestorInicializado)
-	nixCaptureFinalize(&nbGestorSonidos_nixtlaMotor);
+	//nixCaptureFinalize(&gNBGestorSonidos_nixEng);
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 }
 
@@ -934,13 +1168,13 @@ bool NBGestorSonidos::capturandoSonido(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::capturandoSonido")
 	NBASSERT(_gestorInicializado)
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
-	return nixCaptureIsOnProgress(&nbGestorSonidos_nixtlaMotor);
+    return false; //nixCaptureIsOnProgress(&gNBGestorSonidos_nixEng);
 }
 
 bool NBGestorSonidos::iniciarCapturaSonido(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::iniciarCapturaSonido")
 	NBASSERT(_gestorInicializado)
-	NixBOOL	exito = nixCaptureStart(&nbGestorSonidos_nixtlaMotor);
+    NixBOOL	exito = false; //nixCaptureStart(&gNBGestorSonidos_nixEng);
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 	return exito;
 }
@@ -948,14 +1182,14 @@ bool NBGestorSonidos::iniciarCapturaSonido(){
 void NBGestorSonidos::detenerCapturaSonido(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::detenerCapturaSonido")
 	NBASSERT(_gestorInicializado)
-	nixCaptureStop(&nbGestorSonidos_nixtlaMotor);
+	//nixCaptureStop(&gNBGestorSonidos_nixEng);
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 }
 
 SI32 NBGestorSonidos::conteoMuestrasEnBufferCaptura(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::conteoMuestrasEnBufferCaptura")
 	NBASSERT(_gestorInicializado)
-	NixUI32	r = nixCaptureFilledBuffersSamples(&nbGestorSonidos_nixtlaMotor);
+    NixUI32	r = 0; //nixCaptureFilledBuffersSamples(&gNBGestorSonidos_nixEng);
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 	return r;
 }
@@ -963,7 +1197,7 @@ SI32 NBGestorSonidos::conteoMuestrasEnBufferCaptura(){
 float NBGestorSonidos::segundosEnBufferCaptura(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::segundosEnBufferCaptura")
 	NBASSERT(_gestorInicializado)
-	float r = nixCaptureFilledBuffersSeconds(&nbGestorSonidos_nixtlaMotor);
+    float r = 0.f; //nixCaptureFilledBuffersSeconds(&gNBGestorSonidos_nixEng);
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 	return r;
 }
@@ -972,7 +1206,7 @@ AUSonido* NBGestorSonidos::sonidoEnBufferCaptura(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::sonidoEnBufferCaptura")
 	NBASSERT(_gestorInicializado)
 	AUSonidoMutable* sonidoCapturado = NULL;
-	/*const NixUI32 buffersLlenos = nixCaptureFilledBuffersCount(&nbGestorSonidos_nixtlaMotor);
+	/*const NixUI32 buffersLlenos = nixCaptureFilledBuffersCount(&gNBGestorSonidos_nixEng);
 	if(_dispositivoCapturaOpenAL != NULL){
 		ALCint muestrasCapturadas	= 0;
 		alcGetIntegerv(_dispositivoCapturaOpenAL, ALC_CAPTURE_SAMPLES, 1, &muestrasCapturadas);
@@ -1041,8 +1275,7 @@ UI16 NBGestorSonidos::bufferFrecuencia(const UI16 buffer){
 	NBASSERT(_gestorInicializado)
 	UI16 r = 0;
 	NBGSONIDOS_GET_NIXBUFFER_INI(buffer, datosBufferAL)
-	STNix_audioDesc audioDesc = nixBufferAudioDesc(&nbGestorSonidos_nixtlaMotor, datosBufferAL->bufferAL);
-	r = audioDesc.samplerate;
+	r = datosBufferAL->desc.samplerate;
 	NBGSONIDOS_GET_NIXBUFFER_FIN
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 	return r;
@@ -1053,7 +1286,7 @@ ENBufferALEstado NBGestorSonidos::bufferEstado(const UI16 buffer){
 	NBASSERT(_gestorInicializado)
 	ENBufferALEstado r = ENBufferALEstado_SinDatos;
 	NBGSONIDOS_GET_NIXBUFFER_INI(buffer, datosBufferAL)
-	r = (datosBufferAL->bufferAL!=0 ? ENBufferALEstado_Cargado : ENBufferALEstado_SinDatos);
+	r = (!NixBuffer_isNull(datosBufferAL->buffer) ? ENBufferALEstado_Cargado : ENBufferALEstado_SinDatos);
 	NBGSONIDOS_GET_NIXBUFFER_FIN
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 	return r;
@@ -1064,7 +1297,9 @@ float NBGestorSonidos::bufferSegundos(const UI16 buffer){
 	NBASSERT(_gestorInicializado)
 	float r = 0.0f;
 	NBGSONIDOS_GET_NIXBUFFER_INI(buffer, datosBufferAL)
-	r = nixBufferSeconds(&nbGestorSonidos_nixtlaMotor, datosBufferAL->bufferAL);
+    if(datosBufferAL->desc.samplerate > 0 && datosBufferAL->desc.blockAlign > 0){
+        r = (float)(datosBufferAL->dataUse / datosBufferAL->desc.blockAlign) / (float)datosBufferAL->desc.samplerate;
+    }
 	NBGSONIDOS_GET_NIXBUFFER_FIN
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 	return r;
@@ -1172,20 +1407,23 @@ UI16 NBGestorSonidos::privBufferDesdeDatos(const STSonidoDescriptor* propiedades
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::privBufferDesdeDatos")
 	NBASSERT(_gestorInicializado)
 	UI16 bufferAL = 0;
-	STNix_audioDesc audioDesc;
-	audioDesc.samplesFormat		= ENNix_sampleFormat_int;
+	STNixAudioDesc audioDesc;
+	audioDesc.samplesFormat		= ENNixSampleFmt_Int;
 	audioDesc.channels			= propiedadesSonido->canales;
 	audioDesc.bitsPerSample		= propiedadesSonido->bitsPorMuestra;
 	audioDesc.samplerate		= propiedadesSonido->muestrasPorSegundo;
 	audioDesc.blockAlign		= propiedadesSonido->alineacionBloques;
-	const UI16 idBuffer			= nixBufferWithData(&nbGestorSonidos_nixtlaMotor, &audioDesc, datosSonido, conteoBytesDatos);
-	if(idBuffer==0){
+    STNixBufferRef buff			= NixEngine_allocBuffer(gNBGestorSonidos_nixEng, &audioDesc, datosSonido, conteoBytesDatos);
+	if(NixBuffer_isNull(buff)){
 		PRINTF_ERROR("NBGestorSonidos, nixBufferWithData returned '0'.\n");
 		NBASSERT(false)
 	} else {
 		STDatosBufferAL datosBufferAL;
+        memset(&datosBufferAL, 0, sizeof(datosBufferAL));
 		datosBufferAL.regOcupado		= true;
-		datosBufferAL.bufferAL			= idBuffer;
+        NixBuffer_set(&datosBufferAL.buffer, buff);
+        datosBufferAL.desc              = audioDesc;
+        datosBufferAL.dataUse           = conteoBytesDatos;
 		datosBufferAL.conteoRetenciones	= 0;
 		datosBufferAL.formatoArchivo	= formatoArchAudio;
 		datosBufferAL.tipoAudio			= tipoAudio;
@@ -1204,6 +1442,8 @@ UI16 NBGestorSonidos::privBufferDesdeDatos(const STSonidoDescriptor* propiedades
 			bufferAL = _bufferesAL->conteo;
 			_bufferesAL->agregarElemento(datosBufferAL);
 		}
+        NixBuffer_release(&buff);
+        NixBuffer_null(&buff);
 	}
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 	return bufferAL;
@@ -1217,13 +1457,18 @@ bool NBGestorSonidos::bufferEstablecerDatos(const UI16 buffer, const STSonidoDes
 	NBASSERT(conteoBytesDatos > 0)
 	if(buffer > 0 && buffer < _bufferesAL->conteo && conteoBytesDatos > 0){
 		NBASSERT(_bufferesAL->elemento[buffer].regOcupado)
-		STNix_audioDesc audioDesc;
-		audioDesc.samplesFormat		= ENNix_sampleFormat_int;
+        STDatosBufferAL* buffRec    = &_bufferesAL->elemento[buffer];
+		STNixAudioDesc audioDesc;
+		audioDesc.samplesFormat		= ENNixSampleFmt_Int;
 		audioDesc.channels			= propiedadesSonido->canales; NBASSERT(audioDesc.channels == 1 || audioDesc.channels == 2)
 		audioDesc.bitsPerSample		= propiedadesSonido->bitsPorMuestra; NBASSERT(audioDesc.bitsPerSample == 8 || audioDesc.bitsPerSample == 16 || audioDesc.bitsPerSample == 32)
 		audioDesc.samplerate		= propiedadesSonido->muestrasPorSegundo; NBASSERT(audioDesc.samplerate > 0)
 		audioDesc.blockAlign		= propiedadesSonido->alineacionBloques; NBASSERT(audioDesc.blockAlign > 0)
-		r = (nixBufferSetData(&nbGestorSonidos_nixtlaMotor, _bufferesAL->elemento[buffer].bufferAL, &audioDesc, datosSonido, conteoBytesDatos) == NIX_TRUE);
+        if(NixBuffer_setData(buffRec->buffer, &audioDesc, datosSonido, conteoBytesDatos)){
+            buffRec->desc = audioDesc;
+            buffRec->dataUse = conteoBytesDatos;
+            r = true;
+        }
 	}
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
 	return r;
@@ -1339,28 +1584,32 @@ const char* NBGestorSonidos::nombreSonido(const AUSonidoStream* stream){
 	return nombre;
 }
 
+/*
+//2025-07-24: removed
 void NBGestorSonidos::estadoSonidos(UI32* guardarBytesReservadosEn, UI32* guardarBytesUsadosEn, UI32* guardarConteoBufferesEn){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::estadoSonidos")
 	NBASSERT(_gestorInicializado)
-	STNix_StatusDesc nixEstado; nixGetStatusDesc(&nbGestorSonidos_nixtlaMotor, &nixEstado);
+	STNix_StatusDesc nixEstado; nixGetStatusDesc(&gNBGestorSonidos_nixEng, &nixEstado);
 	if(guardarBytesReservadosEn != NULL)	*guardarBytesReservadosEn	= nixEstado.sizePlayBuffers + nixEstado.sizeRecBuffers;
 	if(guardarBytesUsadosEn != NULL)		*guardarBytesUsadosEn		= nixEstado.sizePlayBuffers + nixEstado.sizeRecBuffers;
 	if(guardarConteoBufferesEn != NULL)	*guardarConteoBufferesEn	= nixEstado.countPlayBuffers;
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
-}
+}*/
 
+/*
+//2025-07-24: removed
 void NBGestorSonidos::debugPrintSourcesState(){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::nombreSonido")
 	NBASSERT(_gestorInicializado)
-	nixDbgPrintSourcesStatus(&nbGestorSonidos_nixtlaMotor);
+	//nixDbgPrintSourcesStatus(&gNBGestorSonidos_nixEng);
 	AU_GESTOR_PILA_LLAMADAS_POP_GESTOR_2
-}
+}*/
 
 #ifdef CONFIG_NB_RECOPILAR_ESTADISTICAS_DE_GESTION_MEMORIA
 UI32 NBGestorSonidos::debugBytesTotalBufferes(SI32* guardarConteoFuentesEnUsoEn, SI32* guardarConteoBufferesEn, SI32* guardarConteoBufferesStreamEn, SI32* guardarConteoStreamsEn){
 	AU_GESTOR_PILA_LLAMADAS_PUSH_GESTOR_2("NBGestorSonidos::debugBytesTotalBufferes")
 	NBASSERT(_gestorInicializado)
-	STNix_StatusDesc nixEstado; nixGetStatusDesc(&nbGestorSonidos_nixtlaMotor, &nixEstado);
+	STNix_StatusDesc nixEstado; nixGetStatusDesc(&gNBGestorSonidos_nixEng, &nixEstado);
 	if(guardarConteoFuentesEnUsoEn != NULL) *guardarConteoFuentesEnUsoEn		= nixEstado.countSourcesAssigned;
 	if(guardarConteoBufferesEn != NULL) *guardarConteoBufferesEn				= nixEstado.countPlayBuffers;
 	if(guardarConteoBufferesStreamEn != NULL) *guardarConteoBufferesStreamEn	= 0;

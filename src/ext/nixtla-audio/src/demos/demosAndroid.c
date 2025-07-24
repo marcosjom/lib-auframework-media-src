@@ -28,14 +28,14 @@ STNixTestSamplesConverter gTestSamplesConverter = STNixTestSamplesConverter_Zero
 
 //STNixDemosCommon
 
-JNIEXPORT jboolean JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_commonInit(JNIEnv* env, jobject obj){
+JNIEXPORT jboolean JNICALL Java_com_mortegam_nixtla_1audio_demos_NixDemosCommon_init(JNIEnv* env, jobject obj){
     if(NixDemosCommon_isNull(&gCommon)){
         return NixDemosCommon_init(&gCommon);
     }
     return NIX_FALSE;
 }
 
-JNIEXPORT void JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_commonDestroy(JNIEnv* env, jobject obj){
+JNIEXPORT void JNICALL Java_com_mortegam_nixtla_1audio_demos_NixDemosCommon_destroy(JNIEnv* env, jobject obj){
     if(!NixDemosCommon_isNull(&gCommon)){
         if(!NixDemoPlayWav_isNull(&gDemoPlayWav)){
             NixDemoPlayWav_destroy(&gDemoPlayWav);
@@ -53,7 +53,7 @@ JNIEXPORT void JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_commonDestro
     }
 }
 
-JNIEXPORT void JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_commonTick(JNIEnv* env, jobject obj, jint msPassed){
+JNIEXPORT void JNICALL Java_com_mortegam_nixtla_1audio_demos_NixDemosCommon_tick(JNIEnv* env, jobject obj, jint msPassed){
     if(!NixDemosCommon_isNull(&gCommon)){
         NixDemosCommon_tick(&gCommon, msPassed);
     }
@@ -61,7 +61,7 @@ JNIEXPORT void JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_commonTick(J
 
 //STNixDemoPlayWav
 
-JNIEXPORT jboolean JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_demoPlayWavInit(JNIEnv* env, jobject obj, jobject assetManager){
+JNIEXPORT jboolean JNICALL Java_com_mortegam_nixtla_1audio_NixDemoPlayWav_init(JNIEnv* env, jobject obj, jobject assetManager){
     if(gCommon.ctx.itf == NULL){
         NIX_PRINTF_ERROR("NixDemosCommon_init::gCommon.ctx.itf == NULL.\n");
     } else if(gCommon.ctx.itf->mem.malloc == NULL){
@@ -73,7 +73,7 @@ JNIEXPORT jboolean JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_demoPlay
     return NIX_FALSE;
 }
 
-JNIEXPORT void JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_demoPlayWavDestroy(JNIEnv* env, jobject obj){
+JNIEXPORT void JNICALL Java_com_mortegam_nixtla_1audio_demos_NixDemoPlayWav_destroy(JNIEnv* env, jobject obj){
     if(!NixDemoPlayWav_isNull(&gDemoPlayWav)){
         NixDemoPlayWav_destroy(&gDemoPlayWav);
     }
@@ -81,14 +81,14 @@ JNIEXPORT void JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_demoPlayWavD
 
 //STNixDemoPlayStream
 
-JNIEXPORT jboolean JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_demoPlayStreamInit(JNIEnv* env, jobject obj, jobject assetManager){
+JNIEXPORT jboolean JNICALL Java_com_mortegam_nixtla_1audio_demos_NixDemoPlayStream_init(JNIEnv* env, jobject obj, jobject assetManager){
     if(!NixDemosCommon_isNull(&gCommon) && NixDemoPlayStream_isNull(&gDemoPlayStream)){
         return NixDemoPlayStream_init(&gDemoPlayStream, &gCommon, env, assetManager);
     }
     return NIX_FALSE;
 }
 
-JNIEXPORT void JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_demoPlayStreamDestroy(JNIEnv* env, jobject obj){
+JNIEXPORT void JNICALL Java_com_mortegam_nixtla_1audio_demos_NixDemoPlayStream_destroy(JNIEnv* env, jobject obj){
     if(!NixDemoPlayStream_isNull(&gDemoPlayStream)){
         NixDemoPlayStream_destroy(&gDemoPlayStream);
     }
@@ -96,14 +96,14 @@ JNIEXPORT void JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_demoPlayStre
 
 //STNixDemoCaptureEco
 
-JNIEXPORT jboolean JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_demoCaptureEcoInit(JNIEnv* env, jobject obj){
+JNIEXPORT jboolean JNICALL Java_com_mortegam_nixtla_1audio_demos_NixDemoCaptureEco_init(JNIEnv* env, jobject obj){
     if(!NixDemosCommon_isNull(&gCommon) && NixDemoCaptureEco_isNull(&gDemoCaptureEco)){
         return NixDemoCaptureEco_init(&gDemoCaptureEco, &gCommon);
     }
     return NIX_FALSE;
 }
 
-JNIEXPORT void JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_demoCaptureEcoDestroy(JNIEnv* env, jobject obj){
+JNIEXPORT void JNICALL Java_com_mortegam_nixtla_1audio_demos_NixDemoCaptureEco_destroy(JNIEnv* env, jobject obj){
     if(!NixDemoCaptureEco_isNull(&gDemoCaptureEco)){
         NixDemoCaptureEco_destroy(&gDemoCaptureEco);
     }
@@ -111,20 +111,20 @@ JNIEXPORT void JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_demoCaptureE
 
 //STNixTestSamplesConverter
 
-JNIEXPORT jboolean JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_testSamplesConverterInit(JNIEnv* env, jobject obj, jobject assetManager){
+JNIEXPORT jboolean JNICALL Java_com_mortegam_nixtla_1audio_tests_NixTestSamplesConverter_init(JNIEnv* env, jobject obj, jobject assetManager){
     if(!NixDemosCommon_isNull(&gCommon) && NixTestSamplesConverter_isNull(&gTestSamplesConverter)){
         return NixTestSamplesConverter_init(&gTestSamplesConverter, &gCommon, env, assetManager);
     }
     return NIX_FALSE;
 }
 
-JNIEXPORT void JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_testSamplesConverterDestroy(JNIEnv* env, jobject obj){
+JNIEXPORT void JNICALL Java_com_mortegam_nixtla_1audio_tests_NixTestSamplesConverter_destroy(JNIEnv* env, jobject obj){
     if(!NixTestSamplesConverter_isNull(&gTestSamplesConverter)){
         NixTestSamplesConverter_destroy(&gTestSamplesConverter, &gCommon);
     }
 }
 
-JNIEXPORT void JNICALL Java_com_mortegam_nixtla_1audio_MainActivity_testSamplesConverterTick(JNIEnv* env, jobject obj){
+JNIEXPORT void JNICALL Java_com_mortegam_nixtla_1audio_tests_NixTestSamplesConverter_tick(JNIEnv* env, jobject obj){
     if(!NixTestSamplesConverter_isNull(&gTestSamplesConverter)){
         NixTestSamplesConverter_tick(&gTestSamplesConverter, &gCommon);
     }

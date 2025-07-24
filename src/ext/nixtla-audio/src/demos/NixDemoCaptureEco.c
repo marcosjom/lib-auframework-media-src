@@ -21,7 +21,7 @@
 
 //recorder callback
 
-void bufferCapturedCallback(STNixEngineRef* eng, STNixRecorderRef* rec, const STNixAudioDesc audioDesc, const NixUI8* audioData, const NixUI32 audioDataBytes, const NixUI32 audioDataSamples, void* userdata);
+void bufferCapturedCallback(STNixEngineRef* eng, STNixRecorderRef* rec, const STNixAudioDesc audioDesc, const NixUI8* audioData, const NixUI32 audioDataBytes, const NixUI32 blocksCount, void* userdata);
 
 //player callback
 
@@ -44,10 +44,10 @@ NixBOOL NixDemoCaptureEco_init(STNixDemoCaptureEco* obj, STNixDemosCommon* commo
         audioDesc.samplerate        = 22050;
         audioDesc.blockAlign        = (audioDesc.bitsPerSample / 8) * audioDesc.channels;
         const NixUI16 buffersCount  = (sizeof(obj->buffs.arr) / sizeof(obj->buffs.arr[0]));
-        const NixUI16 samplesPerBuffer = (audioDesc.samplerate / NIX_DEMO_ECO_BUFFS_PER_SEC);
+        const NixUI16 blocksPerBuffer = (audioDesc.samplerate / NIX_DEMO_ECO_BUFFS_PER_SEC);
         //allocate buffers
         while(obj->buffs.use < (sizeof(obj->buffs.arr) / sizeof(obj->buffs.arr[0]))){
-            STNixBufferRef buff = NixEngine_allocBuffer(common->eng, &audioDesc, NULL, samplesPerBuffer * audioDesc.blockAlign);
+            STNixBufferRef buff = NixEngine_allocBuffer(common->eng, &audioDesc, NULL, blocksPerBuffer * audioDesc.blockAlign);
             if(NixBuffer_isNull(buff)){
                 NIX_PRINTF_ERROR("NixEngine_allocBuffer failed.\n");
                 break;
@@ -63,14 +63,14 @@ NixBOOL NixDemoCaptureEco_init(STNixDemoCaptureEco* obj, STNixDemosCommon* commo
             //init the capture
             obj->buffs.iFilled = 0;
             obj->buffs.iPlayed = obj->buffs.use;
-            obj->buffs.bytesPerBuffer = samplesPerBuffer * audioDesc.blockAlign;
-            obj->buffs.samplesPerBuffer = samplesPerBuffer;
+            obj->buffs.bytesPerBuffer = blocksPerBuffer * audioDesc.blockAlign;
+            obj->buffs.blocksPerBuffer = blocksPerBuffer;
             //
             NixSource_setCallback(obj->src, bufferUnqueuedCallback, obj);
             NixSource_setVolume(obj->src, 1.0f);
             NixSource_play(obj->src);
             //
-            obj->rec = NixEngine_allocRecorder(common->eng, &audioDesc, buffersCount, samplesPerBuffer);
+            obj->rec = NixEngine_allocRecorder(common->eng, &audioDesc, buffersCount, blocksPerBuffer);
             if(NixRecorder_isNull(obj->rec)){
                 NIX_PRINTF_ERROR("NixEngine_allocRecorder failed.\n");
             } else {
@@ -113,9 +113,9 @@ void NixDemoCaptureEco_destroy(STNixDemoCaptureEco* obj){
 
 //recorder callback
 
-void bufferCapturedCallback(STNixEngineRef* eng, STNixRecorderRef* rec, const STNixAudioDesc audioDesc, const NixUI8* audioData, const NixUI32 audioDataBytes, const NixUI32 audioDataSamples, void* userdata){
+void bufferCapturedCallback(STNixEngineRef* eng, STNixRecorderRef* rec, const STNixAudioDesc audioDesc, const NixUI8* audioData, const NixUI32 audioDataBytes, const NixUI32 blocksCount, void* userdata){
     STNixDemoCaptureEco* obj = (STNixDemoCaptureEco*)userdata;
-    obj->stats.curSec.framesRecordedCount += audioDataSamples;
+    obj->stats.curSec.framesRecordedCount += blocksCount;
     //calculate avg (for dbg and stats)
     if(audioDesc.bitsPerSample == 16 && audioDesc.samplesFormat == ENNixSampleFmt_Int){
         const NixSI16* s16 = (const NixSI16*)audioData;

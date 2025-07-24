@@ -151,8 +151,8 @@ void NixTestSamplesConverter_tick(STNixTestSamplesConverter* obj, STNixDemosComm
                 obj->conv.audioDesc.channels = 1 + (rand() % 2);
                 obj->conv.audioDesc.samplerate = (rand() % 10) == 0 ? obj->org.audioDesc.samplerate : 800 + (rand() % 92000);
                 obj->conv.audioDesc.blockAlign = (obj->conv.audioDesc.bitsPerSample / 8) * obj->conv.audioDesc.channels;
-                const NixUI32 samplesReq = NixFmtConverter_samplesForNewFrequency(obj->org.dataSz / obj->org.audioDesc.blockAlign, obj->org.audioDesc.samplerate, obj->conv.audioDesc.samplerate);
-                const NixUI32 bytesReq = samplesReq * obj->conv.audioDesc.blockAlign;
+                const NixUI32 blocksReq = NixFmtConverter_blocksForNewFrequency(obj->org.dataSz / obj->org.audioDesc.blockAlign, obj->org.audioDesc.samplerate, obj->conv.audioDesc.samplerate);
+                const NixUI32 bytesReq = blocksReq * obj->conv.audioDesc.blockAlign;
                 if(obj->conv.dataSz < bytesReq){
                     if(obj->conv.data != NULL){
                         NixContext_mfree(common->ctx, obj->conv.data);
@@ -169,7 +169,7 @@ void NixTestSamplesConverter_tick(STNixTestSamplesConverter* obj, STNixDemosComm
                     void* conv = NixFmtConverter_alloc(common->ctx);
                     if(conv != NULL){
                         const NixUI32 srcBlocks = (obj->org.dataSz / obj->org.audioDesc.blockAlign);
-                        const NixUI32 dstBlocks = samplesReq;
+                        const NixUI32 dstBlocks = blocksReq;
                         NixUI32 ammBlocksRead = 0;
                         NixUI32 ammBlocksWritten = 0;
                         if(!NixFmtConverter_prepare(conv, &obj->org.audioDesc, &obj->conv.audioDesc)){
